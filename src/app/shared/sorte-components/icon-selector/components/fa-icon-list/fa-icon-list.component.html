@@ -1,0 +1,54 @@
+<!-- Header -->
+<div class="flex">
+
+  <!-- Title -->
+  <div class="w-3/5">
+    <div>
+      <h2 class="text-3xl font-semibold tracking-tight leading-8">{{ 'ui.select_icon' | transloco }}</h2>
+      <div class="font-medium tracking-tight text-secondary">
+        
+        {{ 'ui.search' | transloco }} <strong>{{iconService.list.length}}</strong>  {{ 'ui.solid_icons_the_first_200_matches_are_shown' | transloco }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="w-2/5">
+    <mat-form-field class="w-full" appearance="fill">
+      <fa-icon matPrefix [icon]="['fas','magnifying-glass']" class="icon-size-2"></fa-icon>
+      <input [placeholder]="'ui.search' | transloco" [(ngModel)]="searchTerm" [ngModelOptions]="{standalone: true}" autofocus matInput>
+    </mat-form-field>
+  </div>
+
+</div>
+
+<!-- Seperator -->
+<div class="flex items-center justify-center my-3 -mx-6 ng-star-inserted">
+  <div class="flex-auto border-b"></div>
+  <div class="flex-0 mx-4 text-sm font-medium leading-5 text-secondary">  {{ 'ui.icons' | transloco }} </div>
+  <div class="flex-auto border-b"></div>
+</div>
+
+<mat-divider />
+
+<!-- Icon List -->
+<div class="icon-results" role="listbox" [attr.aria-label]="'ui.available_icons' | transloco">
+  <div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 xl:grid-cols-9 mx-2 my-2 gap-2">
+    <div *ngFor="let model of (iconService.list | filter: searchTerm | slice:0:200);">
+      <button type="button" (click)="select(model)" [attr.aria-label]="model.displayName" class="rounded border-2 cursor-pointer bg-card hover:shadow">
+
+        <div class="text-xs font-semibold text-center break-all text-secondary m-2">
+          {{model.prefix}}
+        </div>
+
+        <div class="flex items-center justify-center my-3">
+          <fa-icon [icon]="model.icon" class="text-5xl text-black mt-3"></fa-icon>
+        </div>
+
+        <div class="text-xs font-semibold text-center break-all text-secondary m-2 truncate">
+          {{model.displayName}}</div>
+      </button>
+    </div>
+  </div>
+
+</div>

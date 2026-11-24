@@ -1,0 +1,14 @@
+<div class="color-control" (click)="$event.stopPropagation()">
+    <span class="color-label">{{ label }}</span>
+    <button type="button" class="color-trigger" [disabled]="disabled" [attr.aria-expanded]="open()"
+        [attr.aria-label]="'Choose ' + label" (click)="open.update(value => !value)" (keydown.escape)="open.set(false)">
+        <span class="swatch" [style.background-color]="color"></span><span class="hex-value">{{ color }}</span><span
+            class="chevron">{{ open() ? '⌃' : '⌄' }}</span>
+    </button>
+    @if (open()) {
+    <div class="picker-popover" role="dialog" [attr.aria-label]="label + ' color picker'">
+        <color-sketch [color]="color" [width]="220" [disableAlpha]="true" [presetColors]="brandPalette"
+            (onChangeComplete)="choose($event)"></color-sketch>
+    </div>
+    }
+</div>

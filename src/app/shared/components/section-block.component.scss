@@ -1,0 +1,70 @@
+:host {
+    display: block;
+}
+
+summary {
+    cursor: pointer;
+    padding-block: 8px;
+}
+
+.section-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+button {
+    font: inherit;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button[aria-pressed=true] {
+    background: #ede8f7;
+    border-color: #8064b5;
+}
+
+:host-context(.side-navigation) details {
+    border-left: 1px solid #ffffff55;
+    margin-left: 10px;
+    padding-left: 12px;
+}
+
+:host-context(.side-navigation) summary {
+    color: inherit;
+    font-weight: 600;
+}
+
+:host-context(.side-navigation) summary:hover {
+    background: #ffffff20;
+}
+
+:host-context(.side-navigation) button {
+    display: flex;
+    width: 100%;
+    min-height: 38px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #c9a7d2;
+}
+
+:host-context(.side-navigation) button:hover,
+:host-context(.side-navigation) button[aria-pressed=true] {
+    border-color: #51448f;
+    background: #292631;
+    color: #fff;
+}
+
+:host-context(.top-navigation) details { position: relative; margin: 0; border: 0; }
+:host-context(.top-navigation) summary { min-width: 110px; padding: 10px 12px; border-radius: 7px; }
+:host-context(.top-navigation) [collapse-content] { position: absolute; top: 100%; left: 0; z-index: 20; min-width: 200px; padding: 6px; border: 1px solid #ffffff33; border-radius: 8px; background: #1b1c24; box-shadow: 0 10px 24px #0004; }
+:host-context(.top-navigation) [collapse-content] > div { margin: 0; }
+:host-context(.top-navigation) [collapse-content] button { width: 100%; }

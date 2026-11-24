@@ -1,0 +1,6 @@
+:host { display: block; background: var(--builder-panel); color: var(--builder-text); }
+header { min-height: 60px; background: var(--builder-panel); color: var(--builder-text); border-color: var(--builder-border); }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.icon-button { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--builder-border); border-radius: 9px; background: var(--builder-panel); color: var(--builder-text); cursor: pointer; }
+.icon-button:hover { background: color-mix(in srgb, var(--builder-panel) 84%, var(--builder-text) 16%); }
+header button:focus-visible, header select:focus-visible { outline: 2px solid var(--ant-primary); outline-offset: 2px; }

@@ -1,0 +1,77 @@
+@switch (node().type) {
+@case ('icon') { <fa-icon class="icon" [icon]="icon()" [attr.aria-label]="node().text" /> }
+@case ('calendar') { <app-hotel-calendar /> }
+@case ('date-time-picker') {
+@if (designMode()) {
+<div class="date-time-picker-preview" aria-label="Date and time picker preview">
+  <fa-icon [icon]="calendarIcon" aria-hidden="true" />
+  <span>{{ 'elements.dateTimePicker' | transloco }}</span>
+  <span class="date-time-picker-placeholder">{{ 'ui.date_time_picker_preview' | transloco }}</span>
+</div>
+} @else { <div class="date-time-picker-block"><app-date-time-picker /></div> }
+}
+@case ('flippable-card') {
+<antsoft-card class="builder-flippable-card" [flippable]="true" [face]="flippableCardBack() ? 'back' : 'front'">
+  <section antsoftCardFront class="builder-flippable-card-face">
+    <h3>{{ node().text || ('elements.flippableCard' | transloco) }}</h3>
+    <p>{{ 'ui.flippable_card_front_help' | transloco }}</p>
+    <button type="button" (click)="flipCard()">{{ 'ui.show_card_back' | transloco }} →</button>
+  </section>
+  <section antsoftCardBack class="builder-flippable-card-face builder-flippable-card-back">
+    <h3>{{ 'ui.flippable_card_back' | transloco }}</h3>
+    <p>{{ 'ui.flippable_card_back_help' | transloco }}</p>
+    <button type="button" (click)="flipCard()">← {{ 'ui.show_card_front' | transloco }}</button>
+  </section>
+ </antsoft-card>
+}
+@case ('badge') { <span class="display-badge">{{ node().text }}</span> }
+@case ('barcode-reader') {
+<label class="barcode-reader">{{ 'elements.barcodeReader' | transloco }}
+  <input type="text" [disabled]="designMode()" (change)="scanned.set($any($event.target).value)" autocomplete="off">
+  <small>{{ scanned()}}</small>
+</label> }
+@case ('qr-renderer') {
+<ngx-qrcode-styling [data]="node().text || ' '" [width]="160" [height]="160" />
+}
+
+@case ('countdown') { <div class="timer-block">{{ timerValue() }}s <button type="button" (click)="startTimer()"
+    [disabled]="designMode()">▶</button><button type="button" (click)="resetTimer()"
+    [disabled]="designMode()">↺</button></div> }
+
+@case ('countup') {
+<div class="timer-block">{{ timerValue() }}s <button type="button" (click)="startTimer()"
+    [disabled]="designMode()">▶</button><button type="button" (click)="stopTimer()"
+    [disabled]="designMode()">Ⅱ</button><button type="button" (click)="resetTimer()"
+    [disabled]="designMode()">↺</button>
+</div>
+}
+
+@case ('stopwatch') {
+<div class="timer-block">{{ timerValue() }}s <button type="button" (click)="startTimer()"
+    [disabled]="designMode()">▶</button><button type="button" (click)="stopTimer()"
+    [disabled]="designMode()">Ⅱ</button><button type="button" (click)="resetTimer()"
+    [disabled]="designMode()">↺</button>
+</div>
+}
+
+@case ('tooltip') {
+<span tabindex="0" class="tooltip">ⓘ<span role="tooltip">{{ node().text }}</span></span>
+}
+
+@case ('timeline') {
+<ol class="timeline">@for (line of lines(); track $index) { <li>{{ line }}</li> }</ol>
+}
+
+@case ('markdown') {
+@for (line of lines(); track $index) {
+@if (line.startsWith('### ')) {
+<h3>{{ line.slice(4) }}</h3>
+}
+@else if (line.startsWith('## ')) { <h2>{{ line.slice(3) }}</h2> }
+@else if (line.startsWith('# ')) { <h1>{{ line.slice(2) }}</h1> }
+@else { <p>{{ line }}</p> }
+}
+}
+
+
+}

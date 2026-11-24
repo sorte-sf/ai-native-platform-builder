@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+select {
+  min-width: 88px;
+  height: 34px;
+  padding: 0 26px 0 10px;
+  border: 1px solid var(--designer-border, var(--builder-border, #dce3ea));
+  border-radius: 8px;
+  background-color: var(--designer-input, var(--builder-panel, #fff));
+  color: var(--designer-text, var(--builder-text, #263746));
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+select:focus-visible {
+  outline: 2px solid var(--ant-primary, #5e4fa2);
+  outline-offset: 2px;
+}

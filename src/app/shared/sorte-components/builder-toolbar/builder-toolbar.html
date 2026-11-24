@@ -1,0 +1,62 @@
+<div class="flex ml-2 mt-4 sm:mt-0 md:mt-4 mb-2">
+
+    <form class="flex items-center max-w-lg mx-auto" autocomplete="off" novalidate>
+        <div
+            class="relative flex flex-row w-full ps-0 p-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+            <div class="flex flex-row flex-auto justify-between">
+
+                <div class="flex h-full text-end justify-end px-2">
+
+                    @if (showDesktopViewButton()) {
+                    <button matTooltip="{{'action.desktop' | transloco}}"
+                        class="px-4 border-l cursor-pointer  hover:rounded-lg hover:bg-red-600 hover:text-white"
+                        (click)="onDesktopViewButtonClicked.emit()">
+                        <fa-icon [icon]="toolbarIcons.desktop"
+                            class="icon-size-4 mt-2 text-black  hover:bg-red-600 hover:text-white" />
+                    </button>
+                    }
+
+                    @if (showTabletViewButton()) {
+                    <button matTooltip="{{'action.tablet' | transloco}}"
+                        class="px-4 border-l cursor-pointer  hover:rounded-lg hover:bg-red-600 hover:text-white"
+                        (click)="onTabletViewButtonClicked.emit()">
+                        <fa-icon [icon]="toolbarIcons.tablet"
+                            class="icon-size-4 mt-2 text-black  hover:bg-red-600 hover:text-white" />
+
+                    </button>
+                    }
+
+                    @if (showMobileViewButton()) {
+                    <button matTooltip="{{'action.mobile' | transloco}}"
+                        class="px-4 border-l cursor-pointer hover:rounded-lg hover:bg-red-600 hover:text-white"
+                        color="primary" (click)="onMobileViewButtonClicked.emit()">
+                        <fa-icon [icon]="toolbarIcons.mobile"
+                            class="icon-size-4 mt-2 text-black  hover:bg-red-600 hover:text-white" />
+                    </button>
+                    }
+
+                    @if (showFullScreenButton()) {
+                    <button matTooltip="{{'action.fullscreen' | transloco}}"
+                        class="px-4 border-b cursor-pointer  hover:rounded-lg hover:bg-red-600 hover:text-white"
+                        (click)="onFullScreenButtonClicked.emit()">
+                        <fa-icon [icon]="toolbarIcons.expand"
+                            class="icon-size-4 mt-2 text-black  hover:bg-red-600 hover:text-white" />
+                    </button>
+                    }
+
+                    @if (showPreviewButton()) {
+                    <button matTooltip="{{'action.preview' | transloco}}"
+                        class="px-4 border-b cursor-pointer  hover:rounded-lg hover:bg-red-600 hover:text-white"
+                        (click)="onPreviewButtonClicked.emit()">
+                        <fa-icon [icon]="['fal', 'eye']" class="icon-size-4 text-black"></fa-icon>
+                    </button>
+                    }
+
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+</div>

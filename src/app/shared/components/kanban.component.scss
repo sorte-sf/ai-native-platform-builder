@@ -1,0 +1,33 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.board {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-block: 8px;
+}
+
+section {
+    min-width: 220px;
+    flex: 1;
+    background: var(--app-bg, #f4f1fa);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+h4 {
+    margin: 0 0 12px;
+    color: var(--app-primary, #5e4fa2);
+}
+
+article {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--app-surface, white);
+    border: 1px solid #dce3ea;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}

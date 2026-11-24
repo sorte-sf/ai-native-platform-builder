@@ -1,0 +1,67 @@
+antsoft-card {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+    /* Flippable */
+    &.antsoft-card-flippable {
+        border-radius: 0;
+        overflow: visible;
+        transform-style: preserve-3d;
+        transition: transform 1s;
+        perspective: 600px;
+        background: transparent;
+        box-shadow: none;
+
+        &.antsoft-card-face-back {
+            .antsoft-card-front {
+                visibility: hidden;
+                opacity: 0;
+                transform: rotateY(180deg);
+            }
+
+            .antsoft-card-back {
+                visibility: visible;
+                opacity: 1;
+                transform: rotateY(360deg);
+            }
+        }
+
+        .antsoft-card-front,
+        .antsoft-card-back {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            z-index: 10;
+            transition:
+                transform 0.5s ease-out 0s,
+                visibility 0s ease-in 0.2s,
+                opacity 0s ease-in 0.2s;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .antsoft-card-front {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            transform: rotateY(0deg);
+            overflow: hidden;
+        }
+
+        .antsoft-card-back {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: rotateY(180deg);
+            overflow: hidden auto;
+        }
+    }
+}

@@ -1,0 +1,181 @@
+<div class="runtime-shell" [class.collapsed]="collapsed()" [class.embedded-nav]="embeddedNavigation()" [class.authored-shell]="authoredShell()" [class.sidebar-right]="shell().sidebarPosition === 'right'" [class.header-bottom]="shell().headerPosition === 'bottom'" [style.--app-primary]="theme().primaryColor"
+    [style.--app-bg]="theme().backgroundColor" [style.--app-surface]="theme().surfaceColor" [style.--app-text]="theme().textColor"
+    [style.--shell-sidebar-width.px]="shell().sidebarWidth" [style.--shell-header-height.px]="shell().headerHeight"
+    [style.--shell-sidebar-bg]="shell().sidebarBackground" [style.--shell-sidebar-text]="shell().sidebarTextColor"
+    [style.--shell-header-bg]="shell().headerBackground" [style.--shell-header-text]="shell().headerTextColor" [style.--shell-font-family]="theme().fontFamily" [style.--app-font-size.px]="theme().fontSize">
+    <aside class="runtime-sidenav" [attr.aria-label]="'runtimeShell.navigation' | transloco">
+        <div class="runtime-brand">
+            @if (theme().logoUrl) { <img [src]="theme().logoUrl" [alt]="'ui.application_logo' | transloco" /> }
+            @else { <img src="/images/logo/small-logo.png" [alt]="'ui.application_logo' | transloco" /> }
+            @if (!collapsed()) { <strong>{{ shell().brand }}</strong> }
+            <button type="button" class="runtime-toggle" (click)="collapsed.set(!collapsed())" [attr.aria-expanded]="!collapsed()"
+                [attr.aria-label]="(collapsed() ? 'runtimeShell.expand' : 'runtimeShell.collapse') | transloco"
+                [title]="(collapsed() ? 'runtimeShell.expand' : 'runtimeShell.collapse') | transloco">
+                <fa-icon [icon]="collapsed() ? shellIcons.menu : shellIcons.collapse" />
+            </button>
+        </div>
+        @if (!collapsed()) { <div class="runtime-profile"><strong>{{ shell().profileName || userName() }}</strong><small>{{ shell().profileRole }}</small></div> }
+        <nav [attr.aria-label]="'runtimeShell.navigation' | transloco">
+            <ng-container *ngTemplateOutlet="menuTree; context: {$implicit: navigationTree()}" />
+        </nav>
+        @if (!collapsed()) { <div class="runtime-user">{{ userName() }}</div> }
+    </aside>
+<main class="template-workspace" [style.--app-primary]="theme().primaryColor" [style.--app-bg]="theme().backgroundColor"
+    [style.--app-surface]="theme().surfaceColor" [style.--app-text]="theme().textColor"
+    [style.--app-scale]="theme().fontScale">
+    @if (draftPreview()) { <div class="notice preview-banner" role="status">{{ 'preview.banner' | transloco }}
+        <a [routerLink]="['/builder/applications', applicationId, 'design']" [queryParams]="{tenantId}">{{ 'runtimeShell.returnDesigner' | transloco }}</a></div> }
+    @if (error()) { <div class="notice" role="alert">{{ error() | transloco }}</div> }
+    @if (screen(); as current) {
+    <header class="workspace-header">
+        <div class="brand">
+            @if (!embeddedNavigation()) { <strong>{{ current.title }}</strong> }
+        </div>
+        <div class="shell-tools">
+            @if (shell().showSearch) { <input class="shell-search" type="search" aria-label="Search" placeholder="Search for something…" /> }
+            @if (shell().showMegaMenu) { <button type="button">Mega Menu</button> }
+            <button type="button" class="shell-language">{{ shell().language }}</button>
+            @if (shell().showNotifications) { <button type="button" aria-label="Notifications">♧</button> }
+            @if (shell().showSettings) { <button type="button" aria-label="Settings">⚙</button> }
+            @if (shell().showThemeToggle) { <button type="button">{{ shell().themeMode === 'dark' ? 'Light mode' : 'Dark mode' }}</button> }
+            @if (!draftPreview()) { <button type="button" class="assistant-launch" (click)="togglePublishedAssistant()" [attr.aria-expanded]="assistantOpen()">✦ Ask AI</button> }
+            <button type="button" class="shell-user">{{ shell().profileName || userName() }}</button>
+        </div>
+    </header>
+    @if (introHtml()) { <section class="intro" [innerHTML]="introHtml()"></section> }
+    @if (assistantOpen() && !draftPreview()) {
+      <section class="published-assistant" aria-label="Application AI assistant">
+        <header><div><small>APPLICATION ASSISTANT</small><h2>Ask your app</h2><p>Generate a read-only view from data you can access. Save useful views to your favourites.</p></div>
+          <button type="button" (click)="assistantOpen.set(false)" aria-label="Close assistant">×</button></header>
+        <form (ngSubmit)="generatePublishedUi()">
+          <label for="published-ai-prompt">What would you like to see?</label>
+          <textarea id="published-ai-prompt" name="prompt" [ngModel]="assistantPrompt()" (ngModelChange)="assistantPrompt.set($event)" rows="3" maxlength="5000" placeholder="For example: show open requests by department"></textarea>
+          <button type="submit" [disabled]="assistantBusy() || !assistantPrompt().trim()">{{ assistantBusy() ? 'Working…' : 'Generate view' }}</button>
+        </form>
+        @if (assistantError()) { <p class="assistant-notice" role="status">{{ assistantError() }}</p> }
+        @if (generatedUi(); as result) {
+          <section class="generated-view" aria-live="polite">
+            <p>{{ result.answer }}</p>
+            <div class="generated-widgets">
+              @for (widget of result.widgets; track $index) {
+                <article class="generated-widget">
+                  <h3>{{ widget.title }}</h3>
+                  @if (widget.type === 'metric') { <strong class="generated-metric">{{ widget.value | number:'1.0-2' }}</strong><small>{{ widget.total }} matching records</small> }
+                  @if (widget.type === 'table') {
+                    <div class="generated-table-wrap"><table><thead><tr>@for (field of widget.fields ?? []; track field.key) { <th>{{ field.label }}</th> }</tr></thead>
+                      <tbody>@for (row of widget.rows ?? []; track $index) { <tr>@for (field of widget.fields ?? []; track field.key) { <td>{{ row[field.key] }}</td> }</tr> }</tbody>
+                    </table></div><small>{{ widget.total }} matching records</small>
+                  }
+                  @if (widget.type === 'barChart' || widget.type === 'donutChart') {
+                    <div class="generated-bars">@for (group of widget.groups ?? []; track group.label) {
+                      <div class="generated-bar-row"><span>{{ group.label }}</span><span class="generated-bar-track"><i [style.width.%]="chartWidth(group.value, widget.groups)"></i></span><strong>{{ group.value | number:'1.0-2' }}</strong></div>
+                    }</div>
+                  }
+                </article>
+              }
+            </div>
+            <div class="save-favourite"><input aria-label="Favourite name" [ngModel]="favouriteName()" (ngModelChange)="favouriteName.set($event)" name="favouriteName" maxlength="120" placeholder="Name this favourite" />
+              <button type="button" (click)="saveFavourite()" [disabled]="favouritesBusy() || !favouriteName().trim()">{{ result.id ? 'Update favourite' : 'Save to favourites' }}</button></div>
+          </section>
+        }
+        <section class="favourites-list"><h3>Your favourites</h3>
+          @if (favouritesBusy()) { <p>Loading…</p> }
+          @else if (!favourites().length) { <p>No saved views yet.</p> }
+          @else { @for (item of favourites(); track item.id) { <div class="favourite-row"><button type="button" (click)="openFavourite(item)">{{ item.name }}</button><button type="button" class="favourite-delete" (click)="deleteFavourite(item)" [attr.aria-label]="'Delete ' + item.name">Remove</button></div> } }
+        </section>
+      </section>
+    }
+    @if (pageNodes(); as nodes) { <ant-page-tree-runtime [nodes]="nodes" [definitions]="pageForms()" [availablePages]="availablePages()" [tenantId]="tenantId" [applicationId]="applicationId" [preview]="draftPreview()" />
+      @if (!nodes.length) { <section class="empty published-page-empty" role="status"><strong>{{ 'runtimeShell.emptyPageTitle' | transloco }}</strong><p>{{ 'runtimeShell.emptyPageHint' | transloco }}</p></section> }
+    }
+    @else if (formDefinition(); as form) {
+      <ant-runtime-form [objectId]="form.objectId" [definition]="form" [tenantContext]="tenantId" [preview]="draftPreview()" />
+    }
+    @if (current.objectId && !pageNodes()) { <section class="data-panel" aria-labelledby="records-heading">
+        @if (formDefinition() && (draftPreview() || recordCreateAllowed())) { <button type="button" class="list-entry-fab" (click)="openEntryDialog()"
+            [attr.aria-label]="'crud.newRecord' | transloco" [title]="'crud.newRecord' | transloco">＋</button> }
+        <div class="panel-heading">
+            <div><span>{{ 'ui.workspace_data' | transloco }}</span>
+                <h2 id="records-heading">{{ current.title }}</h2>
+            </div>
+        </div>
+        @if (records().length) {
+        <div class="record-grid">@for (record of records(); track record.id) {
+            <article class="record-card">@for (entry of entries(record); track entry[0]) {
+                <div><small>{{ entry[0] }}</small><strong>{{ entry[1] }}</strong></div>
+                }
+            </article>
+            }
+        </div>
+        } @else { <p class="empty">{{ 'ui.no_records_yet_add_one_to_get_started' | transloco }}</p> }
+    </section> }
+    @if (screen() && pageNodes() === null && !formDefinition() && !screen()?.objectId) {
+      <section class="empty published-page-empty" role="status"><strong>{{ 'runtimeShell.emptyPageTitle' | transloco }}</strong><p>{{ 'runtimeShell.emptyPageHint' | transloco }}</p></section>
+    }
+    @if (entryDialogOpen() && formDefinition(); as entryForm) { <div class="list-entry-backdrop" (click)="closeEntryDialog()">
+        <section class="list-entry-dialog" role="dialog" aria-modal="true" aria-labelledby="list-entry-title" (click)="$event.stopPropagation()">
+            <header><div><p>{{ 'ui.tenant_form' | transloco }}</p><h2 id="list-entry-title">{{ entryForm.name }}</h2></div>
+                <button type="button" class="list-entry-close" [attr.aria-label]="'ui.cancel' | transloco" (click)="closeEntryDialog()">×</button></header>
+            <ant-runtime-form [objectId]="entryForm.objectId" [definition]="entryForm" [tenantContext]="tenantId" [preview]="draftPreview()" (recordSaved)="saveListRecord($event)" />
+            <footer><button type="button" (click)="closeEntryDialog()">{{ 'ui.cancel' | transloco }}</button></footer>
+        </section>
+    </div> }
+    <footer class="runtime-footer"><span>{{ current.applicationName }}</span><span>{{ version() }}</span></footer>
+    }
+</main>
+</div>
+
+<ng-template #menuTree let-items let-parentId="parentId">
+    <ul class="runtime-menu-list" [id]="parentId ? menuChildrenId(parentId) : null">
+        @for (node of items; track node.item.Id) {
+            <li>
+                @if (node.children.length) {
+                    <div class="runtime-menu-group-heading">
+                        @if (node.item.Route) {
+                            <a [routerLink]="node.item.Route" [queryParams]="{tenantId, preview: draftPreview() ? 'draft' : null}"
+                                [class.active]="isCurrentRoute(node.item.Route)"
+                                [attr.aria-current]="isCurrentRoute(node.item.Route) ? 'page' : null"
+                                [attr.aria-label]="node.item.Label" [title]="node.item.Label">
+                                <fa-icon [icon]="menuIcon(node.item.Icon)" />
+                                @if (!collapsed()) { <span>{{ node.item.Label }}</span> }
+                            </a>
+                        } @else {
+                            <button type="button" class="runtime-menu-toggle" [attr.aria-expanded]="expandedMenuIds().has(node.item.Id)"
+                                [attr.aria-controls]="collapsed() ? null : menuChildrenId(node.item.Id)"
+                                [attr.aria-label]="(expandedMenuIds().has(node.item.Id) ? 'Collapse ' : 'Expand ') + node.item.Label"
+                                [title]="(expandedMenuIds().has(node.item.Id) ? 'Collapse ' : 'Expand ') + node.item.Label" (click)="toggleMenu(node.item.Id)">
+                                <fa-icon [icon]="menuIcon(node.item.Icon)" />
+                                @if (!collapsed()) {
+                                    <span>{{ node.item.Label }}</span>
+                                    <fa-icon class="menu-chevron" [icon]="expandedMenuIds().has(node.item.Id) ? shellIcons.expand : shellIcons.expandCollapsed" />
+                                }
+                            </button>
+                        }
+                        @if (node.item.Route) {
+                            <button type="button" class="runtime-menu-expand" [attr.aria-expanded]="expandedMenuIds().has(node.item.Id)"
+                                [attr.aria-controls]="collapsed() ? null : menuChildrenId(node.item.Id)"
+                                [attr.aria-label]="(expandedMenuIds().has(node.item.Id) ? 'Collapse ' : 'Expand ') + node.item.Label"
+                                [title]="(expandedMenuIds().has(node.item.Id) ? 'Collapse ' : 'Expand ') + node.item.Label"
+                                (click)="toggleMenu(node.item.Id)">
+                                <fa-icon [icon]="expandedMenuIds().has(node.item.Id) ? shellIcons.expand : shellIcons.expandCollapsed" />
+                            </button>
+                        }
+                    </div>
+                    @if (expandedMenuIds().has(node.item.Id) && !collapsed()) {
+                        <ng-container *ngTemplateOutlet="menuTree; context: {$implicit: node.children, parentId: node.item.Id}" />
+                    }
+                } @else if (node.item.Route) {
+                    <a [routerLink]="node.item.Route" [queryParams]="{tenantId, preview: draftPreview() ? 'draft' : null}"
+                        [class.active]="isCurrentRoute(node.item.Route)"
+                        [attr.aria-current]="isCurrentRoute(node.item.Route) ? 'page' : null"
+                        [attr.aria-label]="node.item.Label" [title]="node.item.Label">
+                        <fa-icon [icon]="menuIcon(node.item.Icon)" />
+                        @if (!collapsed()) { <span>{{ node.item.Label }}</span> }
+                    </a>
+                } @else {
+                    <span class="runtime-menu-label"><fa-icon [icon]="menuIcon(node.item.Icon)" />@if (!collapsed()) { <span>{{ node.item.Label }}</span> }</span>
+                }
+            </li>
+        }
+    </ul>
+</ng-template>

@@ -1,0 +1,108 @@
+<main class="management-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">TENANT ADMINISTRATION</p>
+      <h1>Users</h1>
+      <p>Manage tenant accounts and grant separate access to the Builder workspace or published applications.</p>
+    </div>
+  </header>
+  @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="feedback success" role="status">{{ notice() }}</p> }
+
+  <section class="panel create-panel" aria-labelledby="create-user-heading">
+    <div class="panel-heading">
+      <div>
+        <h2 id="create-user-heading">Add a user</h2>
+        <p>Accounts are shared across your tenant’s applications. The initial password must be changed at first sign-in.
+        </p>
+      </div>
+    </div>
+    <form (ngSubmit)="create()">
+      <label>Full name<input name="displayName" [(ngModel)]="displayName" required maxlength="200"
+          autocomplete="name"></label>
+      <label>Email address<input name="email" [(ngModel)]="email" required type="email" maxlength="320"
+          autocomplete="email"></label>
+      <label>Temporary password<input name="password" [(ngModel)]="password" required type="password" minlength="6" maxlength="100"
+          autocomplete="new-password"><small>At least 6 characters</small></label>
+      <button class="primary" type="submit"
+        [disabled]="saving() || !displayName.trim() || !email.trim() || password.length < 6">{{ saving() ? 'Creating…'
+        : 'Create user' }}</button>
+    </form>
+  </section>
+
+  <section class="panel users-panel" aria-labelledby="builder-access-heading">
+    <div class="panel-heading list-heading">
+      <div>
+        <h2 id="builder-access-heading">Builder workspace access <span class="count">{{ workspaceUsers().length }}</span></h2>
+        <p>Builder access is separate from published-application access. Changes take effect on the user’s next request.</p>
+      </div>
+    </div>
+    @if (loading()) { <p class="empty" role="status">Loading workspace access…</p> }
+    @else if (!workspaceUsers().length) { <p class="empty">Create a tenant user first to grant Builder access.</p> }
+    @else {
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Builder role</th><th>Action</th></tr></thead>
+        <tbody>
+          @for (user of workspaceUsers(); track user.id) {
+          <tr>
+            <td class="name">{{ user.displayName }}</td><td>{{ user.email }}</td>
+            <td><span class="status" [class.inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span></td>
+            <td>
+              <label class="visually-hidden" [for]="'workspace-role-' + user.id">Builder role for {{ user.displayName }}</label>
+              <select [id]="'workspace-role-' + user.id" [(ngModel)]="workspaceRoleSelection[user.id]" [disabled]="saving() || !user.isActive">
+                <option value="">No Builder access</option><option value="BuilderAdmin">Builder Admin</option>
+                <option value="BuilderEditor">Builder Editor</option><option value="BuilderViewer">Builder Viewer</option>
+              </select>
+            </td>
+            <td><button type="button" class="secondary" [disabled]="saving() || !user.isActive || workspaceRoleSelection[user.id] === (user.role ?? '')"
+              (click)="saveWorkspaceRole(user)">{{ saving() ? 'Saving…' : 'Save access' }}</button></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+
+  <section class="panel users-panel" aria-labelledby="users-heading">
+    <div class="panel-heading list-heading">
+      <div>
+        <h2 id="users-heading">Tenant users <span class="count">{{ users().length }}</span></h2>
+        <p>Application access is managed separately.</p>
+      </div><button type="button" class="secondary" (click)="load()" [disabled]="loading()">Refresh</button>
+    </div>
+    @if (loading()) { <p class="empty" role="status">Loading users…</p> }
+    @else if (!users().length) { <p class="empty">No users have been added to this tenant yet.</p> }
+    @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Applications</th>
+            <th>Status</th>
+            <th>Sign-in</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) { <tr>
+            <td class="name">{{ user.displayName }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.applicationCount }}</td>
+            <td><span class="status" [class.inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive'
+                }}</span></td>
+            <td>{{ user.mustChangePassword ? 'Password change required' : 'Ready' }}</td>
+            <td class="user-actions"><button type="button" class="secondary" [disabled]="saving()"
+                (click)="edit(user)">Edit</button><button type="button" class="secondary" [disabled]="saving()"
+                (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Activate' }}</button><button
+                type="button" class="danger" [disabled]="saving()" (click)="delete(user)">Delete</button></td>
+          </tr> }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</main>

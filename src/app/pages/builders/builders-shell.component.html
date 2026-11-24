@@ -1,0 +1,84 @@
+<div class="builder-shell" [class.light]="!darkMode()" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <aside class="builder-sidebar" [class.collapsed]="sidebarCollapsed()">
+        <div class="sidebar-pattern" aria-hidden="true"></div>
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"><span></span></span>
+            <span>
+                <strong>{{ 'ui.antsoft' | transloco }}</strong>
+                <small>{{ 'ui.builder_studio' | transloco }}</small>
+            </span>
+        </div>
+        <nav [attr.aria-label]="'ui.builder_navigation' | transloco">
+            <a routerLink="applications" routerLinkActive="active" [title]="'ui.applications' | transloco">
+                <span>▦</span><b>{{ 'ui.applications' | transloco }}</b>
+            </a>
+            @if (auth.hasAnyRole(['SystemAdmin'])) {
+            <a routerLink="templates" routerLinkActive="active">
+                <span>
+                    <fa-icon [icon]="['fal', 'layer-group']" class="icon-size-4"></fa-icon>
+                </span><b>{{ 'ui.templates' | transloco }}</b>
+            </a>
+            <a routerLink="ai-governance" routerLinkActive="active" [title]="'AI governance'"><span>◈</span><b>AI governance</b></a>
+            }
+            @if (auth.hasAnyRole(['SystemAdmin', 'TenantAdmin'])) {
+            <a routerLink="tenant-configurations" routerLinkActive="active" title="Tenant configurations"><span>⚙</span><b>Tenant configurations</b></a>
+            }
+            <div class="nav-section-label">{{ 'ui.application' | transloco }}</div>
+            <a routerLink="data" routerLinkActive="active" [title]="'ui.data_model' | transloco"><span>◇</span>
+                <b>{{'ui.data_model' | transloco }}</b>
+            </a>
+            <a routerLink="workflows" routerLinkActive="active" [title]="'ui.workflows' | transloco"><span>↗</span><b>{{
+                    'ui.workflows' | transloco }}</b></a>
+            <a routerLink="reports" routerLinkActive="active" [title]="'ui.reports' | transloco"><span>▥</span><b>{{
+                    'ui.reports' | transloco }}</b></a>
+        </nav>
+        <div class="sidebar-footer" [class.menu-open]="accountMenuOpen()">
+            @if (accountMenuOpen()) {
+            <div class="account-popover" role="menu" aria-label="Account menu">
+                <small>{{ 'ui.welcome_back' | transloco }}</small>
+                <strong>{{ auth.displayName() }}</strong>
+                <button type="button" role="menuitem" (click)="auth.logout()">
+                    <fa-icon [icon]="['fal', 'sign-out']" aria-hidden="true"></fa-icon>
+                    {{ 'ui.sign_out' | transloco }}
+                </button>
+            </div>
+            }
+            <button type="button" class="account-trigger" (click)="toggleAccountMenu()"
+                [attr.aria-expanded]="accountMenuOpen()" aria-haspopup="menu"
+                [attr.aria-label]="'ui.open_account_menu' | transloco">
+                <span class="avatar">{{ auth.initials() }}</span>
+                <span class="user-copy">
+                    <strong>{{ auth.displayName() }}</strong>
+                    <small>{{ 'ui.builder_workspace' | transloco }}</small>
+                </span>
+                <span class="account-chevron" aria-hidden="true">⌃</span>
+            </button>
+        </div>
+    </aside>
+    <main class="builder-main">
+        <header>
+            <div class="header-title"><button type="button" class="sidebar-toggle" (click)="toggleSidebar()"
+                    [attr.aria-pressed]="sidebarCollapsed()"
+                    [attr.aria-label]="sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'">{{
+                    sidebarCollapsed() ? '»' : '«' }}</button>
+                <div><span class="eyebrow">{{ 'ui.builder_studio_2' | transloco }}</span>
+                    <h1>{{ applicationSelected() ? ('ui.application_workspace' | transloco) : ('ui.builder_workspace' |
+                        transloco) }}</h1>
+                </div>
+            </div>
+            <div class="header-actions">
+                <ant-language-selector />
+                <button type="button" class="icon-button" (click)="toggleTheme()"
+                    [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+                    {{ darkMode() ? '☼' : '☾' }}
+                </button>
+            </div>
+        </header>
+        <section class="builder-content"><router-outlet />
+        </section>
+        <!-- <footer class="builder-footer">{{ 'ui.antsoft_builder_studio' | transloco }} 
+            <span>•</span> {{
+            'ui.all_systems_operational' | transloco }}
+        </footer> -->
+    </main>
+</div>

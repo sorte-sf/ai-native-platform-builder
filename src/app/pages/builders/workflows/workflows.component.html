@@ -1,0 +1,504 @@
+<main class="process-designer" [class.editor-active]="view() === 'editor'">
+  @if (view() === 'list') {
+  <section class="workflow-list-page">
+    <header class="list-page-header">
+      <div>
+        <div class="list-title"><span class="title-icon" aria-hidden="true">⌘</span>
+          <h1>{{ 'workflows.title' | transloco }}</h1>
+        </div>
+        <p>{{ 'workflows.manageFor' | transloco }} <strong>{{ applicationName() || ('workflows.thisApplication' |
+            transloco) }}</strong>.</p>
+      </div>
+      @if (designerApplicationId) { <a class="back-link"
+        [routerLink]="['/builder/applications', designerApplicationId, 'design']" [queryParams]="{tenantId}">← {{
+        'workflows.backToDesigner' | transloco }}</a> }
+    </header>
+
+    @if (error()) { <div class="page-notice error" role="alert">{{ error() }}</div> }
+    @if (message()) { <div class="page-notice success" role="status">{{ message() }}</div> }
+
+    <div class="creation-options">
+      <button type="button" class="creation-card" (click)="createNewWorkflow()"
+        [disabled]="!selectedApplicationId()"><span class="creation-icon plus">＋</span><span><strong>{{
+            'workflows.createBlank' | transloco }}</strong><small>{{ 'workflows.createBlankHelp' | transloco
+            }}</small></span></button>
+      <button type="button" class="creation-card" (click)="openTemplates()" [disabled]="!selectedApplicationId()"><span
+          class="creation-icon templates">▤</span><span><strong>{{ 'workflows.startTemplate' | transloco
+            }}</strong><small>{{ 'workflows.startTemplateHelp' | transloco }}</small></span></button>
+    </div>
+
+    <section class="ai-workflow-panel" [attr.aria-label]="'workflows.aiTitle' | transloco">
+      <div>
+        <h2>{{ 'workflows.aiTitle' | transloco }}</h2>
+        <p>{{ 'workflows.aiHelp' | transloco }}</p>
+      </div>
+      <label class="ai-workflow-prompt"><span class="visually-hidden">{{ 'workflows.aiPrompt' | transloco
+          }}</span><textarea rows="3" [ngModel]="aiPrompt()" (ngModelChange)="aiPrompt.set($event)"
+          [placeholder]="'workflows.aiPlaceholder' | transloco"
+          [disabled]="aiGenerating() || !selectedApplicationId()"></textarea></label>
+      <button type="button" class="creation-card ai-generate-button" (click)="generateWorkflowProposal()"
+        [disabled]="aiGenerating() || !aiPrompt().trim() || !selectedApplicationId()">{{ aiGenerating() ?
+        ('workflows.aiGenerating' | transloco) : ('workflows.aiGenerate' | transloco) }}</button>
+      @if (aiProposal(); as proposal) {
+      <article class="ai-workflow-proposal">
+        <div><strong>{{ proposal.name }}</strong>
+          <p>{{ proposal.summary }}</p><small>{{ 'workflows.aiReview' | transloco }}</small>
+        </div><button type="button" class="use-template-button" (click)="acceptAiWorkflowProposal()"
+          [disabled]="saving()">{{ saving() ? ('workflows.saving' | transloco) : ('workflows.aiReviewButton' |
+          transloco) }} →</button>
+      </article>
+      }
+    </section>
+
+    <div class="workflow-list-toolbar">
+      <button type="button" class="recent-filter" [class.active]="sortBy() === 'recent'"
+        (click)="sortBy.set('recent')">{{ 'workflows.recentlyModified' | transloco }}</button>
+      <label class="workflow-search"><span aria-hidden="true">⌕</span><input type="search" [ngModel]="searchText()"
+          (ngModelChange)="searchText.set($event)" [placeholder]="'workflows.search' | transloco"
+          [attr.aria-label]="'workflows.search' | transloco"></label>
+      <span class="list-toolbar-spacer"></span>
+      <label class="list-select"><span aria-hidden="true">▽</span><select [value]="statusFilter()"
+          (change)="statusFilter.set($any($event.target).value)"
+          [attr.aria-label]="'workflows.filterStatus' | transloco">
+          <option value="all">{{ 'workflows.allStatuses' | transloco }}</option>
+          <option value="active">{{ 'workflows.active' | transloco }}</option>
+          <option value="draft">{{ 'workflows.draft' | transloco }}</option>
+          <option value="deactivated">{{ 'workflows.deactivated' | transloco }}</option>
+        </select></label>
+      <label class="list-select"><span aria-hidden="true">☷</span><select [value]="sortBy()"
+          (change)="sortBy.set($any($event.target).value)" [attr.aria-label]="'workflows.sort' | transloco">
+          <option value="recent">{{ 'workflows.recentlyModified' | transloco }}</option>
+          <option value="name">{{ 'workflows.nameSort' | transloco }}</option>
+          <option value="oldest">{{ 'workflows.oldestFirst' | transloco }}</option>
+        </select></label>
+      <button type="button" class="refresh-button" (click)="loadWorkflows()" [disabled]="loading()"
+        [attr.aria-label]="'workflows.refresh' | transloco">↻</button>
+    </div>
+
+    @if (loading()) { <div class="list-loading">{{ 'workflows.loading' | transloco }}</div> }
+    @else {
+    <div class="workflow-table-wrap">
+      <table class="workflow-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'workflows.name' | transloco }}</th>
+            <th scope="col">{{ 'workflows.status' | transloco }}</th>
+            <th scope="col">{{ 'workflows.flow' | transloco }}</th>
+            <th scope="col">{{ 'workflows.version' | transloco }}</th>
+            <th scope="col">{{ 'workflows.lastUpdated' | transloco }}</th>
+            <th scope="col"><span class="visually-hidden">{{ 'workflows.actions' | transloco }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (workflow of visibleWorkflows(); track workflow.id) {
+          <tr>
+            <td class="workflow-name-cell">
+              @if (renamingWorkflowId() === workflow.id) {
+              <input class="rename-input" [ngModel]="renameValue()" (ngModelChange)="renameValue.set($event)"
+                (keydown.enter)="saveRename(workflow)" (keydown.escape)="cancelRename()"
+                [attr.aria-label]="'workflows.workflowName' | transloco">
+              } @else {
+              <button type="button" class="workflow-open-button" (click)="selectWorkflow(workflow)"><span
+                  class="workflow-row-icon" aria-hidden="true">⑂</span><span><strong>{{ workflow.name
+                    }}</strong><small>{{ workflow.key }}</small></span></button>
+              }
+            </td>
+            <td><span class="workflow-status" [class.active]="workflowStatus(workflow) === 'active'"
+                [class.deactivated]="workflowStatus(workflow) === 'deactivated'">{{ ('workflows.' +
+                workflowStatus(workflow)) | transloco }}</span></td>
+            <td>{{ workflowStepCount(workflow) }} {{ (workflowStepCount(workflow) === 1 ? 'workflows.step' :
+              'workflows.steps') | transloco }}</td>
+            <td>{{ workflow.version ? 'v' + workflow.version : '—' }}</td>
+            <td>{{ updatedLabel(workflow.updatedAt) }}</td>
+            <td class="workflow-actions-cell">
+              @if (renamingWorkflowId() === workflow.id) {
+              <div class="rename-actions"><button type="button" (click)="saveRename(workflow)"
+                  [disabled]="saving() || !renameValue().trim()">{{ 'workflows.save' | transloco }}</button><button
+                  type="button" (click)="cancelRename()">{{ 'workflows.cancel' | transloco }}</button></div>
+              } @else {
+              <div class="row-action-menu"><button type="button" class="more-button"
+                  (click)="toggleRowMenu(workflow.id)" [attr.aria-expanded]="rowMenuWorkflowId() === workflow.id"
+                  [attr.aria-label]="('workflows.actionsFor' | transloco) + ' ' + workflow.name">···</button>
+                @if (rowMenuWorkflowId() === workflow.id) { <div class="row-action-popover"><button type="button"
+                    (click)="selectWorkflow(workflow)">{{ 'workflows.openWorkflow' | transloco }}</button><button
+                    type="button" (click)="beginRename(workflow)" [disabled]="workflow.status !== 'Draft'"
+                    [title]="workflow.status !== 'Draft' ? ('workflows.renameDraftOnly' | transloco) : ''">{{
+                    'workflows.rename' | transloco }}</button><button type="button" class="activation-action"
+                    [disabled]="saving()" (click)="toggleWorkflowActivation(workflow)">{{ workflowStatus(workflow) ===
+                    'active' ? ('workflows.deactivate' | transloco) : ('workflows.activate' | transloco) }}</button>
+                </div> }
+              </div>
+              }
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6">
+              <div class="workflow-list-empty"><span>⌘</span><strong>{{ searchText() || statusFilter() !== 'all' ?
+                  ('workflows.noFilterMatch' | transloco) : ('workflows.noWorkflows' | transloco) }}</strong>
+                <p>{{ searchText() || statusFilter() !== 'all' ? ('workflows.clearFilters' | transloco) :
+                  ('workflows.noWorkflowsHelp' | transloco) }}</p>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  } @else {
+  <section class="editor-view">
+    <header class="designer-header">
+      <div class="title-group">
+        <button type="button" class="back-to-list" (click)="backToWorkflowList()">← <span>{{ 'workflows.allWorkflows' |
+            transloco }}</span></button>
+        <span class="title-icon" aria-hidden="true">⌘</span>
+        <div>
+          <h1>{{ name || ('workflows.designer' | transloco) }}</h1>
+          <p>{{ applicationName() }} · {{ 'workflows.editOnCanvas' | transloco }}</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        @if (designerApplicationId) { <a class="back-link"
+          [routerLink]="['/builder/applications', designerApplicationId, 'design']" [queryParams]="{tenantId}">{{
+          'workflows.backToDesigner' | transloco }}</a> }
+        <button type="button" class="template-button" (click)="openTemplates()">{{ 'workflows.changeTemplate' |
+          transloco }}</button>
+        <button type="button" class="save-button" (click)="save()" [disabled]="saving() || !isDraft()">{{ saving() ?
+          ('workflows.saving' | transloco) : ('workflows.saveWorkflow' | transloco) }}</button>
+        @if (!isNew && selectedWorkflowId() && isDraft()) { <button type="button" class="publish-button"
+          (click)="publish()" [disabled]="saving()">{{ 'workflows.publish' | transloco }}</button> }
+      </div>
+    </header>
+
+    @if (error()) { <div class="page-notice error" role="alert">{{ error() }}</div> }
+    @if (message()) { <div class="page-notice success" role="status">{{ message() }}</div> }
+
+    <section class="workflow-meta" [attr.aria-label]="'workflows.workflowDetails' | transloco">
+      <div class="workflow-title-input"><label for="workflow-name">{{ 'workflows.workflowName' | transloco
+          }}</label><input id="workflow-name" [(ngModel)]="name" [disabled]="!isDraft()"
+          [placeholder]="'workflows.nameProcess' | transloco"></div>
+      <div class="workflow-key-input"><label for="workflow-key">{{ 'workflows.uniqueKey' | transloco }}</label><input
+          id="workflow-key" [(ngModel)]="key" [disabled]="!isNew" placeholder="purchase-approval"></div>
+      <span class="draft-status" [class.published]="!isDraft()">{{ isDraft() ? ('workflows.draft' | transloco) :
+        (selectedWorkflowId() && workflows().find(item => item.id === selectedWorkflowId())?.status === 'Archived' ?
+        ('workflows.deactivatedReadOnly' | transloco) : ('workflows.publishedReadOnly' | transloco)) }}</span>
+    </section>
+
+    <nav class="step-toolbar" [attr.aria-label]="'workflows.addStep' | transloco">
+      <span class="toolbar-label">{{ 'workflows.addStep' | transloco }}</span>
+      @for (tool of stepTools; track tool.type) {
+      <button type="button" (click)="addStep(tool.type)" [disabled]="!canAdd(tool.type)"
+        [attr.aria-label]="('workflows.add' | transloco) + ' ' + ('workflows.stepTypes.' + tool.type | transloco)"><span>{{
+          tool.icon }}</span>{{ ('workflows.stepTypes.' + tool.type) | transloco }}</button>
+      }
+      <span class="toolbar-spacer"></span><span class="canvas-count">{{ steps().length }} {{ 'workflows.steps' |
+        transloco }} · {{ connections().length }} {{ 'workflows.connectionsCount' | transloco }}</span>
+    </nav>
+
+    @if (loading()) { <div class="loading-state">{{ 'workflows.loadingApplication' | transloco }}</div> }
+    @else {
+    <section class="designer-workspace" [class.inspector-collapsed]="inspectorCollapsed()"
+      [attr.aria-label]="'workflows.editor' | transloco">
+      <div class="canvas-panel">
+       
+        <div class="canvas-viewport">
+          <f-flow fDraggable fDropToGroup="false" (fCreateConnection)="onCreateConnection($event)"
+            (fMoveNodes)="onMoveNodes($event)" (fSelectionChange)="onSelectionChange($event)"
+            (fDeleteSelected)="deleteSelection($event)" [class.read-only]="!isDraft()" [style.width.px]="canvasWidth()"
+            [style.height.px]="canvasHeight()">
+            <f-canvas fZoom>
+              <f-background><f-circle-pattern /></f-background>
+              @for (connection of connections(); track connection.id) {
+              <f-connection [fConnectionId]="connection.id" [fSourceId]="connection.source"
+                [fTargetId]="connection.target">
+                @if (connection.label) { <span fConnectionContent class="connection-label">{{ connection.label }}</span>
+                }
+              </f-connection>
+              }
+              <f-connection-for-create />
+              @for (item of steps(); track item.id) {
+              <article fNode fDragHandle [fNodeId]="item.id" [fNodePosition]="item.position"
+                (fNodePositionChange)="onNodePositionChange(item.id, $event)"
+                [class]="'flow-node type-' + item.type + (selectedStepId() === item.id ? ' selected-node' : '')"
+                (click)="selectStep(item.id)">
+                @if (item.type !== 'trigger') { <span class="port port-in" fConnector [fConnectorId]="inputId(item)"
+                  fConnectorType="target" [attr.aria-label]="'workflows.inputConnector' | transloco"></span> }
+                <div class="node-topline"><span class="node-icon" aria-hidden="true">{{ nodeIcon(item.type)
+                    }}</span><span class="node-kind">{{ ('workflows.stepTypes.' + item.type) | transloco
+                    }}</span><button type="button" class="node-menu"
+                    (click)="$event.stopPropagation(); selectStep(item.id)"
+                    [attr.aria-label]="('workflows.edit' | transloco) + ' ' + item.title">···</button></div>
+                <h2>{{ item.title }}</h2>
+                @if (item.description) { <p>{{ item.description }}</p> }
+                @if (item.type === 'condition') {
+                <span class="port port-yes" fConnector [fConnectorId]="conditionYesId(item)" fConnectorType="source"
+                  [attr.aria-label]="'workflows.yesBranch' | transloco"></span><span
+                  class="branch-tag branch-yes-label">{{ 'workflows.yes' | transloco }}</span>
+                <span class="port port-no" fConnector [fConnectorId]="conditionNoId(item)" fConnectorType="source"
+                  [attr.aria-label]="'workflows.noBranch' | transloco"></span><span
+                  class="branch-tag branch-no-label">{{ 'workflows.no' | transloco }}</span>
+                } @else if (item.type === 'approval') {
+                <span class="port port-approved" fConnector [fConnectorId]="approvedId(item)" fConnectorType="source"
+                  [attr.aria-label]="'workflows.approvedBranch' | transloco"></span><span
+                  class="branch-tag branch-approved-label">{{ 'workflows.approved' | transloco }}</span>
+                <span class="port port-rejected" fConnector [fConnectorId]="rejectedId(item)" fConnectorType="source"
+                  [attr.aria-label]="'workflows.rejectedBranch' | transloco"></span><span
+                  class="branch-tag branch-rejected-label">{{ 'workflows.rejected' | transloco }}</span>
+                } @else if (item.type !== 'end') { <span class="port port-out" fConnector
+                  [fConnectorId]="outputId(item)" fConnectorType="source"
+                  [attr.aria-label]="'workflows.outputConnector' | transloco"></span> }
+              </article>
+              }
+            </f-canvas>
+          </f-flow>
+          @if (!steps().length) {
+          <div class="empty-canvas"><span>⌘</span>
+            <h2>{{ 'workflows.startTemplate' | transloco }}</h2>
+            <p>{{ 'workflows.emptyCanvasHelp' | transloco }}</p><button type="button" class="save-button"
+              (click)="openTemplates()" [disabled]="!selectedApplicationId()">{{ 'workflows.browseTemplates' | transloco
+              }}</button>
+          </div>
+          }
+        </div>
+        <!-- <div class="canvas-footnote"><span class="footnote-dot"></span> {{ 'workflows.runtimeNote' | transloco }}</div> -->
+      </div>
+
+      <aside class="inspector" [attr.aria-label]="'workflows.stepInspector' | transloco">
+        <button type="button" class="inspector-collapse-toggle" (click)="toggleInspector()"
+          [attr.aria-expanded]="!inspectorCollapsed()"
+          [attr.aria-label]="(inspectorCollapsed() ? 'workflows.expandProperties' : 'workflows.collapseProperties') | transloco"
+          [title]="(inspectorCollapsed() ? 'workflows.expandProperties' : 'workflows.collapseProperties') | transloco"><span
+            aria-hidden="true">{{ inspectorCollapsed() ? '‹' : '›' }}</span></button>
+        <div class="inspector-body" [hidden]="inspectorCollapsed()">
+          <nav class="inspector-tabs" [attr.aria-label]="'workflows.inspectorSections' | transloco">
+            <button type="button" [class.active]="activeTab() === 'settings'" (click)="toggleTab('settings')">{{
+              'workflows.stepSettings' | transloco }}</button>
+            <button type="button" [class.active]="activeTab() === 'test'" (click)="toggleTab('test')">{{
+              'workflows.testIt' | transloco }}</button>
+            <button type="button" [class.active]="activeTab() === 'approvals'" (click)="toggleTab('approvals')">{{
+              'workflows.approvals' | transloco }}</button>
+            <button type="button" [class.active]="activeTab() === 'connections'" (click)="toggleTab('connections')">{{
+              'workflows.connections' | transloco }}</button>
+          </nav>
+
+          @if (activeTab() === 'settings') {
+          @if (selectedStep(); as selected) {
+          <div class="inspector-content">
+            <p class="inspector-kicker">{{ ('workflows.stepTypes.' + selected.type) | transloco }}</p>
+            <h2>{{ 'workflows.stepSettings' | transloco }}</h2>
+            <label>{{ 'workflows.stepName' | transloco }}<input [value]="selected.title"
+                (input)="updateStepTitle($any($event.target).value)" [disabled]="!isDraft()"></label>
+            <label>{{ 'workflows.description' | transloco }}<textarea rows="3" [value]="selected.description"
+                (input)="updateStepDescription($any($event.target).value)" [disabled]="!isDraft()"></textarea></label>
+            @if (selected.type === 'trigger') {
+            <label>{{ 'workflows.triggerEvent' | transloco }}<select
+                [value]="selected.settings['event'] || 'record-created'"
+                (change)="updateStepSetting('event', $any($event.target).value)" [disabled]="!isDraft()">
+                <option value="record-created">{{ 'workflows.recordCreated' | transloco }}</option>
+                <option value="record-updated">{{ 'workflows.recordUpdated' | transloco }}</option>
+                <option value="manual">{{ 'workflows.startedManually' | transloco }}</option>
+              </select></label>
+            }
+            @if (selected.type === 'condition') {
+            <label>{{ 'workflows.field' | transloco }}<input [value]="selected.settings['field'] || ''"
+                (input)="updateStepSetting('field', $any($event.target).value)"
+                [placeholder]="'workflows.amountExample' | transloco" [disabled]="!isDraft()"></label>
+            <label>{{ 'workflows.operator' | transloco }}<select [value]="selected.settings['operator'] || '>'"
+                (change)="updateStepSetting('operator', $any($event.target).value)" [disabled]="!isDraft()">
+                <option value="==">{{ 'workflows.equals' | transloco }}</option>
+                <option value="!=">{{ 'workflows.notEqual' | transloco }}</option>
+                <option value=">">{{ 'workflows.greaterThan' | transloco }}</option>
+                <option value=">=">{{ 'workflows.atLeast' | transloco }}</option>
+                <option value="<">{{ 'workflows.lessThan' | transloco }}</option>
+                <option value="<=">{{ 'workflows.atMost' | transloco }}</option>
+                <option value="contains">{{ 'workflows.contains' | transloco }}</option>
+              </select></label>
+            <label>{{ 'workflows.value' | transloco }}<input [value]="selected.settings['value'] || ''"
+                (input)="updateStepSetting('value', $any($event.target).value)" [disabled]="!isDraft()"></label>
+            }
+            @if (selected.type === 'approval') {
+            <section class="approval-policy-editor">
+              <h3>{{ 'workflows.approvalPolicyTitle' | transloco }}</h3>
+              @if (approvalLevelCount(selected) > 1) { <p class="muted-copy">{{ 'workflows.approvalPolicyLevels' |
+                transloco:{ count: approvalLevelCount(selected) } }}</p> }
+              <label>{{ 'workflows.reusablePolicy' | transloco }}<select [value]="approvalPolicyId()"
+                  (change)="approvalPolicyId.set($any($event.target).value)" [disabled]="!isDraft()">
+                  <option value="">{{ 'workflows.choosePolicy' | transloco }}</option>@for (policy of
+                  approvalPolicies(); track policy.id) { <option [value]="policy.id">{{ policy.name }} · {{
+                    policy.steps.length }}</option> }
+                </select></label>
+              <button type="button" class="secondary-button" (click)="applyApprovalPolicy()"
+                [disabled]="!isDraft() || !approvalPolicyId()">{{ 'workflows.applyPolicy' | transloco }}</button>
+              <label class="separation-toggle"><input type="checkbox" [checked]="requesterSeparationEnabled(selected)"
+                  (change)="setRequesterSeparation($any($event.target).checked)" [disabled]="!isDraft()">{{
+                'workflows.preventRequesterApproval' | transloco }}</label>
+              <div class="save-policy-row"><input [value]="approvalPolicyName()"
+                  (input)="approvalPolicyName.set($any($event.target).value)"
+                  [placeholder]="'workflows.policyNamePlaceholder' | transloco" [disabled]="!isDraft()"><button
+                  type="button" class="secondary-button" (click)="saveApprovalPolicy()"
+                  [disabled]="!isDraft() || !approvalPolicyName().trim()">{{ 'workflows.savePolicy' | transloco
+                  }}</button></div>
+            </section>
+            <label>{{ 'workflows.approverRole' | transloco }}<input [value]="selected.settings['assignedTo'] || ''"
+                (input)="updateStepSetting('assignedTo', $any($event.target).value)"
+                [placeholder]="'workflows.managerExample' | transloco" [disabled]="!isDraft()"></label>
+            <label>{{ 'workflows.parallelDecision' | transloco }}<select
+                [value]="selected.settings['approvalMode'] || 'all'"
+                (change)="updateStepSetting('approvalMode', $any($event.target).value)" [disabled]="!isDraft()">
+                <option value="all">{{ 'workflows.requireAllApprovers' | transloco }}</option>
+                <option value="any">{{ 'workflows.requireAnyApprover' | transloco }}</option>
+              </select></label>
+            <label>{{ 'workflows.dueHours' | transloco }}<input type="number" min="1" max="2160"
+                [value]="selected.settings['dueHours'] || '48'"
+                (input)="updateStepSetting('dueHours', $any($event.target).value)" [disabled]="!isDraft()"></label>
+            }
+            @if (selected.type === 'email') {
+            <label>{{ 'workflows.recipient' | transloco }}<input [value]="selected.settings['recipient'] || ''"
+                (input)="updateStepSetting('recipient', $any($event.target).value)"
+                [placeholder]="'workflows.recordFieldOrEmail' | transloco" [disabled]="!isDraft()"></label>
+            <label>{{ 'workflows.subject' | transloco }}<input [value]="selected.settings['subject'] || ''"
+                (input)="updateStepSetting('subject', $any($event.target).value)" [disabled]="!isDraft()"></label>
+            }
+            @if (selected.type === 'alert') {
+            <label>{{ 'workflows.notify' | transloco }}<input [value]="selected.settings['recipient'] || ''"
+                (input)="updateStepSetting('recipient', $any($event.target).value)"
+                [placeholder]="'workflows.roleOrUser' | transloco" [disabled]="!isDraft()"></label>
+            <label>{{ 'workflows.message' | transloco }}<input [value]="selected.settings['message'] || ''"
+                (input)="updateStepSetting('message', $any($event.target).value)" [disabled]="!isDraft()"></label>
+            }
+            @if (selected.type === 'end') { <label>{{ 'workflows.outcome' | transloco }}<input
+                [value]="selected.settings['outcome'] || ''"
+                (input)="updateStepSetting('outcome', $any($event.target).value)"
+                [placeholder]="'workflows.approvedExample' | transloco" [disabled]="!isDraft()"></label> }
+            @if (isDraft()) { <button type="button" class="danger-button delete-step-button"
+              (click)="deleteStep(selected.id)">{{ 'workflows.deleteStep' | transloco }}</button> }
+          </div>
+          } @else if (selectedConnection(); as selected) {
+          <div class="inspector-content">
+            <p class="inspector-kicker">{{ 'workflows.connection' | transloco }}</p>
+            <h2>{{ 'workflows.connectionSettings' | transloco }}</h2><label>{{ 'workflows.branchLabel' | transloco
+              }}<input [value]="selected.label || ''"
+                (input)="updateConnectionLabel(selected.id, $any($event.target).value)"
+                [placeholder]="'workflows.approvedExample' | transloco" [disabled]="!isDraft()"></label><button
+              type="button" class="danger-button" (click)="removeConnection(selected.id)" [disabled]="!isDraft()">{{
+              'workflows.removeConnection' | transloco }}</button>
+          </div>
+          } @else { <div class="inspector-empty"><span>＋</span>
+            <h2>{{ 'workflows.selectStep' | transloco }}</h2>
+            <p>{{ 'workflows.selectStepHelp' | transloco }}</p>
+          </div> }
+          } @else if (activeTab() === 'test') {
+          <div class="inspector-content">
+            <p class="inspector-kicker">{{ 'workflows.processCheck' | transloco }}</p>
+            <h2>{{ 'workflows.testProcess' | transloco }}</h2>
+            <p class="muted-copy">{{ 'workflows.validationHelp' | transloco }}</p><button type="button"
+              class="validate-button" (click)="validateProcess()" [disabled]="!steps().length">{{
+              'workflows.validateProcess' | transloco }}</button>
+            @if (testResult(); as result) {
+            <div class="test-result" [class.valid]="result.valid">
+              <strong>{{ result.valid ? ('workflows.readyToSave' | transloco) : ('workflows.needsAttention' | transloco)
+                }}</strong>
+              @for (issue of result.issues; track issue) { <p>{{ issue }}</p> }
+            </div>
+            }
+            <section class="workflow-simulation">
+              <h3>{{ 'workflows.simulationTitle' | transloco }}</h3>
+              <p class="muted-copy">{{ 'workflows.simulationHelp' | transloco }}</p>
+              <label>{{ 'workflows.sampleRecord' | transloco }}<textarea [(ngModel)]="simulationRecordJson" rows="5"
+                  spellcheck="false" [disabled]="simulationBusy()"
+                  aria-label="{{ 'workflows.sampleRecord' | transloco }}"></textarea></label>
+              <label>{{ 'workflows.approvalDecisions' | transloco }}<textarea [(ngModel)]="simulationOutcomesJson"
+                  rows="3" spellcheck="false" [disabled]="simulationBusy()"
+                  aria-label="{{ 'workflows.approvalDecisions' | transloco }}"></textarea></label>
+              <button type="button" class="validate-button" (click)="simulateWorkflow()"
+                [disabled]="!selectedWorkflowId() || simulationBusy()">{{ (simulationBusy() ?
+                'workflows.simulationRunning' : 'workflows.runSimulation') | transloco }}</button>
+              @if (simulationResult(); as simulation) {
+              <div class="test-result" [class.valid]="simulation.status === 'completed'" aria-live="polite">
+                <strong>{{ ('workflows.simulationStatus.' + simulation.status) | transloco }}</strong>
+                @if (simulation.awaitingNodeId) { <p>{{ 'workflows.awaitingApproval' | transloco }}: {{
+                  simulation.awaitingNodeId }}</p> }
+                @for (trace of simulation.steps; track $index) { <p>{{ trace.title }} · {{ trace.result || trace.type }}
+                  <small>({{ trace.nodeId }})</small></p> }
+              </div>
+              }
+            </section>
+            <!-- <div class="runtime-note">
+              <strong>{{ 'workflows.designerValidation' | transloco }}</strong>
+              <p>{{ 'workflows.validationRuntimeNote' | transloco }}</p>
+            </div> -->
+          </div>
+          } @else if (activeTab() === 'approvals') {
+          <div class="inspector-content">
+            <p class="inspector-kicker">{{ 'workflows.humanReview' | transloco }}</p>
+            <h2>{{ 'workflows.approvalSteps' | transloco }}</h2>
+            @if (approvalSteps().length) { @for (approval of approvalSteps(); track approval.id) { <button type="button"
+              class="approval-row" (click)="selectStep(approval.id)"><span
+                class="approval-avatar">♙</span><span><strong>{{ approval.title }}</strong><small>{{
+                  approval.settings['assignedTo'] || ('workflows.noApprover' | transloco) }}</small></span><span
+                class="row-arrow">›</span></button> } }
+            @else { <p class="muted-copy">{{ 'workflows.addApprovalHelp' | transloco }}</p> }
+            @if (isPurchaseApproval()) { <div class="runtime-note"><strong>{{ 'workflows.purchaseRuntime' | transloco
+                }}</strong>
+              <p>{{ 'workflows.purchaseRuntimeHelp' | transloco }}</p>
+            </div> }
+          </div>
+          } @else {
+          <div class="inspector-content">
+            <p class="inspector-kicker">{{ 'workflows.flowLinks' | transloco }}</p>
+            <h2>{{ 'workflows.connections' | transloco }}</h2>
+            @if (connections().length) { @for (connection of connections(); track connection.id) { <button type="button"
+              class="connection-row" [class.selected]="selectedConnectionId() === connection.id"
+              (click)="selectConnection(connection.id)"><span class="connection-line"></span><span><strong>{{
+                  connectionLabel(connection) }}</strong><small>{{ connection.label || ('workflows.continue' |
+                  transloco) }}</small></span><span class="row-arrow">›</span></button> } }
+            @else { <p class="muted-copy">{{ 'workflows.connectHelp' | transloco }}</p> }
+          </div>
+          }
+        </div>
+      </aside>
+    </section>
+    }
+  </section>
+  }
+
+  @if (showTemplates()) {
+  <div class="template-backdrop" role="presentation" (click)="closeTemplates()">
+    <section class="template-dialog" role="dialog" aria-modal="true" aria-labelledby="template-title"
+      (click)="$event.stopPropagation()">
+      <header class="template-heading">
+        <div>
+          <p class="inspector-kicker">{{ 'workflows.title' | transloco }}</p>
+          <h2 id="template-title">{{ 'workflows.chooseTemplate' | transloco }}</h2>
+          <p>{{ 'workflows.templateDialogHelp' | transloco }}</p>
+        </div><button type="button" class="close-button" (click)="closeTemplates()"
+          [attr.aria-label]="'workflows.close' | transloco">×</button>
+      </header>
+      <div class="template-grid">
+        @for (template of templates; track template.key) {
+        <article class="template-card">
+          <div class="template-preview"><span class="template-category"
+              [class]="'template-category category-' + template.category.toLowerCase()">{{ ('workflows.categories.' +
+              template.category.toLowerCase()) | transloco }}</span>
+            <div class="mini-flow"><span class="mini-start">{{ 'workflows.start' | transloco }}</span>@for (item of
+              template.steps; track item.id) { <span class="mini-arrow">→</span><span class="mini-step"
+                [class]="'mini-step mini-' + item.type" [title]="templateStepTitle(template.key, item.id)">{{
+                templateStepTitle(template.key, item.id) }}</span> }</div>
+          </div>
+          <div class="template-card-body">
+            <div>
+              <h3>{{ templateName(template.key) }}</h3>
+              <p>{{ templateDescription(template.key) }}</p><small>{{ template.steps.length }} {{ 'workflows.steps' |
+                transloco }} · {{ template.connections.length }} {{ 'workflows.connectionsCount' | transloco }}</small>
+            </div><button type="button" class="use-template-button" (click)="useTemplate(template)">{{
+              'workflows.useTemplate' | transloco }} <span>→</span></button>
+          </div>
+        </article>
+        }
+      </div>
+    </section>
+  </div>
+  }
+</main>

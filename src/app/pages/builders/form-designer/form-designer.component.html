@@ -1,0 +1,357 @@
+<div class="studio" [class.embedded]="embedded">
+  @if (!embedded) { <header class="toolbar">
+
+    <div class="toolbar-start">
+      <button class="icon-button" type="button" (click)="back()"
+        [attr.aria-label]="'ui.back_to_application_design' | transloco">←
+      </button>
+      <span class="brand-mark">AB</span>
+      <div class="brand-text">
+        <strong>{{ application()?.name || ('ui.form_designer' | transloco) }}</strong>
+        <small>{{ 'ui.builder_studio' | transloco }}
+          <span aria-hidden="true">/</span> {{ 'ui.design' | transloco }}
+        </small>
+      </div>
+    </div>
+
+    <div class="toolbar-center" role="group" [attr.aria-label]="'ui.editor_mode' | transloco">
+      <label>{{ 'ui.module' | transloco }} 
+        <select [value]="moduleId() || ''"
+          (change)="selectModule($any($event.target).value)">
+          @for (module of application()?.modules || []; track module.id) { <option [value]="module.id">{{ module.name }}
+          </option> }
+        </select>
+      </label>
+      <button type="button" [class.active]="!preview()" (click)="preview.set(false)">{{ 'ui.design_2' | transloco
+        }}</button>
+      <button type="button" [class.active]="preview()" (click)="preview.set(true)">{{ 'ui.preview' | transloco
+        }}</button>
+    </div>
+
+    <div class="toolbar-end">
+      <button type="button" class="icon-button" (click)="undo()" [disabled]="!canUndo() || readOnly"
+        [attr.aria-label]="'ui.undo' | transloco" [title]="'ui.undo' | transloco">↶</button>
+      <button type="button" class="icon-button" (click)="redo()" [disabled]="!canRedo() || readOnly"
+        [attr.aria-label]="'ui.redo' | transloco" [title]="'ui.redo' | transloco">↷</button>
+      <button class="viewport-button" type="button" [class.active]="viewport() === 'tablet'"
+        (click)="viewport.set('tablet')" [attr.aria-label]="'ui.tablet_preview' | transloco"
+        [title]="'ui.tablet_preview' | transloco">▯</button>
+      <button class="viewport-button" type="button" [class.active]="viewport() === 'desktop'"
+        (click)="viewport.set('desktop')" [attr.aria-label]="'ui.desktop_preview' | transloco"
+        [title]="'ui.desktop_preview' | transloco">▣</button>
+      <button class="viewport-button" type="button" [class.active]="viewport() === 'mobile'"
+        (click)="viewport.set('mobile')" [attr.aria-label]="'ui.mobile_preview' | transloco"
+        [title]="'ui.mobile_preview' | transloco">▯
+      </button>
+      <span class="divider"></span>
+      <span class="save-state">{{ dirty() ? ('ui.unsaved_changes' | transloco) : ('ui.saved_draft' | transloco)
+        }}</span>
+      <button class="save-button" type="button" [disabled]="saving() || readOnly" (click)="save()">{{ saving() ?
+        ('ui.saving' | transloco) : ('ui.save_draft' | transloco)
+        }}
+      </button>
+    </div>
+  </header> }
+  @if (loading()) { <div class="loading" role="status">{{ 'ui.loading_designer' | transloco }}</div> }
+  @else {
+  <div class="workspace">
+    @if (!embedded) { <nav class="tool-rail" [attr.aria-label]="'ui.designer_tools' | transloco">
+      <button type="button" [title]="'ui.elements' | transloco" [attr.aria-label]="'ui.elements' | transloco"
+        (click)="preview.set(false)">＋</button>
+      <button type="button" [title]="'ui.module_properties' | transloco"
+        [attr.aria-label]="'ui.module_properties' | transloco"
+        (click)="selectedId.set(null); inspectorTab.set('properties')">▤</button>
+      <button type="button" [title]="'ui.styling' | transloco" [attr.aria-label]="'ui.styling' | transloco"
+        (click)="inspectorTab.set('styling')">⚙</button>
+      <button type="button" [title]="'ui.preview_2' | transloco" [attr.aria-label]="'ui.preview_2' | transloco"
+        (click)="preview.set(true)">▷</button>
+      <button type="button" [title]="'ui.back' | transloco" [attr.aria-label]="'ui.back' | transloco"
+        (click)="back()">←</button>
+    </nav> }
+    <aside class="palette" [attr.aria-label]="'ui.elements_palette' | transloco">
+      <div class="panel-heading">
+        <div><span class="eyebrow">{{ 'ui.build_your_form' | transloco }}</span>
+          <h2>{{ 'ui.elements' | transloco }}</h2>
+        </div><span class="count">{{ items().length }}</span>
+      </div><label class="search"><span aria-hidden="true">⌕</span><input type="search"
+          [placeholder]="'ui.search_elements' | transloco" [attr.aria-label]="'ui.search_elements' | transloco"
+          [value]="search()" (input)="setSearch($event)"></label>
+      <div class="palette-scroll">
+        @for (group of ['Inputs', 'Choices', 'Display']; track group) { <section class="palette-group">
+          <h3>{{ group }}</h3>
+          <div class="element-grid">@for (item of items(); track item.type) { @if (item.group === group) { <button
+              type="button" class="element" [disabled]="readOnly" draggable="true"
+              (dragstart)="dragStart($event, item.type)" (click)="addField(item.type)"
+              [attr.aria-label]="'Add ' + item.label + ' field'"><span class="element-icon">{{ item.icon
+                }}</span><span>{{ item.label }}</span></button> } }</div>
+        </section> }
+      </div>
+      <p class="palette-hint">{{ 'ui.drag_an_element_into_the_canvas_or_click_to_add_it' | transloco }}</p>
+    </aside>
+    <main class="canvas-area">
+      <div class="canvas-top">
+        <div>
+          <span class="eyebrow">{{ 'ui.application_designer' | transloco }}</span>
+          <h1>{{ formName() }}</h1>
+          <p>{{ 'ui.arrange_fields_and_design_the_data_your_team_will_collect' | transloco }}</p>
+        </div>
+        @if (!embedded) { <div class="object-picker">
+          <label for="object-select">{{ 'ui.data_object' | transloco }}</label>
+          <select id="object-select" [value]="objectId() ?? ''" (change)="selectObject($event)">
+            <option value="">{{ 'ui.new_object' | transloco }}</option>
+            @for (object of application()?.objects ?? []; track object.id) {
+            <option [value]="object.id">{{ object.name }}</option>
+            }
+          </select>
+        </div> }
+      </div>
+      @if (error()) { <div class="message error" role="alert">{{ error() }}</div> }
+      @if (notice()) { <div class="message success" role="status">{{ notice() }}</div> }
+      @if (readOnly) { <div class="message info">@if (application()?.status !== 'Draft') {
+        {{ 'ui.this_application_is' | transloco }} {{ application()?.status }}{{ 'ui.draft_editing_is_unavailable' |
+        transloco }}
+        } @else { {{ 'ui.your_role_can_view_this_design_but_cannot_edit_it' | transloco }} }</div> }
+      <div class="canvas-scroll">
+        <div class="form-page" [class.mobile]="viewport() === 'mobile'" [class.tablet]="viewport() === 'tablet'"
+          [style.background-color]="appearance().backgroundColor" [style.color]="appearance().textColor"
+          [style.font-family]="appearance().fontFamily" [style.font-size.px]="appearance().fontSize"
+          [style.--form-primary]="appearance().primaryColor">
+          <div class="form-page-header"><span class="form-badge">{{ 'ui.form' | transloco }}</span>
+            <h2>{{ formName() }}</h2>
+            <p>{{ 'ui.design_a_form_for' | transloco }} {{ objectName() }}.</p>
+          </div>
+          <div class="drop-zone" [style.--form-columns]="appearance().gridColumns" cdkDropList
+            (cdkDropListDropped)="reorder($event)" (dragover)="allowDrop($event)" (drop)="dropPalette($event)">
+            @if (preview()) {
+            <div class="live-preview">@for (field of fields(); track field.localId) { @if (field.type ===
+              dataTypes.Image && configValue(field, 'imageUrl')) { <img class="canvas-image"
+                [src]="configValue(field, 'imageUrl')" [alt]="configValue(field, 'alt') || field.label"> }
+              }<ant-platform-dynamic-form [config]="previewConfig()"
+                (submitted)="notice.set('Preview only: no record was saved.')" />
+              <p>{{ 'ui.preview_only_values_entered_here_are_not_saved' | transloco }}</p>
+            </div>
+            } @else {
+            @for (field of fields(); track field.localId; let fieldIndex = $index) { <div cdkDrag class="field-card"
+              [ngStyle]="fieldStyle(field)" [class.selected]="selectedId() === field.localId"
+              [class.preview-card]="preview()" (click)="selectedId.set(field.localId)"
+              (keydown.enter)="selectedId.set(field.localId)" tabindex="0"
+              [attr.aria-label]="'Select ' + field.label + ' field'"><span cdkDragHandle class="drag-handle"
+                [title]="'ui.drag_to_reorder' | transloco" aria-hidden="true">⋮⋮</span>
+              <div class="field-content" [ngStyle]="textStyle(field)"><label [ngStyle]="textStyle(field)">{{ field.label
+                  }} @if (field.required) { <span class="required">*</span>
+                  }</label>@switch (field.type) { @case (dataTypes.TextArea) { <textarea rows="3"
+                  [placeholder]="configValue(field, 'placeholder') || 'Enter text'" disabled></textarea> } @case
+                (dataTypes.Boolean) { <div class="fake-checkbox"><span>□</span> Select an option</div> } @case
+                (dataTypes.MultipleSelection) {
+                <select disabled>
+                  <option>{{ configValue(field, 'placeholder') || 'Select an option' }}</option>
+                  @for (option of dropdownOptions(field); track option.value) { <option [value]="option.value">{{
+                    option.label | transloco }}</option> }
+                </select> } @case (dataTypes.Image) { @if (configValue(field, 'imageUrl')) { <img class="canvas-image"
+                  [src]="configValue(field, 'imageUrl')" [alt]="configValue(field, 'alt') || field.label"> } @else {
+                <div class="image-placeholder">Add an image URL in Properties</div> } }
+                @default { <input
+                  [type]="field.type === dataTypes.DateOnly ? 'date' : field.type === dataTypes.DateTime ? 'datetime-local' : field.type === dataTypes.Email ? 'email' : field.type === dataTypes.Phone ? 'tel' : field.type === dataTypes.Url ? 'url' : field.type === dataTypes.Number ? 'number' : 'text'"
+                  [placeholder]="configValue(field, 'placeholder') || 'Enter ' + field.label.toLowerCase()" disabled> }
+                }
+                @if (!preview()) { <div class="field-meta"><code>{{ field.key }}</code><span>{{ apiType(field) }} · {{
+                    fieldIndex + 1 }}</span></div> }
+              </div>@if (!preview()) { <span class="field-type">{{ typeName(field.type) }}</span> }
+            </div> }
+            @if (!fields().length) { <div class="empty-state">
+              <div class="empty-icon">✦</div>
+              <h3>{{ 'ui.your_canvas_is_ready' | transloco }}</h3>
+              <p>{{ 'ui.choose_an_element_on_the_left_to_start_designing_your_form' | transloco }}</p><button
+                type="button" (click)="addField(dataTypes.Text)" [disabled]="readOnly">{{ 'ui.add_your_first_field' |
+                transloco }}</button>
+            </div> }
+            @else if (!preview() && !readOnly) { <button class="add-row" type="button"
+              (click)="addField(dataTypes.Text)">{{ 'ui.add_another_field' | transloco }}</button> }
+            }
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="properties" [attr.aria-label]="'ui.properties_panel' | transloco">
+      <div class="inspector-tabs" role="group" [attr.aria-label]="'ui.inspector_panel' | transloco"><button
+          type="button" [class.active]="inspectorTab() === 'properties'" (click)="inspectorTab.set('properties')">{{
+          'ui.properties' | transloco }}</button><button type="button" [class.active]="inspectorTab() === 'styling'"
+          (click)="inspectorTab.set('styling')">{{ 'ui.styling' | transloco }}</button></div>
+      <div class="panel-heading">
+        <div><span class="eyebrow">{{ 'ui.inspector' | transloco }}</span>
+          <h2>{{ 'ui.properties' | transloco }}</h2>
+        </div><span class="properties-icon">⚙</span>
+      </div>
+      <div class="properties-scroll">
+        @if (inspectorTab() === 'properties') {
+        @if (selectedField(); as field) { <div class="selection-title"><span class="selection-icon">{{
+            typeName(field.type)[0]
+            }}</span>
+          <div><strong>{{ field.label }}</strong><small>{{ typeName(field.type) }} {{ 'ui.field' | transloco }}</small>
+          </div>
+        </div>
+        <div class="property-section">
+          <h3>{{ 'ui.builder_field' | transloco }}</h3>
+          <p class="property-help">{{
+            'ui.each_canvas_element_becomes_one_builderfield_on_this_data_object_its_key_is_used_to_store_record_val' |
+            transloco }}</p>
+          <label>{{ 'ui.label' | transloco }}<input type="text" [value]="field.label"
+              (input)="updateField({label: inputValue($event)})" [disabled]="readOnly"></label><label>{{ 'ui.field_key'
+            | transloco }}<input type="text" [value]="field.key" (input)="updateField({key: inputValue($event)})"
+              [disabled]="readOnly"></label><label>{{ 'ui.field_type' | transloco }}<select [value]="field.type"
+              (change)="setSelectedType($event)" [disabled]="readOnly">@for (item of items(); track item.type) { <option
+                [value]="item.type">{{ item.label }}</option> }</select></label>@if (field.type === dataTypes.Image) {
+          <label>{{ 'ui.image_url' | transloco }}<input type="url" [value]="configValue(field, 'imageUrl')"
+              (input)="setConfig('imageUrl', inputValue($event))" placeholder="https://… or /assets/…"></label><label>{{
+            'ui.alternative_text' | transloco }}<input type="text" [value]="configValue(field, 'alt')"
+              (input)="setConfig('alt', inputValue($event))"></label> } @else if (field.type !== dataTypes.Boolean) {
+          <label>{{ 'ui.placeholder' | transloco }}<input type="text" [value]="configValue(field, 'placeholder')"
+              (input)="setConfig('placeholder', inputValue($event))" [disabled]="readOnly"></label> }@if (field.type ===
+          dataTypes.MultipleSelection ) {
+          <label>{{ 'ui.options_source' | transloco }}<select [value]="configValue(field, 'source') || 'static'"
+              (change)="setConfig('source', inputValue($event))" [disabled]="readOnly">
+              <option value="static">{{ 'ui.predefined_values' | transloco }}</option>
+              <option value="api">{{ 'ui.api_lookup' | transloco }}</option>
+            </select></label>
+          @if (configValue(field, 'source') === 'api') {
+          <label>{{ 'ui.gateway_api_path' | transloco }}<input type="text" [value]="apiConfig(field, 'path')"
+              (change)="setApiConfig('path', $event)" placeholder="/builder/…" [disabled]="readOnly"></label>
+          <label>{{ 'ui.id_property' | transloco }}<input type="text" [value]="apiConfig(field, 'idField')"
+              (change)="setApiConfig('idField', $event)" [disabled]="readOnly"></label>
+          <label>{{ 'ui.name_property' | transloco }}<input type="text" [value]="apiConfig(field, 'nameField')"
+              (change)="setApiConfig('nameField', $event)" [disabled]="readOnly"></label>
+          <button type="button" (click)="loadDropdownPreview()">{{ 'ui.load_preview' | transloco }}</button>
+          } @else { <label>{{ 'ui.one_id_name_per_line' | transloco }}<textarea rows="4" [value]="optionsText(field)"
+              (change)="setOptions($event)" [disabled]="readOnly"
+              placeholder="1 | crm.status.active&#10;2 | crm.status.inactive"></textarea></label> }
+          <p class="property-help">{{ 'ui.names_may_be_transloco_keys_records_store_the_id_not_the_translated_name' |
+            transloco }}</p>
+          }
+        </div>
+        <div class="property-section">
+          <h3>{{ 'ui.stored_metadata' | transloco }}</h3>
+          <p class="property-help">{{ 'ui.type' | transloco }} {{ apiType(field) }} {{ 'ui.position' | transloco }} {{
+            fields().indexOf(field) + 1 }}</p>
+          <p class="property-help">{{ 'ui.tenant_object_and_field_ids_are_assigned_when_the_application_is_created' |
+            transloco }}</p>
+        </div>
+        <div class="property-section">
+          <h3>{{ 'ui.behavior' | transloco }}</h3><label class="check"><input type="checkbox" [checked]="field.required"
+              (change)="updateField({required: inputChecked($event)})" [disabled]="readOnly"><span>{{
+              'ui.required_field' | transloco }}</span></label><label class="check"><input type="checkbox"
+              [checked]="field.searchable" (change)="updateField({searchable: inputChecked($event)})"
+              [disabled]="readOnly"><span>{{ 'ui.searchable' | transloco }}</span></label><label class="check"><input
+              type="checkbox" [checked]="field.readOnly" (change)="updateField({readOnly: inputChecked($event)})"
+              [disabled]="readOnly"><span>{{ 'ui.read_only' | transloco }}</span></label>
+        </div>
+        <div class="property-section">
+          <h3>Field permissions</h3>
+          <p class="property-help">Restrict this field by application role. Enter role names separated by commas; leave blank to allow all roles. Tenant and system admins retain access.</p>
+          <label>Roles allowed to read
+            <textarea rows="2" [value]="fieldPermissionRoles(field, 'readRoles')"
+              (input)="setFieldPermissionRoles('readRoles', $event)" [disabled]="readOnly"
+              placeholder="e.g. Sales, Manager"></textarea>
+          </label>
+          <label>Roles allowed to edit
+            <textarea rows="2" [value]="fieldPermissionRoles(field, 'writeRoles')"
+              (input)="setFieldPermissionRoles('writeRoles', $event)" [disabled]="readOnly"
+              placeholder="e.g. Manager, Finance"></textarea>
+          </label>
+        </div>
+        <div class="property-actions"><button type="button" (click)="moveField(-1)" [disabled]="readOnly">{{
+            'ui.move_up' | transloco }}</button><button type="button" (click)="moveField(1)" [disabled]="readOnly">{{
+            'ui.move_down' | transloco }}</button><button class="danger" type="button" (click)="removeField()"
+            [disabled]="readOnly">{{ 'ui.remove_field' | transloco }}</button><button type="button"
+            (click)="duplicateField()" [disabled]="readOnly">{{ 'ui.duplicate_field' | transloco }}</button></div>
+        } @else { <div class="property-section">
+          <h3>{{ 'ui.data_object' | transloco }}</h3><label>{{ 'ui.name' | transloco }}<input type="text"
+              [value]="objectName()" (input)="setObjectName($event)" [disabled]="readOnly"></label><label>{{
+            'ui.object_key' | transloco }}<input type="text" [value]="objectKey()" (input)="setObjectKey($event)"
+              [disabled]="readOnly"></label>
+        </div>
+        <div class="property-section">
+          <h3>{{ 'ui.form_2' | transloco }}</h3><label>{{ 'ui.name' | transloco }}<input type="text"
+              [value]="formName()" (input)="setFormName($event)" [disabled]="readOnly"></label><label>{{ 'ui.form_key' |
+            transloco }}<input type="text" [value]="formKey()" (input)="setFormKey($event)"
+              [disabled]="readOnly"></label>
+          <p class="property-help">{{ 'ui.select_a_field_on_the_canvas_to_edit_its_properties' | transloco }}</p>
+        </div> }
+        }
+        @if (inspectorTab() === 'styling') {
+        @if (selectedField(); as field) {
+        <div class="styling-target"><strong>{{ field.label }}</strong><small>{{ field.key }}</small><button
+            type="button" (click)="resetElementStyle()" [disabled]="readOnly">{{ 'ui.reset_styles' | transloco
+            }}</button></div>
+        @for (group of styleGroups; track group.title) {
+        <details class="style-group" open>
+          <summary>{{ group.title }}</summary>
+          <div class="style-controls">
+            @for (control of group.fields; track control.key) {
+            <label>{{ control.label }}
+              @if ('options' in control) { <select [value]="styleValue(control.key)"
+                (change)="setElementStyle(control.key, inputValue($event))" [disabled]="readOnly">
+                <option value="">{{ 'ui.inherit_default' | transloco }}</option>@for (option of control.options; track
+                option) { <option [value]="option">{{ option }}</option> }
+              </select> }
+              @else { <input type="text" [value]="styleValue(control.key)"
+                (change)="setElementStyle(control.key, inputValue($event))"
+                [placeholder]="control.key.includes('color') ? '#334155 / transparent' : 'auto / 16px / 100%'"
+                [disabled]="readOnly"> }
+            </label>
+            }
+          </div>
+        </details>
+        }
+        <p class="style-help">{{
+          'ui.styles_apply_to_this_element_only_blank_values_inherit_the_form_style_sizes_accept_px_rem_em_or' |
+          transloco }}</p>
+        } @else { <p class="style-help">{{ 'ui.select_a_canvas_element_to_style_it' | transloco }}</p> }
+        <details class="form-style">
+          <summary>{{ 'ui.whole_form_appearance' | transloco }}</summary>
+          <div class="property-section">
+            <h3>{{ 'ui.form_appearance' | transloco }}</h3>
+            <label>{{ 'ui.grid_columns' | transloco }}
+              <select [value]="appearance().gridColumns" (change)="setGridColumns($event)">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+              </select>
+            </label>
+            <label>{{ 'ui.font_family' | transloco }}<select [value]="appearance().fontFamily"
+                (change)="setFontFamily($event)">
+                <option value="Inter, system-ui, sans-serif">{{ 'ui.inter_system' | transloco }}</option>
+                <option value="Arial, sans-serif">{{ 'ui.arial' | transloco }}</option>
+                <option value="Georgia, serif">{{ 'ui.georgia' | transloco }}</option>
+                <option value="monospace">{{ 'ui.monospace' | transloco }}</option>
+              </select></label>
+            <label>{{ 'ui.font_size' | transloco }} <input type="range" min="12" max="24"
+                [value]="appearance().fontSize" (input)="setFontSize($event)"> {{ appearance().fontSize }}{{ 'ui.px' |
+              transloco }}</label>
+            <ant-brand-color-picker [label]="'ui.primary_color' | transloco" [color]="appearance().primaryColor"
+                (colorChange)="setColor('primaryColor', $event)" />
+            <ant-brand-color-picker [label]="'ui.background' | transloco" [color]="appearance().backgroundColor"
+                (colorChange)="setColor('backgroundColor', $event)" />
+            <ant-brand-color-picker [label]="'ui.text_color' | transloco" [color]="appearance().textColor"
+                (colorChange)="setColor('textColor', $event)" />
+          </div>
+        </details> }
+      </div>
+    </aside>
+  </div>
+
+  @if (!embedded) { <footer class="statusbar"><span>{{ application()?.name }} / {{ objectName() }} / {{ formName()
+      }}</span><span>{{
+      fields().length }} {{ 'ui.fields' | transloco }} <span aria-hidden="true">·</span> {{ viewport() }} {{ 'ui.view' |
+      transloco }}</span></footer>
+  }
+  }
+</div>

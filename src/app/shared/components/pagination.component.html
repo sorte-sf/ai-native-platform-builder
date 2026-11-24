@@ -1,0 +1,9 @@
+<nav class="flex items-center justify-center gap-3 p-2" [attr.aria-label]="'businessBlocks.pagination' | transloco">
+    @if (state(); as current) {
+    <button type="button" class="rounded border px-3 py-1" (click)="move(-1)" [disabled]="current.page <= 1">{{
+        'crud.previous' | transloco }}</button>
+    <span>{{ current.page }} · {{ current.total }}</span>
+    <button type="button" class="rounded border px-3 py-1" (click)="move(1)"
+        [disabled]="current.page * current.pageSize >= current.total">{{ 'crud.next' | transloco }}</button>
+    } @else { <small>{{ 'businessBlocks.paginationHelp' | transloco }}</small> }
+</nav>

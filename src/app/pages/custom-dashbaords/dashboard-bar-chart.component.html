@@ -1,0 +1,6 @@
+<section class="widget">
+    <header>
+        <h2>{{ 'ui.monthly_signups' | transloco }}</h2><span>{{ 'ui.last_6_months' | transloco }}</span>
+    </header>
+    <div class="chart" echarts [options]="option" role="img" [attr.aria-label]="'ui.bar_chart_showing_monthly_signups' | transloco"></div>
+</section>

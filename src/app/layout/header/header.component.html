@@ -1,0 +1,22 @@
+<header class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+    <div>
+        <button
+            class="grid h-10 w-10 place-items-center rounded-md border border-[var(--builder-border)] bg-[var(--builder-panel)] text-[var(--builder-text)] transition hover:opacity-80 lg:hidden"
+            type="button" aria-controls="builder-sidenav" [attr.aria-expanded]="!collapsed()" [attr.aria-label]="'common.toggleNavigation' | transloco" (click)="navigationToggle.emit()">
+            <fa-icon [icon]="icons.bars" />
+        </button>
+        <button
+            class="hidden h-10 w-10 place-items-center rounded-md border border-[var(--builder-border)] bg-[var(--builder-panel)] text-[var(--builder-text)] transition hover:opacity-80 lg:grid"
+            type="button" aria-controls="builder-sidenav" [attr.aria-expanded]="!collapsed()" [attr.aria-label]="'ui.toggle_sidebar' | transloco" [title]="'ui.toggle_sidebar' | transloco" (click)="sidenavToggle.emit()">
+            <fa-icon [icon]="collapsed() ? icons.expand : icons.collapse" />
+        </button>
+    </div>
+    <div class="header-actions item-end item-end justify-end px-4">
+        <ant-language-selector />
+        <button type="button" class="icon-button" (click)="themeToggle.emit()"
+            [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+            {{ darkMode() ? '☼' : '☾' }}
+        </button>
+        <ant-assistant/>
+    </div>
+</header>

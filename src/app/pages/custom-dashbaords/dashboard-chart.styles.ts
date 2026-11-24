@@ -1,0 +1,1 @@
+export const chartWidgetStyles = `:host{display:block;height:100%}.widget{height:100%;padding:.75rem 1rem;box-sizing:border-box}.widget header{display:flex;align-items:center;justify-content:space-between}.widget h2{margin:0;font-size:.9rem}.widget header span{color:#64748b;font-size:.7rem}.chart{height:calc(100% - 1.7rem);min-height:145px}`;

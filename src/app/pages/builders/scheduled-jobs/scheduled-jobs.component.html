@@ -1,0 +1,239 @@
+<main class="jobs-page">
+  <header class="page-header">
+    <div class="heading-copy">
+      <a class="back-link" [routerLink]="['/builder/applications', applicationId, 'design']"
+        [queryParams]="{ tenantId }"><fa-icon [icon]="icons.back" /> {{ 'scheduledJobs.backToDesigner' | transloco }}</a>
+      <div class="page-title"><span class="title-icon"><fa-icon [icon]="icons.page" /></span>
+        <div>
+          <h1>{{ 'scheduledJobs.title' | transloco }}</h1>
+          <p>{{ 'scheduledJobs.description' | transloco }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="secondary-action" type="button" (click)="tab.set('templates')"><fa-icon [icon]="icons.repeat" />
+        {{ 'scheduledJobs.browseTemplates' | transloco }}</button>
+      <button class="primary-action" type="button" (click)="startBlank()"><fa-icon [icon]="icons.add" /> {{ 'scheduledJobs.createJob' | transloco }}</button>
+    </div>
+  </header>
+
+  <section class="overview" [attr.aria-label]="'scheduledJobs.jobOverview' | transloco">
+    <article class="overview-card"><span class="overview-icon total"><fa-icon [icon]="icons.page" /></span>
+      <div><small>{{ 'scheduledJobs.totalJobs' | transloco }}</small><strong>{{ jobs().length }}</strong></div>
+    </article>
+    <article class="overview-card"><span class="overview-icon running"><fa-icon [icon]="icons.play" /></span>
+      <div><small>{{ 'scheduledJobs.enabled' | transloco }}</small><strong>{{ enabledCount() }}</strong></div>
+    </article>
+    <article class="overview-card"><span class="overview-icon paused-count"><fa-icon [icon]="icons.pause" /></span>
+      <div><small>{{ 'scheduledJobs.paused' | transloco }}</small><strong>{{ jobs().length - enabledCount() }}</strong></div>
+    </article>
+    <article class="overview-card"><span class="overview-icon templates-count"><fa-icon [icon]="icons.repeat" /></span>
+      <div><small>{{ 'scheduledJobs.readyTemplates' | transloco }}</small><strong>{{ templates().length }}</strong></div>
+    </article>
+  </section>
+
+
+  <section class="content-panel">
+    <div class="toolbar">
+      <div>
+        <h2 class="section-title">{{ (tab() === 'templates' ? 'scheduledJobs.scheduleTemplates' : tab() === 'recent' ? 'scheduledJobs.yourSchedules' : 'scheduledJobs.allScheduledJobs') | transloco }}</h2>
+        <p class="section-subtitle">{{ (tab() === 'templates' ? 'scheduledJobs.templatesDescription' : 'scheduledJobs.schedulesDescription') | transloco }}</p>
+      </div>
+      <label class="search"><fa-icon [icon]="icons.search" /><input type="search" [ngModel]="search()"
+          (ngModelChange)="search.set($event)" [placeholder]="'scheduledJobs.search' | transloco"
+          [attr.aria-label]="'scheduledJobs.searchAria' | transloco"></label>
+    </div>
+    <div class="tabs" role="tablist" [attr.aria-label]="'scheduledJobs.views' | transloco">
+      <button type="button" role="tab" [attr.aria-selected]="tab() === 'recent'" [class.selected]="tab() === 'recent'"
+        (click)="tab.set('recent')">{{ 'scheduledJobs.recentlyModified' | transloco }}</button>
+      <button type="button" role="tab" [attr.aria-selected]="tab() === 'all'" [class.selected]="tab() === 'all'"
+        (click)="tab.set('all')">{{ 'scheduledJobs.allJobs' | transloco }} <span>{{ jobs().length }}</span></button>
+      <button type="button" role="tab" [attr.aria-selected]="tab() === 'templates'"
+        [class.selected]="tab() === 'templates'" (click)="tab.set('templates')">{{ 'scheduledJobs.templates' | transloco }} <span>{{ templates().length
+          }}</span></button>
+    </div>
+
+    @if (tab() === 'templates') {
+    <div class="categories" [attr.aria-label]="'scheduledJobs.filterCategory' | transloco">
+      @for (item of categories(); track item) { <button type="button" [class.active]="category() === item"
+        (click)="category.set(item)">{{ item === 'All' ? ('scheduledJobs.allCount' | transloco: { count: templates().length }) : templateCategory(item) + ' ' +
+        templates().filter(t => t.category === item).length }}</button> }
+    </div>
+    <section class="template-grid" [attr.aria-label]="'scheduledJobs.jobTemplates' | transloco">
+      @for (template of filteredTemplates(); track template.id) {
+      <article class="template-card">
+        <div class="template-art" [class]="'template-art ' + template.tint"><span>{{ templateCategory(template.category.replace('Job Schedule: ', '')) }}</span><fa-icon
+            [icon]="template.icon" /></div>
+        <div class="template-copy">
+          <h2>{{ templateText(template, 'name') }}</h2>
+          <p>{{ templateText(template, 'description') }}</p>
+          <div class="template-footer"><span class="schedule-chip"><fa-icon [icon]="icons.clock" /> {{ template.cron
+              }}</span><button type="button" (click)="useTemplate(template)">{{ 'scheduledJobs.useTemplate' | transloco }} <fa-icon
+                [icon]="icons.next" /></button></div>
+        </div>
+      </article>
+      }
+    </section>
+    } @else {
+    @if (loading()) { <div class="empty">{{ 'scheduledJobs.loading' | transloco }}</div> }
+    @else if (!visibleJobs().length) { <div class="empty"><fa-icon [icon]="icons.clock" /><strong>{{ 'scheduledJobs.emptyTitle' | transloco }}</strong><span>{{ 'scheduledJobs.emptyDescription' | transloco }}</span><button type="button"
+        (click)="tab.set('templates')">{{ 'scheduledJobs.browseJobTemplates' | transloco }}</button></div> }
+    @else {
+    <div class="jobs-list">
+      @for (job of visibleJobs(); track job.id) {
+      <article class="job-row">
+        <div class="job-icon"><fa-icon [icon]="icons.clock" /></div>
+        <div class="job-title"><strong>{{ job.key }}</strong><small>{{ actionLabel(job.actionType) }} · {{ job.scheduleType ===
+            'once' ? (('scheduledJobs.oneTime' | transloco) + ' · ' + formatInTimeZone(job.runAt, job.timeZoneId)) : job.schedule }} · {{ job.timeZoneId
+            }}</small></div><span class="status" [class.paused]="!job.enabled">{{ (job.enabled ? 'scheduledJobs.enabled' :
+          job.scheduleType === 'once' && (job.lastRunAt || !canReenable(job)) ? 'scheduledJobs.completed' : 'scheduledJobs.paused') | transloco }}</span><span
+          class="last-run">{{ job.nextRunAt ? (('scheduledJobs.next' | transloco) + ' ' + formatInTimeZone(job.nextRunAt, job.timeZoneId)) :
+          (job.lastRunAt ? (('scheduledJobs.lastRun' | transloco) + ' ' + formatInTimeZone(job.lastRunAt, job.timeZoneId)) : ('scheduledJobs.notRunYet' | transloco)) }}</span>@if
+        (job.actionType === 'report.generate') { <button class="toggle" type="button" (click)="downloadReport(job)"
+          [attr.title]="'scheduledJobs.downloadCsv' | transloco" [attr.aria-label]="'scheduledJobs.downloadReport' | transloco"><fa-icon
+            [icon]="icons.download" /></button> }<div class="row-menu" style="position:relative;flex:none"><button
+            class="toggle menu-trigger" type="button" [attr.aria-label]="'scheduledJobs.actionsFor' | transloco: { name: job.key }"
+            [attr.aria-expanded]="openMenuFor() === job.id" [attr.title]="'scheduledJobs.scheduleActions' | transloco"
+            (click)="openMenuFor.set(openMenuFor() === job.id ? null : job.id)"><fa-icon
+              [icon]="icons.more" /></button>@if (openMenuFor() === job.id) { <div class="menu-popover"
+            style="position:absolute;z-index:20;right:0;top:calc(100% + 6px);width:148px;padding:5px;border:1px solid #e1e5ed;border-radius:10px;background:#fff;box-shadow:0 12px 30px #17203324">
+            @if (job.enabled || canReenable(job)) { <button type="button"
+              (click)="toggle(job); openMenuFor.set(null)"><fa-icon [icon]="job.enabled ? icons.disable : icons.play" />
+              {{ (job.enabled ? 'scheduledJobs.disable' : 'scheduledJobs.enable') | transloco }}</button> }<button class="delete-action" type="button"
+              (click)="delete(job)"><fa-icon [icon]="icons.cleanup" /> {{ 'scheduledJobs.delete' | transloco }}</button></div> }</div>
+      </article>
+      }
+    </div>
+    }
+    }
+  </section>
+
+  @if (editorOpen()) {
+  <div class="modal-backdrop" role="presentation" (click)="editorOpen.set(false)">
+    <section class="job-editor" role="dialog" aria-modal="true" aria-labelledby="editor-title"
+      (click)="$event.stopPropagation()">
+      <header>
+        <div><span>{{ 'scheduledJobs.editor.eyebrow' | transloco }}</span>
+          <h2 id="editor-title">{{ name ? ('scheduledJobs.editor.configure' | transloco: { name }) : ('scheduledJobs.editor.createTitle' | transloco) }}</h2>
+        </div><button type="button" class="close" [attr.aria-label]="'scheduledJobs.editor.close' | transloco" (click)="editorOpen.set(false)">×</button>
+      </header>
+      <label>{{ 'scheduledJobs.editor.jobName' | transloco }}<input [(ngModel)]="name" maxlength="120" [placeholder]="'scheduledJobs.editor.jobNamePlaceholder' | transloco"></label>
+      <fieldset class="schedule-kind">
+        <legend>{{ 'scheduledJobs.editor.whenRun' | transloco }}</legend><label><input type="radio" name="scheduleType" value="once"
+            [checked]="scheduleType === 'once'" (change)="scheduleModeChanged('once')"> {{ 'scheduledJobs.editor.once' | transloco }}</label><label><input
+            type="radio" name="scheduleType" value="recurring" [checked]="scheduleType === 'recurring'"
+            (change)="scheduleModeChanged('recurring')"> {{ 'scheduledJobs.editor.repeatedly' | transloco }}</label>
+      </fieldset>
+      @if (scheduleType === 'once') {
+      <label>{{ 'scheduledJobs.editor.runOn' | transloco }}<input type="datetime-local" [(ngModel)]="runAtLocal"></label>
+      <p class="editor-help">{{ 'scheduledJobs.editor.onceHelp' | transloco }}</p>
+      } @else {
+      @if (!advancedSchedule) {
+      <label>{{ 'scheduledJobs.editor.repeat' | transloco }}<select [ngModel]="recurrence" (ngModelChange)="recurrence = $event; updateCronFromGuided()">
+          <option value="minutes">{{ 'scheduledJobs.editor.everyFewMinutes' | transloco }}</option>
+          <option value="hours">{{ 'scheduledJobs.editor.everyFewHours' | transloco }}</option>
+          <option value="daily">{{ 'scheduledJobs.editor.everyDay' | transloco }}</option>
+          <option value="weekdays">{{ 'scheduledJobs.editor.weekdays' | transloco }}</option>
+          <option value="weekly">{{ 'scheduledJobs.editor.weekly' | transloco }}</option>
+          <option value="monthly">{{ 'scheduledJobs.editor.monthly' | transloco }}</option>
+        </select></label>
+      @if (recurrence === 'minutes' || recurrence === 'hours') {
+      <label>{{ 'scheduledJobs.editor.every' | transloco }}<input type="number" min="1" [max]="recurrence === 'minutes' ? 59 : 23" [(ngModel)]="interval"
+          (ngModelChange)="updateCronFromGuided()"></label>
+      }
+      @if (recurrence === 'hours') {
+      <label>{{ 'scheduledJobs.editor.minuteOfHour' | transloco }}<input type="number" min="0" max="59" [(ngModel)]="minuteOfHour"
+          (ngModelChange)="updateCronFromGuided()"></label>
+      } @else if (recurrence !== 'minutes') {
+      @if (recurrence === 'weekly') { <label>{{ 'scheduledJobs.editor.dayOfWeek' | transloco }}<select [(ngModel)]="weekday"
+          (ngModelChange)="updateCronFromGuided()">
+          <option [ngValue]="0">{{ 'scheduledJobs.weekdays.0' | transloco }}</option>
+          <option [ngValue]="1">{{ 'scheduledJobs.weekdays.1' | transloco }}</option>
+          <option [ngValue]="2">{{ 'scheduledJobs.weekdays.2' | transloco }}</option>
+          <option [ngValue]="3">{{ 'scheduledJobs.weekdays.3' | transloco }}</option>
+          <option [ngValue]="4">{{ 'scheduledJobs.weekdays.4' | transloco }}</option>
+          <option [ngValue]="5">{{ 'scheduledJobs.weekdays.5' | transloco }}</option>
+          <option [ngValue]="6">{{ 'scheduledJobs.weekdays.6' | transloco }}</option>
+        </select></label> }
+      @if (recurrence === 'monthly') { <label>{{ 'scheduledJobs.editor.dayOfMonth' | transloco }}<select [(ngModel)]="monthDay"
+          (ngModelChange)="updateCronFromGuided()">@for (day of monthDays; track day) { <option [ngValue]="day">{{ day
+            }}</option> }</select></label> }
+      <label>{{ 'scheduledJobs.editor.at' | transloco }}<input type="time" [(ngModel)]="timeOfDay" (ngModelChange)="updateCronFromGuided()"></label>
+      }
+      } @else {
+      <label>{{ 'scheduledJobs.editor.cronSchedule' | transloco }} <small>{{ 'scheduledJobs.editor.cronHelp' | transloco }}</small><input [(ngModel)]="cron"
+          placeholder="0 30 2 * * *"></label>
+      }
+      <label class="advanced-toggle"><input type="checkbox" [checked]="advancedSchedule"
+          (change)="toggleAdvanced($any($event.target).checked)"> {{ 'scheduledJobs.editor.advancedToggle' | transloco }}</label>
+      }
+      <label>{{ 'scheduledJobs.editor.timeZone' | transloco }} <small>{{ 'scheduledJobs.editor.timeZoneHelp' | transloco }}</small><select
+          [(ngModel)]="timeZoneId">
+          <option value="Europe/Istanbul">{{ 'scheduledJobs.editor.istanbulTimeZone' | transloco }}</option>@for (zone of timeZones; track zone) { @if
+          (zone !== 'Europe/Istanbul') { <option [value]="zone">{{ zone }}</option> } }
+        </select></label>
+      <label>{{ 'scheduledJobs.editor.action' | transloco }}<select [ngModel]="actionType" (ngModelChange)="setActionType($event)">
+          <option value="event.audit">{{ 'scheduledJobs.editor.auditAction' | transloco }}</option>
+          <option value="notification.create">{{ 'scheduledJobs.editor.notificationAction' | transloco }}</option>
+          <option value="workflow.start">{{ 'scheduledJobs.editor.workflowAction' | transloco }}</option>
+          <option value="report.generate">{{ 'scheduledJobs.editor.reportAction' | transloco }}</option>
+          <option value="email.send">{{ 'scheduledJobs.editor.emailAction' | transloco }}</option>
+          <option value="http.request">{{ 'scheduledJobs.editor.apiAction' | transloco }}</option>
+        </select></label>
+      @if (actionType === 'event.audit') { <label>{{ 'scheduledJobs.editor.eventName' | transloco }}<input [(ngModel)]="eventName"
+          [placeholder]="'scheduledJobs.editor.eventPlaceholder' | transloco"></label> }
+      @if (actionType === 'notification.create') {
+      <label>{{ 'scheduledJobs.editor.recipientUserId' | transloco }}<input [(ngModel)]="recipientId" [placeholder]="'scheduledJobs.editor.userIdPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.notificationTitle' | transloco }}<input [(ngModel)]="notificationTitle" [placeholder]="'scheduledJobs.editor.reminderPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.message' | transloco }}<textarea [(ngModel)]="notificationMessage" rows="3"
+          [placeholder]="'scheduledJobs.editor.notificationMessagePlaceholder' | transloco"></textarea></label>
+      }
+      @if (actionType === 'workflow.start') {
+      <label>{{ 'scheduledJobs.editor.workflowId' | transloco }}<input [(ngModel)]="workflowId" [placeholder]="'scheduledJobs.editor.workflowGuidPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.recordId' | transloco }}<input [(ngModel)]="recordId" [placeholder]="'scheduledJobs.editor.recordGuidPlaceholder' | transloco"></label>
+      }
+      @if (actionType === 'report.generate') {
+      <label>{{ 'scheduledJobs.editor.reportKey' | transloco }}<input [(ngModel)]="reportKey" [placeholder]="'scheduledJobs.editor.reportKeyPlaceholder' | transloco"></label>
+      <p class="editor-help">{{ 'scheduledJobs.editor.reportHelp' | transloco }}</p>
+      <label class="check-label" style="display:flex;align-items:center;gap:8px"><input style="width:auto;margin:0"
+          type="checkbox" [(ngModel)]="reportEmailEnabled"> {{ 'scheduledJobs.editor.emailReportCopy' | transloco }}</label>
+      @if (reportEmailEnabled) {
+      <label>{{ 'scheduledJobs.editor.recipientEmail' | transloco }}<input type="email" [(ngModel)]="reportEmailTo" [placeholder]="'scheduledJobs.editor.emailPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.emailSubjectOptional' | transloco }}<input [(ngModel)]="reportEmailSubject" maxlength="200"
+          [placeholder]="'scheduledJobs.editor.scheduledReportPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.emailMessageOptional' | transloco }}<textarea [(ngModel)]="reportEmailBody" rows="3" maxlength="10000"
+          [placeholder]="'scheduledJobs.editor.csvAttachedPlaceholder' | transloco"></textarea></label>
+      <p class="editor-help">{{ 'scheduledJobs.editor.reportEmailHelp' | transloco }}</p>
+      }
+      }
+      @if (actionType === 'email.send') {
+      <label>{{ 'scheduledJobs.editor.recipientEmail' | transloco }}<input type="email" [(ngModel)]="mailTo" [placeholder]="'scheduledJobs.editor.emailPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.subject' | transloco }}<input [(ngModel)]="mailSubject" [placeholder]="'scheduledJobs.editor.scheduledReportPlaceholder' | transloco"></label>
+      <label>{{ 'scheduledJobs.editor.message' | transloco }}<textarea [(ngModel)]="mailBody" rows="4" [placeholder]="'scheduledJobs.editor.emailContentPlaceholder' | transloco"></textarea></label>
+      <label class="check-label" style="display:flex;align-items:center;gap:8px"><input style="width:auto;margin:0"
+          type="checkbox" [(ngModel)]="mailIsHtml"> {{ 'scheduledJobs.editor.sendAsHtml' | transloco }}</label>
+      <p class="editor-help">{{ 'scheduledJobs.editor.smtpHelp' | transloco }}</p>
+      }
+      @if (actionType === 'http.request') {
+      <label>{{ 'scheduledJobs.editor.method' | transloco }}<select [(ngModel)]="apiMethod">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>PATCH</option>
+          <option>DELETE</option>
+        </select></label>
+      <label>{{ 'scheduledJobs.editor.httpsUrl' | transloco }}<input type="url" [(ngModel)]="apiUrl" placeholder="https://api.example.com/endpoint"></label>
+      <label>{{ 'scheduledJobs.editor.jsonBodyOptional' | transloco }}<textarea [(ngModel)]="apiBody" rows="4"
+          placeholder="{ &quot;key&quot;: &quot;value&quot; }"></textarea></label>
+      <p class="editor-help">{{ 'scheduledJobs.editor.apiHelp' | transloco }}</p>
+      }
+      <p class="schedule-summary" aria-live="polite">{{ scheduleSummary() }}</p>
+      <!-- <p class="editor-help">The scheduler converts each run to UTC; the host's timezone will not change your selected schedule.</p> -->
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      <footer><button class="secondary" type="button" (click)="editorOpen.set(false)">{{ 'scheduledJobs.editor.cancel' | transloco }}</button><button
+          class="primary" type="button" [disabled]="saving()" (click)="save()">{{ (saving() ? 'scheduledJobs.editor.saving' : 'scheduledJobs.editor.save') | transloco
+          }}</button></footer>
+    </section>
+  </div>
+  }
+</main>

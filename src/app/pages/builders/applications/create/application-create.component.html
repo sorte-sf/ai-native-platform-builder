@@ -1,0 +1,83 @@
+<div class="details-page"><a routerLink="/builder/applications">{{ 'ui.applications_2' | transloco }}</a>
+    <header><span>{{ 'ui.new_project' | transloco }}</span>
+        <h1>{{ 'ui.application_information' | transloco }}</h1>
+        <p>{{ 'ui.name_your_blank_application_before_opening_the_designer' | transloco }}</p>
+    </header>
+    @if (templateName()) { <p><strong>{{ templateName() }}</strong></p> }
+    @if (duplicateApplication(); as existing) {
+    <section class="duplicate-template-warning" role="alert">
+        <strong>{{ 'applicationCreate.templateAlreadyUsed' | transloco }}</strong>
+        <p>{{ 'applicationCreate.continueExisting' | transloco:{ name: existing.name } }}</p>
+        <a [routerLink]="['/builder/applications', existing.id, 'design']"
+            [queryParams]="{tenantId: existing.tenantId}">{{ 'applicationCreate.openExisting' | transloco }}</a>
+    </section>
+    }
+    @if (loadingTemplate()) { <p role="status">{{ 'ui.loading_templates' | transloco }}</p> }
+    @if (!templateId && canUseAi()) {
+    <div class="creation-mode" role="group" aria-label="Application creation method">
+        <button type="button" [class.active]="!scaffoldMode()" (click)="scaffoldMode.set(false)">Blank
+            application</button>
+        <button type="button" [class.active]="scaffoldMode()" (click)="scaffoldMode.set(true)">Build with AI</button>
+    </div>
+    }
+    @if (scaffoldMode()) {
+    <section class="ai-scaffold" aria-label="AI application scaffolding">
+        <p>Describe the application you want. AI will propose data tables, fields, forms, pages, and navigation. Nothing
+            is created until you review and confirm.</p>
+        <label>Application description<textarea rows="5" maxlength="5000" [value]="aiPrompt()"
+                (input)="aiPrompt.set(($any($event.target)).value)"
+                placeholder="Example: A small purchasing system with suppliers, purchase requests, approvals, and purchase orders."></textarea></label>
+        <button type="button" (click)="proposeScaffold()" [disabled]="aiBusy() || !aiPrompt().trim()">{{ aiBusy() ?
+            'Preparing proposal…' : 'Generate proposal' }}</button>
+        @if (aiError()) { <p class="error" role="alert">{{ aiError() }}</p> }
+        @if (aiProposal(); as proposal) {
+        <div class="proposal-review">
+            <h2>{{ proposal.name }}</h2>
+            <p>{{ proposal.description }}</p>
+            <p><strong>{{ proposal.objects.length }}</strong> data tables · <strong>{{ proposal.pages.length }}</strong>
+                pages · <strong>{{ fieldCount(proposal) }}</strong> fields</p>
+            <div class="proposal-lists">
+                <section>
+                    <h3>Data tables and fields</h3>@for (object of proposal.objects; track object.key) { <p><strong>{{
+                            object.name }}</strong><br><small>{{ fieldLabels(object) }}</small></p> }
+                </section>
+                <section>
+                    <h3>Pages</h3>@for (page of proposal.pages; track page.key) { <p><strong>{{ page.title
+                            }}</strong><br><small>{{ page.description || page.objectKey }}</small></p> }
+                </section>
+            </div>
+            <p class="provider-note">Only metadata you confirm is saved. The application is created as a draft and is
+                not published.</p>
+        </div>
+        }
+    </section>
+    }
+    <form [formGroup]="form" (ngSubmit)="create()">
+        <label>{{ 'ui.application_name_2' | transloco }}<input formControlName="name" maxlength="120" autocomplete="off"
+                (input)="suggestKey()"></label>
+        <label>{{ 'ui.application_key_2' | transloco }}<input formControlName="key" maxlength="80"
+                autocomplete="off"><small>{{ 'ui.lowercase_letters_numbers_and_hyphens_start_with_a_letter' | transloco
+                }}</small></label>
+        <label>{{ 'ui.application_type_2' | transloco }}<select formControlName="applicationType">
+                <option value="Web">{{ 'ui.web' | transloco }}</option>
+                <option value="Mobile">{{ 'ui.mobile' | transloco }}</option>
+            </select></label>
+        <label>{{ 'ui.description' | transloco }}<textarea formControlName="description" maxlength="500"
+                rows="3"></textarea></label>
+        <label>{{ 'ui.version_number' | transloco }}<input type="text" formControlName="versionNo" maxlength="64"
+                placeholder="0.0.1" autocomplete="off"><small>{{ 'ui.major_minor_patch_for_example_0_0_1_or_1_2_3' |
+                transloco }}</small></label>
+        @if (form.controls.versionNo.touched && form.controls.versionNo.invalid) { <p role="alert">{{
+            'ui.enter_a_valid_version_such_as_0_0_1_no_leading_zeroes' | transloco }}</p> }
+        <label>{{ 'ui.application_icon' | transloco }}<ant-icon-selector [value]="form.controls.icon.value"
+                (valueChange)="form.controls.icon.setValue($event)" /></label>
+        @if (!canCreate && !scaffoldMode()) { <p role="status">{{
+            'ui.a_system_administrator_tenant_administrator_or_developer_role_is_required_to_create_an_application' |
+            transloco }}</p> }
+        @if (error()) { <p role="alert" class="error">{{ error() }}</p> }
+        <footer><a routerLink="/builder/applications">{{ 'ui.cancel' | transloco }}</a><button type="submit"
+                [disabled]="saving() || loadingTemplate() || (templateId && !templateAvailable()) || !!duplicateApplication() || (!canCreate && !scaffoldMode()) || scaffoldMode() && !aiProposal()">{{
+                saving() ? ('ui.creating' | transloco) : scaffoldMode() ? 'Create draft application →' : 'Create & open
+                designer →' }}</button></footer>
+    </form>
+</div>

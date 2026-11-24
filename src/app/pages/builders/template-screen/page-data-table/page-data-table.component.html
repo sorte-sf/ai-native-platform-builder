@@ -1,0 +1,22 @@
+@if (loading()) { <p role="status">{{ 'ui.loading_records' | transloco }}</p> }
+@else if (error()) { <p role="alert">{{ error() }}</p> }
+@else {
+<div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                @for (key of keys(); track key) {
+                <th scope="col">{{ key }}</th> }
+            </tr>
+        </thead>
+        <tbody>
+            @for (row of rows(); track $index) {
+            <tr>
+                @for (key of keys(); track key) {
+                <td>{{ display(row[key]) }}</td> }
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (!rows().length) { <p>{{ 'ui.no_records_yet' | transloco }}</p> } }

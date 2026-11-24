@@ -1,0 +1,6 @@
+<label class="sr-only" [for]="id">{{ 'ui.language' | transloco }}</label>
+<select [id]="id" [value]="language.active()" (change)="language.use($any($event.target).value)"
+    [attr.aria-label]="'ui.language_selector' | transloco">
+    <option value="en">{{ 'ui.english' | transloco }}</option>
+    <option value="tr">{{ 'ui.t_rk_e' | transloco }}</option>
+</select>

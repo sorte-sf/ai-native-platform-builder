@@ -1,0 +1,83 @@
+ <main class="settings-page">
+      <header class="page-header">
+        <div><span class="eyebrow">TENANT WORKSPACE</span><h1>{{selectedTenant()?.name || 'Tenant configurations'}}</h1><p>Manage tenant details, its single SMTP profile, and multiple application integrations.</p></div>
+        <button class="icon-button close-dialog" type="button" aria-label="Close tenant configuration" title="Close" (click)="closeDialog()">×</button>
+      </header>
+
+      @if (loading()) { <section class="panel empty">Loading tenant configuration…</section> }
+      @else if (!tenantId) { <section class="panel empty">Select a tenant to manage its configuration.</section> }
+      @else {
+        <section class="panel tenant-panel"><div class="section-heading"><div><h2>Tenant workspace</h2><p>Company identity and lifecycle are managed in Portal.</p></div><strong>{{selectedTenant()?.name}}</strong></div></section>
+        <nav class="tabs" aria-label="Configuration sections">
+          <button [class.active]="section() === 'smtp'" (click)="section.set('smtp')">Email / SMTP</button>
+          <button [class.active]="section() === 'integrations'" (click)="section.set('integrations')">Integrations <span>{{integrations().length}}</span></button>
+        </nav>
+
+        @if (section() === 'smtp') {
+          <section class="panel">
+            <div class="section-heading"><div><h2>SMTP configuration</h2><p>Mail server settings for this tenant. Saved passwords are never shown.</p></div><span class="status" [class.configured]="smtp()?.hasPassword">{{smtp() ? 'Configured' : 'Not configured'}}</span></div>
+            <div class="form-grid">
+              <label>SMTP host<input [(ngModel)]="smtpForm.host" placeholder="smtp.example.com" autocomplete="off"></label>
+              <label>Port<input type="number" min="1" max="65535" [(ngModel)]="smtpForm.port"></label>
+              <label>From address<input type="email" [(ngModel)]="smtpForm.from" placeholder="notifications@example.com" autocomplete="off"></label>
+              <label>Display name<input [(ngModel)]="smtpForm.displayName" placeholder="Company name"></label>
+              <label>Username<input [(ngModel)]="smtpForm.userName" autocomplete="off"></label>
+              <label>Password<input type="password" [(ngModel)]="smtpForm.password" [placeholder]="smtp()?.hasPassword ? 'Saved — leave blank to keep current' : 'SMTP password'" autocomplete="new-password"></label>
+              <label class="check"><input type="checkbox" [(ngModel)]="smtpForm.enableSsl"> Use SSL</label>
+              <label class="check"><input type="checkbox" [(ngModel)]="smtpForm.useStartTls"> Use STARTTLS</label>
+              @if (smtp()?.hasPassword) { <label class="check clear-secret"><input type="checkbox" [(ngModel)]="smtpForm.clearPassword"> Clear saved password</label> }
+            </div>
+            <div class="form-footer"><button class="secondary" [disabled]="!smtp() || busy()" (click)="deleteSmtp()">Remove settings</button><button class="primary" [disabled]="busy()" (click)="saveSmtp()">{{busy() ? 'Saving…' : 'Save SMTP settings'}}</button></div>
+          </section>
+        } @else {
+          <section class="panel">
+            <div class="section-heading"><div><h2>Integrations</h2><p>Configure tenant application connections and map fields between systems.</p></div><button class="primary" (click)="newIntegration()">＋ Add integration</button></div>
+            @if (!integrations().length) { <div class="empty">No integrations configured for this tenant yet.</div> }
+            @else {
+              <div class="integration-list">@for (item of integrations(); track item.id) {
+                <article class="integration-card" [class.selected]="selectedIntegration()?.id === item.id" (click)="selectIntegration(item)" tabindex="0" (keydown.enter)="selectIntegration(item)">
+                  <div class="integration-icon">{{item.integrationType === 1 || item.integrationType === 'DbServer' ? 'DB' : 'API'}}</div>
+                  <div class="integration-info"><strong>{{item.name}}</strong><small>{{applicationName(item.applicationId)}} · {{item.integrationType === 1 || item.integrationType === 'DbServer' ? 'Database server' : 'API'}}</small></div>
+                  <span class="mapping-count">{{item.mappingCount}} mappings</span><button class="icon-button" title="Edit integration" (click)="$event.stopPropagation(); editIntegration(item)">✎</button>
+                  <button class="icon-button danger" title="Delete integration" (click)="$event.stopPropagation(); deleteIntegration(item)">×</button>
+                </article>
+              }</div>
+            }
+          </section>
+
+          @if (integrationEditor()) {
+            <section class="panel editor-panel">
+              <div class="section-heading"><div><h2>{{editingIntegrationId ? 'Edit integration' : 'New integration'}}</h2><p>Credentials are write-only; leave secret fields blank to keep their current values.</p></div><button class="icon-button" title="Close editor" (click)="integrationEditor.set(false)">×</button></div>
+              <div class="form-grid">
+                <label>Integration name<input [(ngModel)]="integrationForm.name" placeholder="ERP database"></label>
+                <label>Application<select [(ngModel)]="integrationForm.applicationId"><option value="">Choose application</option>@for (app of applications(); track app.id) {<option [value]="app.id">{{app.name}}</option>}</select></label>
+                <label>Type<select [(ngModel)]="integrationForm.integrationType"><option [ngValue]="1">Database server</option><option [ngValue]="2">API</option></select></label>
+                <label>Port<input type="number" min="1" max="65535" [(ngModel)]="integrationForm.port"></label>
+                <label>Username<input [(ngModel)]="integrationForm.userName" autocomplete="off"></label>
+                <label>{{ isApiIntegration() ? 'Link' : 'Database name' }}<input [type]="isApiIntegration() ? 'url' : 'text'" [(ngModel)]="integrationForm.databaseName" [placeholder]="isApiIntegration() ? 'https://api.example.com' : ''" [maxlength]="256" [autocomplete]="isApiIntegration() ? 'url' : 'off'"></label>
+                <label>Password<input type="password" [(ngModel)]="integrationForm.password" [placeholder]="selectedIntegration()?.hasPassword ? 'Saved — leave blank to keep current' : 'Password'" autocomplete="new-password"></label>
+                <label>API token<input type="password" [(ngModel)]="integrationForm.token" [placeholder]="selectedIntegration()?.hasToken ? 'Saved — leave blank to keep current' : 'Token'" autocomplete="new-password"></label>
+                @if (!isApiIntegration()) { <label class="wide">Connection string<input type="password" [(ngModel)]="integrationForm.connectionString" [placeholder]="selectedIntegration()?.hasConnectionString ? 'Saved — leave blank to keep current' : 'Connection string'" autocomplete="new-password"></label> }
+                <label class="check"><input type="checkbox" [(ngModel)]="integrationForm.enableSsl"> Use SSL</label>
+                @if (selectedIntegration()?.hasPassword) { <label class="check"><input type="checkbox" [(ngModel)]="integrationForm.clearPassword"> Clear saved password</label> }
+                @if (selectedIntegration()?.hasToken) { <label class="check"><input type="checkbox" [(ngModel)]="integrationForm.clearToken"> Clear saved token</label> }
+                @if (selectedIntegration()?.hasConnectionString) { <label class="check"><input type="checkbox" [(ngModel)]="integrationForm.clearConnectionString"> Clear saved connection string</label> }
+              </div>
+              <div class="form-footer"><button class="secondary" (click)="integrationEditor.set(false)">Cancel</button><button class="primary" [disabled]="busy()" (click)="saveIntegration()">{{busy() ? 'Saving…' : 'Save integration'}}</button></div>
+            </section>
+          }
+
+          @if (selectedIntegration() && !integrationEditor()) {
+            <section class="panel">
+              <div class="section-heading"><div><h2>Field mappings</h2><p>{{selectedIntegration()?.name}} · map source fields to destination fields.</p></div><button class="primary" (click)="newMapping()">＋ Add mapping</button></div>
+              @if (mappingEditor()) {
+                <div class="mapping-form"><label>Source field<input [(ngModel)]="mappingForm.sourceFieldName"></label><label>Description<input [(ngModel)]="mappingForm.sourceFieldDescription"></label><label>Destination field<input [(ngModel)]="mappingForm.destinationFieldName"></label><button class="primary" [disabled]="busy()" (click)="saveMapping()">Save mapping</button><button class="secondary" (click)="mappingEditor.set(false)">Cancel</button></div>
+              }
+              @if (!mappings().length) { <div class="empty">No field mappings yet.</div> } @else {
+                <div class="table-wrap"><table><thead><tr><th>Source field</th><th>Description</th><th>Destination field</th><th></th></tr></thead><tbody>@for (mapping of mappings(); track mapping.id) {<tr><td>{{mapping.sourceFieldName}}</td><td>{{mapping.sourceFieldDescription || '—'}}</td><td>{{mapping.destinationFieldName}}</td><td class="row-actions"><button class="text-button" (click)="editMapping(mapping)">Edit</button><button class="text-button danger" (click)="deleteMapping(mapping)">Delete</button></td></tr>}</tbody></table></div>
+              }
+            </section>
+          }
+        }
+      }
+    </main>

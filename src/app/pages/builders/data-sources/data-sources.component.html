@@ -1,0 +1,285 @@
+<header class="page-nav">
+    <div class="breadcrumbs">
+        <a class="back-link" routerLink="/builder/applications">{{ 'ui.applications' | transloco}}</a>
+        <span class="crumb-separator" aria-hidden="true">/</span>
+        <strong>{{ app()?.name }}</strong>
+    </div>
+    <nav aria-label="Application sections">
+        <a [routerLink]="['/builder/applications',applicationId,'design']" [queryParams]="{tenantId}">{{'crud.uiDesign' | transloco }}</a>
+        <span class="current-page">{{ 'crud.dataSources' | transloco }}</span>
+    </nav>
+</header>
+<main class="data-sources-page">
+    <section class="page-heading">
+        <div class="heading-copy">
+            <div class="title-line"><span class="title-icon" aria-hidden="true">▤</span><div>
+                <p class="eyebrow">{{ app()?.name }} · Application data</p>
+                <h1>{{ 'crud.dataSources' | transloco }}</h1>
+            </div></div>
+            <p class="page-intro">{{ 'crud.guide' | transloco }}</p>
+        </div>
+        <div class="primary-actions">
+            <button class="secondary-action" type="button" (click)="showEditor.set(!showEditor())"
+                [disabled]="busy() || app()?.status !== 'Draft'">
+                <span aria-hidden="true">{{ showEditor() ? '×' : '+' }}</span>{{ showEditor() ? 'Close editor' : ('crud.newObject' | transloco) }}
+            </button>
+            <button class="publish-action" type="button" (click)="publish()" [disabled]="busy() || app()?.status !== 'Draft'">
+                <span aria-hidden="true">✓</span>
+                {{ 'crud.publish' |transloco }}
+            </button>
+        </div>
+    </section>
+    @if(error()){<p class="feedback error-feedback" role="alert"><span aria-hidden="true">!</span>{{ error() | transloco }}</p>}
+    @if(notice()){<p class="feedback success-feedback" role="status"><span aria-hidden="true">✓</span>{{ notice() | transloco }}</p>}
+
+    @if(showEditor()){
+    <section class="object-editor">
+        <h2>Module and data table</h2>
+        <p>Select the CRM module that owns this table, or create one first. A module can have one primary table.</p>
+        <div class="details">
+            <label>Module
+                <select [value]="moduleId()"
+                    (change)="moduleId.set($any($event.target).value)">
+                    <option value="">No module</option>
+                    @for(module of app()?.modules || [];track module.id){
+                        <option [value]="module.id"
+                        [disabled]="!!module.objectId">{{ module.name }}{{ module.objectId ? ' — table attached' : '' }}
+                    </option>
+                }
+                </select>
+                </label>
+                <label>New module name<input [value]="moduleName()"
+                    (input)="moduleName.set($any($event.target).value)" placeholder="Companies">
+                    </label>
+            <label>Module key
+                <input [value]="moduleKey()" (input)="moduleKey.set($any($event.target).value)" placeholder="companies">
+            </label>
+            <button type="button" (click)="createModule()" [disabled]="busy()">Create module</button>
+        </div>
+        <div class="details">
+            <label>{{ 'ui.name' | transloco }}
+            <input [value]="name()"
+                    (input)="name.set($any($event.target).value)">
+            </label>
+            <label>{{ 'crud.key' | transloco }}
+                <input
+                    [value]="key()" (input)="key.set($any($event.target).value)">
+            </label>
+        </div>
+        <label class="import-fields">Import fields from JSON
+            <input type="file" accept=".json,application/json" (change)="importFields($event)">
+        </label>
+
+        <p class="hint">Accepts field definitions or a sample JSON object/array. Only field names and types are
+            imported—not record data. Review before saving.</p>
+
+        @for(field of fields();track $index;let index=$index){
+        <div class="field">
+            <label>{{ 'crud.key' | transloco }}
+                <input [value]="field.key" (input)="updateField(index,'key',$any($event.target).value)">
+            </label>
+            <label>{{ 'crud.label' | transloco }}
+                <input [value]="field.label" (input)="updateField(index,'label',$any($event.target).value)">
+            </label>
+            <label>{{ 'ui.type' | transloco }}
+                <select [value]="field.type" (change)="updateField(index,'type',$any($event.target).value)">
+                    @for(type of fieldTypes;track type){
+                    <option [value]="type">{{ type }}</option>
+                    }
+                </select>
+            </label>
+            <label>{{ 'ui.required_field' | transloco }}
+                <input type="checkbox" [checked]="field.required"
+                    (change)="updateField(index,'required',$any($event.target).checked?'true':'false')">
+            </label>
+            <button type="button" (click)="removeField(index)">{{ 'crud.removeField' | transloco }}</button>
+            @if(field.type === 'Lookup') {
+
+            <div class="field-config">
+                <label>Lookup table
+                    <select [value]="lookupValue(field,'targetObjectId')"
+                        (change)="setFieldConfig(index,'lookup','targetObjectId',$any($event.target).value)">
+                        <option value="">Select a table</option>
+                        @for(object of app()?.objects || [];track object.id){
+                        <option [value]="object.id">{{ object.name }}</option>
+                        }
+                    </select>
+                </label>
+                <label>Display field
+                    <select [value]="lookupValue(field,'displayField')"
+                        (change)="setFieldConfig(index,'lookup','displayField',$any($event.target).value)">
+                        <option value="">Select a field</option>
+                        @for(object of app()?.objects || [];track
+                        object.id){
+                        @if(object.id === lookupValue(field,'targetObjectId')){
+                        @for(option of
+                        object.fields;track option.key){
+                            <option [value]="option.key">{{ option.label }}</option>
+                        }
+                    }
+                }
+                    </select>
+                </label>
+            </div>}
+            @if(field.type === 'Decimal') {
+            <div class="field-config">
+                <label>
+                    <input type="checkbox" [checked]="isCalculated(field)"
+                        (change)="toggleCalculated(index,$any($event.target).checked)">
+                    Calculated field
+                </label>
+                @if(isCalculated(field)) {
+                <label>First field
+                    <select [value]="formulaValue(field,'left')"
+                        (change)="setFieldConfig(index,'formula','left',$any($event.target).value)">
+                        <option value="">Select</option>
+                        @for(source of fields();track source.key){@if(source.key !==
+                        field.key && (source.type === 'Decimal' || source.type === 'Integer') && !isCalculated(source)){
+                        <option [value]="source.key">{{ source.label }}
+                        </option>}}
+                    </select>
+                </label>
+                <label>Operator
+                    <select [value]="formulaValue(field,'operator')"
+                        (change)="setFieldConfig(index,'formula','operator',$any($event.target).value)">
+                        <option value="+">+</option>
+                        <option value="-">−</option>
+                        <option value="*">×</option>
+                        <option value="/">÷</option>
+                    </select>
+                </label>
+                <label>Second field
+                    <select [value]="formulaValue(field,'right')"
+                        (change)="setFieldConfig(index,'formula','right',$any($event.target).value)">
+                        <option value="">Select</option>
+                        @for(source of fields();track source.key){
+                        @if(source.key !== field.key && (source.type === 'Decimal' || source.type === 'Integer') &&
+                        !isCalculated(source)){
+                        <option [value]="source.key">{{ source.label }}</option>}
+                        }
+                    </select>
+                </label>}
+
+            </div>}
+        </div>}
+        <div class="actions">
+            <button type="button" (click)="addField()">
+                {{ 'crud.addField' | transloco}}
+            </button>
+            <button type="button" (click)="create()" [disabled]="busy()">
+                {{ 'crud.saveObject' | transloco}}
+            </button>
+        </div>
+    </section>}
+    <section class="data-overview">
+        <div class="section-heading">
+            <div class="section-title">
+                <span class="section-icon" aria-hidden="true">⌘</span><div>
+                    <p class="eyebrow">Application structure</p>
+                    <h2>Modules and data tables</h2>
+                </div>
+            </div>
+            <div class="overview-counts">
+                <span class="item-count"><strong>{{ app()?.modules?.length ?? 0 }}</strong> modules</span>
+                <span class="item-count"><strong>{{ app()?.objects?.length ?? 0 }}</strong> tables</span>
+                <span class="item-count"><strong>{{ relationships().length }}</strong> relationships</span>
+            </div>
+        </div>
+        <div class="module-grid">@for(module of app()?.modules || [];track module.id){<section class="module-card">
+                <div class="module-heading"><span class="module-icon" aria-hidden="true">▦</span><div>
+                    <p class="eyebrow">Application module</p><h2>{{ module.name }}</h2>
+                </div></div>
+                @if(module.design; as object){<div class="table-card">
+                    <div class="table-heading"><span class="table-icon" aria-hidden="true">▤</span><div>
+                        <p class="eyebrow">Data table</p><h3>{{ object.name }}</h3>
+                    </div><span class="field-count">{{ object.fields.length }} {{ 'ui.fields' | transloco }}</span></div>
+                    <p class="table-key"><code>{{ object.key }}</code></p>
+                    <div class="actions"><a [routerLink]="['/builder/applications',applicationId,'forms']"
+                            [queryParams]="{tenantId,objectId:object.id}">{{ 'crud.designForm' | transloco }}</a>
+                        <button type="button" (click)="generate(object.id)"
+                            [disabled]="busy() || app()?.status !== 'Draft'"><span aria-hidden="true">✣</span>{{ 'crud.generate' | transloco }}</button>
+                    </div>
+                </div>}
+                @else {<p class="module-empty">No table attached yet. Select this module when creating a data table.</p>}
+            </section>}</div>
+        @for(object of app()?.objects || [];track object.id){@if(moduleNameFor(object.id) === 'Unassigned'){
+        <section class="table-card standalone-table-card">
+            <div class="table-heading"><span class="table-icon" aria-hidden="true">▤</span><div>
+                <p class="eyebrow">Unassigned data table</p><h3>{{ object.name }}</h3>
+            </div><span class="field-count">{{ object.fields.length }} {{ 'ui.fields' | transloco }}</span></div>
+            <p class="table-key"><code>{{ object.key }}</code></p>
+            <div class="actions">
+                <a [routerLink]="['/builder/applications',applicationId,'forms']"
+                    [queryParams]="{tenantId,objectId:object.id}">{{ 'crud.designForm' | transloco }}
+                </a>
+                <button type="button" (click)="generate(object.id)" [disabled]="busy() || app()?.status !== 'Draft'">
+                    <span aria-hidden="true">✣</span>{{'crud.generate' | transloco }}
+                </button>
+            </div>
+        </section>}}
+        @if (!(app()?.modules?.length) && !(app()?.objects?.length)) {
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">▦</span>
+            <h3>No application data yet</h3>
+            <p>Create a module and its data table to define the records your application will use.</p>
+            <button type="button" (click)="showEditor.set(true)">{{ 'crud.newObject' | transloco }}</button>
+        </div>
+        }
+    </section>
+    <section class="relationships-section">
+        <p class="eyebrow">Data relationships</p>
+        <h2>Connect application tables</h2>
+        <p>Define how records from two tables relate. The source and target must belong to this application.</p>
+        @if (relationships().length) {
+        <ul class="relationship-list">
+            @for (relationship of relationships(); track relationship.id) {
+            <li>
+                <strong>{{ relationship.name }}</strong>
+                <span>{{ objectName(relationship.sourceObjectId) }} → {{
+                    objectName(relationship.targetObjectId) }}
+                </span>
+                <small>{{ relationship.cardinality }}</small>
+            </li>
+            }
+        </ul>
+        }
+        @if (app()?.status === 'Draft' && (app()?.objects?.length ?? 0) > 0) {
+        <div class="details relationship-fields">
+            <label>Source table
+                <select [value]="relationshipSource()" (change)="relationshipSource.set($any($event.target).value)">
+                    <option value="">Select table</option>
+                    @for (object of app()?.objects || []; track object.id) {
+                    <option [value]="object.id">{{ object.name}}</option>
+                    }
+                </select>
+            </label>
+            <label>Target table
+                <select [value]="relationshipTarget()" (change)="relationshipTarget.set($any($event.target).value)">
+                    <option value="">Select table</option>
+                    @for (object of app()?.objects || []; track object.id) {
+                    <option [value]="object.id">{{ object.name}}</option>
+                    }
+                </select>
+            </label>
+            <label>Relationship name
+                <input [value]="relationshipName()" (input)="relationshipName.set($any($event.target).value)"
+                    placeholder="Company contacts">
+            </label>
+            <label>Key
+                <input [value]="relationshipKey()" (input)="relationshipKey.set($any($event.target).value)"
+                    placeholder="company-contacts">
+            </label>
+            <label>Cardinality
+                <select [value]="relationshipCardinality()"
+                    (change)="relationshipCardinality.set($any($event.target).value)">
+                    <option value="one-to-one">One to one</option>
+                    <option value="one-to-many">One to many</option>
+                    <option value="many-to-one">Many to one</option>
+                    <option value="many-to-many">Many to many</option>
+                </select>
+            </label>
+        </div>
+        <button type="button" (click)="createRelationship()" [disabled]="busy()">Create relationship</button>
+        }
+    </section>
+</main>

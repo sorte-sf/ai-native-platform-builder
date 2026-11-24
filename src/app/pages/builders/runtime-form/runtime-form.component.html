@@ -1,0 +1,29 @@
+<article class="runtime-form" [style.background-color]="appearance().backgroundColor"
+  [style.color]="appearance().textColor" [style.font-family]="appearance().fontFamily"
+  [style.font-size.px]="appearance().fontSize" [style.--form-columns]="appearance().gridColumns"
+  [style.--form-primary]="appearance().primaryColor">
+  <header>
+    <p class="eyebrow">{{ 'ui.tenant_form' | transloco }}</p>
+    <h1>{{ title() }}</h1>
+  </header>
+  @if (error(); as message) { <p class="message error" role="alert">{{ message }}</p> }
+  @if (savedRecord()) { <p class="message success" role="status">{{ 'ui.record_saved_successfully' | transloco }}</p> }
+  @for (image of images(); track image.url) { <img class="form-image" [src]="image.url" [alt]="image.alt"> }
+  @for (lookup of lookups(); track lookup.key) {
+    <section class="lookup-picker" [attr.aria-label]="lookup.label">
+      <label [for]="'lookup-search-' + lookup.key">{{ lookup.label }}{{ lookup.required ? ' *' : '' }}</label>
+      @if (lookup.selectedId) { <p class="lookup-selected">Selected: {{ lookup.selectedLabel || lookup.selectedId }}
+        <button type="button" (click)="selectLookup(lookup.key, '')">Clear</button></p> }
+      <div class="lookup-search"><input [id]="'lookup-search-' + lookup.key" type="search" [value]="lookup.search"
+          (input)="updateLookup(lookup.key, { search: $any($event.target).value })" placeholder="Search records">
+        <button type="button" (click)="loadLookup(lookup.key, 1)" [disabled]="lookup.loading">Search</button></div>
+      @if (lookup.error) { <p role="alert">{{ lookup.error }}</p> }
+      @if (lookup.loading) { <p>Loading…</p> }
+      <div class="lookup-results">@for (option of lookup.options; track option.value) {
+        <button type="button" [class.selected]="option.value === lookup.selectedId" (click)="selectLookup(lookup.key, option.value)">{{ option.label }}</button>
+      }</div>
+      <ant-block-pagination [page]="lookup.page" [pageSize]="10" [total]="lookup.total" (pageChange)="loadLookup(lookup.key, $event)" />
+    </section>
+  }
+  @if (config(); as formConfig) { <ant-platform-dynamic-form [config]="formConfig" (submitted)="submit($event)" /> }
+</article>

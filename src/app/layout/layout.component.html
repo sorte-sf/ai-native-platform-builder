@@ -1,0 +1,10 @@
+<div class="layout" [class.light-theme]="!darkMode()" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <ant-sidenav [collapsed]="sidebarCollapsed()" />
+    <main>
+        <ant-header [collapsed]="sidebarCollapsed()" [darkMode]="darkMode()" (sidenavToggle)="toggleSidebar()"
+            (navigationToggle)="toggleSidebar()" (themeToggle)="toggleTheme()" />
+        <section>
+            <router-outlet />
+        </section>
+    </main>
+</div>

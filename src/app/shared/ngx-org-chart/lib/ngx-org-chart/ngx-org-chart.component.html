@@ -1,0 +1,13 @@
+@if(nodes?.length){
+
+  @for(node of nodes; track node; let y=$index){
+  <ng-container>
+      <div class="ngx-org-self-{{direction}} flex flex-auto w-auto h-auto overflow-y-auto overflow-x-auto">
+          <ngx-chart-designer [node]="node" [direction]="direction"
+              (itemClick)="itemClick.emit($event)"></ngx-chart-designer>
+      </div>
+  </ng-container>
+  }  
+  }
+  
+   

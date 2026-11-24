@@ -1,0 +1,29 @@
+<section class="w-full overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-slate-200" role="alertdialog"
+    aria-modal="true">
+        <header class="flex items-start gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg font-bold"
+                [class.bg-primary-50]="dialog.tone !== 'danger' && dialog.tone !== 'warning'"
+                [class.text-primary-600]="dialog.tone !== 'danger' && dialog.tone !== 'warning'"
+                [class.bg-red-50]="dialog.tone === 'danger'" [class.text-red-700]="dialog.tone === 'danger'"
+                [class.bg-amber-50]="dialog.tone === 'warning'" [class.text-amber-700]="dialog.tone === 'warning'">
+                {{ dialog.tone === 'danger' ? '!' : '?' }}
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-lg font-semibold text-slate-950">{{ dialog.title }}</h3>
+                <p class="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{{ dialog.message }}</p>
+            </div>
+        </header>
+        <footer class="flex justify-end gap-2 bg-slate-50 px-5 py-4">
+            <button
+                class="h-10 rounded-lg border border-slate-300 bg-white px-4 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                type="button" (click)="cancel()">
+                {{ dialog.cancelText || ('common.cancel' | transloco) }}
+            </button>
+            <button class="h-10 rounded-lg px-4 font-semibold text-white shadow-sm transition"
+                [class.bg-primary-600]="dialog.tone !== 'danger'" [class.hover:bg-primary-700]="dialog.tone !== 'danger'"
+                [class.bg-red-600]="dialog.tone === 'danger'" [class.hover:bg-red-700]="dialog.tone === 'danger'"
+                type="button" (click)="accept()">
+                {{ dialog.confirmText || ('common.accept' | transloco) }}
+            </button>
+        </footer>
+    </section>

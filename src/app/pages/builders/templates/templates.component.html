@@ -1,0 +1,30 @@
+<div class="templates-page">
+  <div class="page-heading">
+    <div><span class="eyebrow">{{ 'ui.system_administration' | transloco }}</span>
+      <h2>{{ 'ui.templates' | transloco }}</h2>
+      <p>{{ 'ui.manage_reusable_starting_points_for_builder_applications' | transloco }}</p>
+    </div><button mat-flat-button color="primary" (click)="edit(null)">{{ 'ui.new_template' | transloco }}</button>
+  </div>
+  @if (error()) { <div class="error">{{ error() }}</div> }
+  <div class="template-grid">
+    @for (template of templates(); track template.id) {
+    <mat-card class="template-card">
+      <button class="card-open" type="button" (click)="preview(template)"
+        [attr.aria-label]="'Preview ' + template.name">
+        <span class="preview" [innerHTML]="template.htmlContent"></span>
+        <span class="card-details"><strong>{{ template.name }}</strong><span>{{ template.description ||
+            ('ui.no_description' | transloco) }}</span></span>
+      </button>
+      <mat-card-actions>
+        <button class="preview-action" type="button" (click)="preview(template)"
+          [attr.aria-label]="'Preview ' + template.name">{{ 'ui.open_preview' | transloco }}</button>
+        @if (template.isBuiltIn) { <span>{{ 'ui.built_in_fuse_base' | transloco }}</span> }
+        @else { <button mat-button (click)="edit(template)">{{ 'ui.edit' | transloco }}</button>
+        <button mat-button color="warn" (click)="remove(template)">{{ 'ui.delete' | transloco }}</button> }
+      </mat-card-actions>
+    </mat-card>
+    } @empty {
+    <div class="empty">{{ 'ui.no_templates_yet_create_your_first_reusable_template' | transloco }}</div>
+    }
+  </div>
+</div>

@@ -1,0 +1,25 @@
+@if (loading()) { <p role="status">{{ 'ui.loading_records' | transloco }}</p> }
+@else if (failed()) { <p role="alert">{{ 'tableDesigner.loadError' | transloco }}</p> }
+@else {
+@if (designMode()) { <small>{{ 'tableDesigner.preview' | transloco }}</small> }
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>@for (column of columns(); track $index) {
+        <th scope="col" [style.width.px]="column.width" [style.text-align]="column.align || 'left'">{{ column.title }}
+        </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track $index) { <tr>@for (column of columns(); track $index) { <td
+          [style.text-align]="column.align || 'left'">{{ display(row[column.field], column) }}</td> }</tr> }
+      @if (designMode() && !rows().length) { @for (row of [1,2,3,4]; track row) { <tr>@for (column of columns(); track
+        $index) { <td><span class="skeleton"></span></td> }</tr> } }
+    </tbody>
+  </table>
+</div>
+@if (!columns().length) { <p>{{ 'tableDesigner.addColumns' | transloco }}</p> }
+@else if (!designMode() && !rows().length) { <p>{{ 'ui.no_records_yet' | transloco }}</p> }
+@if (!designMode() && !node().tableJson) { <small>{{ 'tableDesigner.limit' | transloco }}</small> }
+}

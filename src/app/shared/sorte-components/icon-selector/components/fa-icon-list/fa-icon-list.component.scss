@@ -1,0 +1,27 @@
+.icon-results{max-height:60vh;overflow:auto}.icon-results button{width:100%;background:transparent;color:inherit}
+
+:host {
+  display: block;
+  width: min(100%, 1100px);
+  max-height: 90vh;
+  overflow: hidden;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+:host > .flex {
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-results {
+  max-height: min(60vh, 620px);
+  overflow: auto;
+}
+
+@media (max-width: 600px) {
+  :host { padding: 16px; }
+  :host > .flex { flex-direction: column; align-items: stretch; }
+  :host > .flex > .w-3\/5,
+  :host > .flex > .w-2\/5 { width: 100%; }
+}

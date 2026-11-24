@@ -1,0 +1,20 @@
+<ng-container>
+    @if(releaseMode() == false){
+
+    <div class="ribbon up">
+        <div class="content">
+            <div class="flex flex-col items-center jutsify-center text-center">
+                <div class="w-8 h-8">
+                    <ant-logo-widget />
+                </div>
+                <div>
+                    <span class="mt-2 badge">{{ 'ui.appState' | transloco }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+    
+    <router-outlet></router-outlet>
+
+</ng-container>

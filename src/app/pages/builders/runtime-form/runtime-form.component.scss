@@ -1,0 +1,66 @@
+.runtime-form {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid var(--builder-border);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--builder-page) 94%, white 6%);
+}
+
+h1 {
+    margin: 4px 0 24px;
+    font-size: 1.75rem;
+}
+
+.eyebrow {
+    color: #56d3c8;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+}
+
+.message {
+    padding: 12px 14px;
+    border-radius: 8px;
+}
+
+.error {
+    background: #5b2025;
+    color: #fff;
+}
+
+.success {
+    background: #174b3d;
+    color: #fff;
+}
+
+.form-image {
+    display: block;
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    margin: 0 0 20px;
+    border-radius: 8px;
+}
+
+.lookup-picker { padding: 14px; margin-bottom: 16px; border: 1px solid var(--builder-border); border-radius: 10px; }
+.lookup-picker > label { display: block; font-weight: 700; margin-bottom: 8px; }
+.lookup-search { display: flex; gap: 8px; }
+.lookup-search input { min-width: 0; flex: 1; padding: 8px; border: 1px solid var(--builder-border); border-radius: 6px; }
+.lookup-search button, .lookup-results button, .lookup-selected button { padding: 7px 12px; border: 1px solid var(--builder-border); border-radius: 6px; cursor: pointer; }
+.lookup-results { display: grid; gap: 5px; max-height: 240px; overflow: auto; margin-top: 10px; }
+.lookup-results button { text-align: left; background: transparent; }
+.lookup-results button.selected { background: #f7edf7; border-color: #5e4fa2; }
+.lookup-selected { margin: 0 0 8px; }
+
+:host ::ng-deep ant-platform-dynamic-form form {
+    display: grid;
+    grid-template-columns: repeat(var(--form-columns, 2), minmax(0, 1fr));
+    gap: 16px;
+}
+
+@media(max-width:650px) {
+    :host ::ng-deep ant-platform-dynamic-form form {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,56 @@
+<header>
+  <h2>{{ node().text }}</h2>
+</header>
+@if (error()) { <p role="alert">{{ 'crud.error' | transloco }}</p> }
+@if (mode() === 'view') { @if (selected(); as record) { <dl>@for (key of columns(); track key) { <dt>{{
+    label(key) }}</dt>
+  <dd>{{ value(record,key) }}</dd> }
+</dl> } }
+@if (mode() === 'list') {
+@if (actionEnabled('create')) { <button type="button" class="record-fab" (click)="create()"
+  [attr.aria-label]="'crud.newRecord' | transloco" [title]="'crud.newRecord' | transloco">＋</button> }
+<label>{{ 'crud.search' | transloco }}<input type="search" [value]="search()"
+    (input)="search.set($any($event.target).value)"></label>
+@if (loading()) { <p role="status">{{ 'ui.loading' | transloco }}</p> }
+<div class="scroll">
+  <table>
+    <thead>
+      <tr>@for (column of columnSettings(); track $index) { <th scope="col" [style.width.px]="column.width"
+          [style.text-align]="column.align">{{ column.title | transloco }}</th> }<th scope="col">{{ 'crud.actions' |
+          transloco }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of visibleRows(); track record.id) { <tr>@for (column of columnSettings(); track $index) { <td
+          [style.text-align]="column.align">{{ display(record,column) }}</td> }<td>
+          <div class="actions">@if (actionEnabled('view')) { <button type="button" (click)="open('view',record)">{{
+              'crud.view' | transloco }}</button> }@if (actionEnabled('edit')) { <button type="button"
+              (click)="open('edit',record)">{{ 'crud.edit' | transloco }}</button> }@if (actionEnabled('delete')) {
+            <button type="button" (click)="confirmDelete(record)">{{ 'crud.delete' | transloco }}</button> }</div>
+        </td>
+      </tr> }
+    </tbody>
+  </table>
+</div>
+<footer><button type="button" (click)="changePage(-1)" [disabled]="page() <= 1 || loading()">{{ 'crud.previous' |
+    transloco }}</button><span>{{ page() }} · {{ total() }}</span><button type="button" (click)="changePage(1)"
+    [disabled]="page()*25 >= total() || loading()">{{ 'crud.next' | transloco }}</button></footer>
+}
+@if (pendingDelete()) { <aside role="alert">
+  <p>{{ 'crud.confirmDelete' | transloco }}</p><button type="button" (click)="deleteSelected()" [disabled]="busy()">{{
+    'crud.delete' | transloco }}</button><button type="button" (click)="pendingDelete.set(null)" [disabled]="busy()">{{
+    'ui.cancel' | transloco }}</button>
+</aside> }
+@if (dialogOpen() && (mode() === 'create' || mode() === 'edit')) {
+  <div class="record-dialog-backdrop" (click)="closeDialog()">
+    <section class="record-dialog" role="dialog" aria-modal="true" aria-labelledby="record-dialog-title" (click)="$event.stopPropagation()">
+      <header class="record-dialog-heading">
+        <div><p>{{ 'ui.tenant_form' | transloco }}</p><h2 id="record-dialog-title">{{ definition().name }}</h2></div>
+        <button type="button" class="dialog-close" [attr.aria-label]="'ui.cancel' | transloco" (click)="closeDialog()" [disabled]="busy()">×</button>
+      </header>
+      <ant-runtime-form [objectId]="node().objectId!" [definition]="definition()" [tenantContext]="tenantId()"
+        [existingRecord]="selected()" [preview]="preview()" [localOnly]="localOnly()" (recordSaved)="saved($event)" />
+      <footer class="record-dialog-footer"><button type="button" (click)="closeDialog()" [disabled]="busy()">{{ 'ui.cancel' | transloco }}</button></footer>
+    </section>
+  </div>
+}

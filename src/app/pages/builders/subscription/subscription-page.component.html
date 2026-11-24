@@ -1,0 +1,69 @@
+<main class="subscription-page" *transloco="let t">
+  <header class="page-header">
+    <a class="back-link" routerLink="/builder/applications">{{ t('subscription.backToApps') }}</a>
+    <h1>{{ t('subscription.heroTitle') }}</h1>
+    <p>{{ t('subscription.heroSubtitle') }}</p>
+  </header>
+
+  @if (selectedPlanId()) {
+    <div class="mock-notice" role="status">
+      {{ t('subscription.mockNotice', { plan: t('subscription.plans.' + selectedPlanId()) }) }}
+      <button type="button" [attr.aria-label]="t('subscription.dismiss')" (click)="selectedPlanId.set('')">×</button>
+    </div>
+  }
+
+  <section class="plan-grid" [attr.aria-label]="t('subscription.availablePlans')">
+    @for (plan of plans; track plan.id) {
+      <article class="plan-card" [class.featured]="plan.popular">
+        @if (plan.popular) {
+          <div class="popular-ribbon">{{ t('subscription.mostPopular') }}</div>
+        }
+
+        <div class="plan-heading">
+          <h2>{{ t(plan.titleKey) }}</h2>
+          @if (plan.regularPrice) {
+            <span class="discount-badge">{{ t('subscription.discount') }}</span>
+          }
+        </div>
+
+        <div class="price-row">
+          @if (plan.regularPrice) {
+            <del>{{ plan.regularPrice | currency:'USD':'symbol':'1.0-0' }}</del>
+          }
+          <strong>{{ plan.monthlyPrice | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <span>{{ t('subscription.perMonth') }}</span>
+        </div>
+
+        <div class="credits">
+          @if (plan.elite) {
+            <label class="credit-picker">
+              <span class="visually-hidden">{{ t('subscription.chooseCredits') }}</span>
+              <select [value]="selectedEliteBundleId()" (change)="selectEliteBundle($event)">
+                @for (bundle of eliteBundles; track bundle.id) {
+                  <option [value]="bundle.id">{{ bundle.messageCredits }} {{ t('subscription.messageCredits') }} · {{ bundle.integrationCredits }} {{ t('subscription.integrationCredits') }}</option>
+                }
+              </select>
+            </label>
+          } @else {
+            <span>{{ plan.messageCredits }} {{ t('subscription.messageCredits') }}</span>
+            <span>{{ plan.integrationCredits }} {{ t('subscription.integrationCredits') }}</span>
+          }
+        </div>
+
+        <button class="plan-action" [class.featured-action]="plan.popular" type="button" (click)="requestPlan(plan)">
+          {{ t('subscription.getPlan', { plan: t(plan.titleKey) }) }}
+        </button>
+
+        <div class="feature-divider"></div>
+        <h3>{{ t('subscription.planHighlights') }}</h3>
+        <ul class="feature-list">
+          @for (featureKey of plan.featureKeys; track featureKey) {
+            <li><span aria-hidden="true">✓</span><span>{{ t(featureKey) }}</span></li>
+          }
+        </ul>
+      </article>
+    }
+  </section>
+
+  <p class="mock-data-note">{{ t('subscription.mockDataNote') }}</p>
+</main>

@@ -1,0 +1,20 @@
+<form [formGroup]="form" (ngSubmit)="create()" (keydown.escape)="cancel($event)"
+    class="mt-2 rounded-md border border-slate-300 bg-slate-50 p-2" [attr.aria-busy]="busy()">
+    <label for="new-page-title" class="block text-xs font-medium text-slate-700">{{ 'ui.page_name' | transloco
+        }}</label>
+    <input #titleInput id="new-page-title" formControlName="title" maxlength="100" autocomplete="off"
+        [placeholder]="'ui.e_g_contacts' | transloco" [readOnly]="busy()" [attr.aria-invalid]="invalid()"
+        aria-describedby="new-page-feedback"
+        class="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 focus:outline-2 focus:outline-violet-600" />
+    <p id="new-page-feedback" class="my-1 text-xs text-red-700" aria-live="polite">{{ error() || (invalid() ?
+        ('ui.enter_a_page_name_maximum_100_characters' | transloco) : '') }}</p>
+    <div class="flex gap-2">
+        <button type="submit" [disabled]="busy()" class="rounded border px-2 py-1 text-sm">{{ busy() ? ('ui.creating' |
+            transloco) :
+            ('ui.create' | transloco) }}
+        </button>
+        <button type="button" (click)="cancel()" [disabled]="busy()" class="rounded border px-2 py-1 text-sm">
+            {{'ui.cancel' | transloco }}
+        </button>
+    </div>
+</form>

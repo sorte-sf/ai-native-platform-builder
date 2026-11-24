@@ -1,0 +1,273 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use "tailwindcss";
+@use '@foblex/flow/styles/default.scss';
+@import 'ng-diagram/styles.css';
+
+/* Keep the icon chooser centered and bounded within the viewport. */
+.cdk-overlay-pane.icon-selector-dialog {
+  max-width: 96vw !important;
+}
+
+.icon-selector-dialog .mat-mdc-dialog-surface {
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+@theme {
+  --color-brand-50: #f7edf7;
+  --color-brand-100: #efe0f0;
+  --color-brand-300: #d3add8;
+  --color-brand-500: #5e4fa2;
+  --color-brand-600: #4f428b;
+  --color-brand-700: #403672;
+  --color-primary-50: #f3f1fa;
+  --color-primary-100: #e7e3f4;
+  --color-primary-200: #cfc8e8;
+  --color-primary-300: #b7addb;
+  --color-primary-400: #8b7dc4;
+  --color-primary-500: #5e4fa2;
+  --color-primary-600: #51448f;
+  --color-primary-700: #453a7b;
+  --color-primary-800: #393066;
+  --color-primary-900: #2e2752;
+  --color-secondary-50: #fff0f7;
+  --color-secondary-100: #fce0ed;
+  --color-secondary-300: #f59bc1;
+  --color-secondary-500: #ee378a;
+  --color-secondary-600: #d92d7b;
+  --color-secondary-700: #b82367;
+  --color-accent-50: #fff8e7;
+  --color-accent-100: #ffefc7;
+  --color-accent-500: #faa61a;
+  --color-accent-600: #df8e0c;
+  --color-ink-950: #1f2937;
+  --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --ant-primary: #5e4fa2;
+  --ant-secondary: #ee378a;
+  --ant-accent: #faa61a;
+  --ant-tertiary: #a065aa;
+  --ant-heading: #1f2937;
+  --ant-body: #56616d;
+  --ant-support: #a065aa;
+  --ant-background: #f2f2f2;
+  --ant-powder: #f7edf7;
+  --ant-border: #dcdee2;
+
+  --mat-sys-primary: #5e4fa2;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e7e3f4;
+  --mat-sys-on-primary-container: #2e2752;
+  --mat-sys-secondary: #ee378a;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #fce0ed;
+  --mat-sys-on-secondary-container: #4b102c;
+  --mat-sys-tertiary: #a065aa;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #f7edf7;
+  --mat-sys-on-tertiary-container: #351b3a;
+}
+
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ant-background);
+  color: var(--ant-heading);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--ant-powder);
+  color: var(--ant-secondary);
+}
+
+/* Builder application layout */
+ant-layout {
+  --builder-page: #07090b;
+  --builder-sidebar: #1e1e19;
+  --builder-panel: #111310;
+  --builder-border: #353a40;
+  --builder-text: #f5f5f3;
+  --builder-muted: #b6b8b8;
+  display: block;
+  height: 100%;
+  color: var(--builder-text);
+  background: var(--builder-page);
+}
+
+ant-layout .layout {
+  background: var(--builder-page);
+}
+
+ant-layout ant-sidenav {
+  display: block;
+  background: var(--builder-sidebar);
+}
+
+ant-layout ant-sidenav aside {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 18px 8px 10px;
+  color: var(--builder-text);
+}
+
+ant-layout ant-sidenav .brand strong,
+ant-layout ant-sidenav .user span:last-child {
+  color: var(--builder-text);
+}
+
+ant-layout ant-sidenav nav a {
+  font-size: 14px;
+  align-items: center;
+}
+
+ant-layout ant-sidenav .user {
+  left: 8px;
+  right: 8px;
+  border-top: 1px solid var(--builder-border);
+}
+
+ant-layout ant-header {
+  display: block;
+  background: var(--builder-panel);
+  color: var(--builder-text);
+}
+
+ant-layout ant-header h1 {
+  color: var(--builder-text);
+}
+
+ant-layout ant-header select {
+  color: var(--builder-text);
+  background: var(--builder-panel);
+  border: 1px solid var(--builder-border);
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+
+ant-layout ant-footer {
+  display: block;
+  background: var(--builder-panel);
+}
+
+.section-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.eyebrow {
+  color: #dc3925;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin: .5rem 0 0;
+  color: #18212b;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.section-copy {
+  margin-top: .75rem;
+  max-width: 42rem;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+[role="dialog"] .compact-date-field {
+  display: block;
+  width: 100% !important;
+  height: 2.2rem !important;
+  margin: 0;
+  --mat-form-field-container-height: 2.2rem;
+  --mat-form-field-container-vertical-padding: 0;
+}
+
+[role="dialog"] .compact-date-field .mat-mdc-text-field-wrapper,
+[role="dialog"] .compact-date-field .mat-mdc-form-field-flex,
+[role="dialog"] .compact-date-field .mat-mdc-form-field-infix {
+  height: 2.2rem !important;
+  min-height: 2.1rem !important;
+}
+
+[role="dialog"] .compact-date-field .mat-mdc-form-field-infix {
+  width: auto;
+  padding: .25rem .5rem !important;
+}
+
+[role="dialog"] .compact-date-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+[role="dialog"] .compact-date-field .mat-mdc-form-field-icon-suffix {
+  padding-right: .2rem;
+}
+
+.mat-mdc-form-field {
+    &.compact {
+        .mat-mdc-form-field-flex {
+            min-height: 48px !important;
+        }
+
+        .mat-mdc-text-field-wrapper {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .mat-mdc-form-field-infix {
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+            min-height: unset !important;
+        }
+    }
+}
+
+.mat-mdc-text-field-wrapper.mdc-text-field--outlined .mat-mdc-form-field-infix {
+  padding-top: 8px !important;
+  padding-bottom: 10px !important;
+}
+
+.mat-mdc-form-field-infix {
+  min-height: 16px !important;
+}
+/* Keep the icon chooser centered and bounded within the viewport. */
+.cdk-overlay-pane.icon-selector-dialog {
+  max-width: 96vw !important;
+}
+
+.icon-selector-dialog .mat-mdc-dialog-surface {
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 16px;
+}

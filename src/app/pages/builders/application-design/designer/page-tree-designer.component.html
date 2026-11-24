@@ -1,0 +1,987 @@
+<dialog #previewDialog class="local-preview" aria-labelledby="local-preview-title">
+    <header>
+        <h2 id="local-preview-title">{{ previewTitle() }}</h2>
+        <div class="preview-controls">
+            <div id="viewportTools" class="viewport-tools" role="group"
+                [attr.aria-label]="'designer.viewport' | transloco">
+                <button type="button" [class.active]="viewport() === 'desktop'"
+                    [attr.aria-pressed]="viewport() === 'desktop'" [title]="'designer.desktop' | transloco"
+                    [attr.aria-label]="'designer.desktop' | transloco" (click)="viewport.set('desktop')"><fa-icon
+                        [icon]="toolbarIcons.desktop" /></button>
+                <button type="button" [class.active]="viewport() === 'tablet'"
+                    [attr.aria-pressed]="viewport() === 'tablet'" [title]="'designer.tablet' | transloco"
+                    [attr.aria-label]="'designer.tablet' | transloco" (click)="viewport.set('tablet')"><fa-icon
+                        [icon]="toolbarIcons.tablet" /></button>
+                <button type="button" [class.active]="viewport() === 'mobile'"
+                    [attr.aria-pressed]="viewport() === 'mobile'" [title]="'designer.mobile' | transloco"
+                    [attr.aria-label]="'designer.mobile' | transloco" (click)="viewport.set('mobile')"><fa-icon
+                        [icon]="toolbarIcons.mobile" /></button>
+            </div>
+            <button type="button" (click)="previewDialog.close()">{{ 'preview.close' | transloco }}</button>
+        </div>
+    </header>
+    <p>{{ 'preview.localHelp' | transloco }}</p>
+    <div class="local-preview-canvas" [class.tablet]="viewport() === 'tablet'" [class.mobile]="viewport() === 'mobile'">
+        @if (previewDialog.open) {
+        <div class="local-preview-shell">
+            <aside class="local-preview-sidenav" aria-label="Application navigation">
+                <div class="local-preview-brand"><img src="/images/logo/small-logo.png" alt="" /><strong>{{ app()?.name
+                        }}</strong></div>
+                <nav>
+                    @for (node of previewNavigation(); track node.item.id) {
+                    <div class="local-preview-menu-group">
+                        @if (node.item.route) {
+                        <button type="button" (click)="previewNavigate(previewMenuPageKey(node.item.route))">
+                            <fa-icon [icon]="previewMenuIcon(node.item.icon)" /><span>{{ node.item.label }}</span>
+                        </button>
+                        } @else { <div class="local-preview-group-label"><fa-icon
+                                [icon]="previewMenuIcon(node.item.icon)" /><span>{{ node.item.label }}</span></div> }
+                        @for (child of node.children; track child.item.id) {
+                        @if (child.item.route) {
+                        <button type="button" class="local-preview-submenu"
+                            (click)="previewNavigate(previewMenuPageKey(child.item.route))">
+                            <fa-icon [icon]="previewMenuIcon(child.item.icon)" /><span>{{ child.item.label }}</span>
+                        </button>
+                        }
+                        }
+                    </div>
+                    }
+                </nav>
+            </aside>
+            <section class="local-preview-workspace">
+                <header>{{ previewTitle() }}</header>
+                <ant-page-tree-runtime [nodes]="previewNodes()" [definitions]="previewForms()"
+                    [availablePages]="pages()" [tenantId]="tenantId" [applicationId]="applicationId" [preview]="true"
+                    [localOnly]="true" (navigatePage)="previewNavigate($event)" />
+            </section>
+        </div>
+        }
+    </div>
+</dialog>
+<div class="designer-page" [class.light-theme]="!darkMode()">
+<header>
+    <div class="studio-brand">
+        <a class="toolbar-icon" routerLink="/builder/applications" [attr.aria-label]="'ui.applications_2' | transloco"
+            [title]="'ui.applications_2' | transloco"><fa-icon [icon]="toolbarIcons.back" /></a>
+        <div>
+            <strong>{{ app()?.name }}</strong><small>{{ 'ui.page_designer' | transloco }}</small>
+        </div>
+    </div>
+    <nav class="module-toolbar" [attr.aria-label]="'studioToolbar.modules' | transloco">
+        @for (module of studioModules; track module.key) {
+        @if (module.route) {
+        <a class="toolbar-icon" [class.active]="module.route === 'design'"
+            [attr.aria-current]="module.route === 'design' ? 'page' : null"
+            [routerLink]="['/builder/applications',applicationId,module.route]" [queryParams]="{tenantId}"
+            [attr.aria-label]="('studioToolbar.' + module.key) | transloco"
+            [title]="('studioToolbar.' + module.key) | transloco"><fa-icon [icon]="module.icon" /></a>
+        } @else {
+        <span class="unavailable-module" tabindex="0"
+            [title]="(('studioToolbar.' + module.key) | transloco) + ' — ' + ('studioToolbar.unavailable' | transloco)">
+            <button type="button" class="toolbar-icon" disabled
+                [attr.aria-label]="(('studioToolbar.' + module.key) | transloco) + ' — ' + ('studioToolbar.unavailable' | transloco)"><fa-icon
+                    [icon]="module.icon" /></button>
+        </span>
+        }
+        }
+    </nav>
+
+    <div class="toolbar-actions">
+        <ant-language-selector />
+        <button type="button" class="toolbar-icon theme-toggle" (click)="toggleTheme()"
+            [title]="(darkMode() ? 'designer.switchToLight' : 'designer.switchToDark') | transloco"
+            [attr.aria-label]="(darkMode() ? 'designer.switchToLight' : 'designer.switchToDark') | transloco">
+            <fa-icon [icon]="darkMode() ? toolbarIcons.sun : toolbarIcons.moon" />
+        </button>
+        <button type="button" class="toolbar-icon" (click)="undoCanvas()"
+            [disabled]="!editable() || !undoStack().length" [title]="'designer.undo' | transloco"
+            [attr.aria-label]="'designer.undo' | transloco"><fa-icon [icon]="toolbarIcons.undo" /></button>
+        <button type="button" class="toolbar-icon" (click)="save()" [disabled]="!editable() || saving()"
+            [title]="(saving() ? 'ui.saving' : 'ui.save_page') | transloco"
+            [attr.aria-label]="(saving() ? 'ui.saving' : 'ui.save_page') | transloco"><fa-icon
+                [icon]="toolbarIcons.save" />
+        </button>
+
+        <button #aiLauncher type="button" class="toolbar-icon" (click)="openAiPanel()" [disabled]="!editable()"
+            aria-controls="ai-designer-panel" aria-haspopup="dialog" [attr.aria-expanded]="aiPanelOpen()"
+            [title]="'aiDesigner.title' | transloco" [attr.aria-label]="'aiDesigner.title' | transloco">
+            <fa-icon [icon]="aiPanelIcons.open" />
+        </button>
+
+        <button type="button" class="preview-action" (click)="previewDraft()"
+            [disabled]="!current() || saving()"><fa-icon [icon]="toolbarIcons.preview" />
+            {{ 'preview.open' | transloco}}
+        </button>
+
+    </div>
+</header>
+<div class="viewport-warning" role="status">{{ 'ui.minimumViewport' | transloco }}</div>
+@if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+@if (notice()) { <p role="status">{{ notice() }}</p> }
+
+<div class="studio" [class.sidebar-collapsed]="!sidebarPanel()" [style.--sidebar-width]="(sidebarPanel() ? sidebarWidth() : 58) + 'px'">
+    <aside class="studio-sidebar" [class.panel-closed]="!sidebarPanel()">
+        <!-- <div class="sidebar-head">
+            @if (sidebarPanel()) { 
+                <div class="text-lg truncate font-semibold" [title]="app()?.name || ''">{{ app()?.name }}</div> 
+            }
+        </div> -->
+        <nav class="sidebar-rail" [attr.aria-label]="'ui.application_tree' | transloco">
+            <button type="button" [class.active]="sidebarPanel() === 'pages'" [attr.aria-pressed]="sidebarPanel() === 'pages'"
+                (click)="showSidebarSection('pages')" [title]="'ui.pages' | transloco"
+                [attr.aria-label]="'ui.pages' | transloco"><fa-icon [icon]="sidebarIcons.pages" /></button>
+            <button type="button" [class.active]="sidebarPanel() === 'components'" [attr.aria-pressed]="sidebarPanel() === 'components'"
+                (click)="showSidebarSection('components')" [title]="'ui.components' | transloco"
+                [attr.aria-label]="'ui.components' | transloco"><fa-icon [icon]="sidebarIcons.components" /></button>
+            <button type="button" [class.active]="sidebarPanel() === 'dataModels'" [attr.aria-pressed]="sidebarPanel() === 'dataModels'"
+                (click)="showSidebarSection('dataModels')" [title]="'ui.data_models' | transloco"
+                [attr.aria-label]="'ui.data_models' | transloco"><fa-icon [icon]="sidebarIcons.dataModels" /></button>
+            <button type="button" [class.active]="sidebarPanel() === 'elements'" [attr.aria-pressed]="sidebarPanel() === 'elements'"
+                (click)="showSidebarSection('elements')" [title]="'ui.elements' | transloco"
+                [attr.aria-label]="'ui.elements' | transloco"><fa-icon [icon]="sidebarIcons.elements" /></button>
+            <button type="button" [class.active]="sidebarPanel() === 'navigation'" [attr.aria-pressed]="sidebarPanel() === 'navigation'"
+                (click)="showSidebarSection('navigation')" [title]="'designer.navigationTab' | transloco"
+                [attr.aria-label]="'designer.navigationTab' | transloco"><fa-icon [icon]="sidebarIcons.navigation" /></button>
+        </nav>
+        <div class="sidebar-panel-content">
+
+        <dialog #aiPanel id="ai-designer-panel" class="ai-panel" aria-labelledby="ai-panel-title"
+            (close)="onAiPanelClosed()">
+            <div class="ai-panel-header">
+                <h2 id="ai-panel-title">{{ 'aiDesigner.title' | transloco }}</h2>
+                <button type="button" class="ai-panel-close" [attr.aria-label]="'aiDesigner.close' | transloco"
+                    [title]="'aiDesigner.close' | transloco" (click)="closeAiPanel()">
+                    <fa-icon [icon]="aiPanelIcons.close" />
+                </button>
+            </div>
+            <div class="ai-designer">
+                <p>{{ 'aiDesigner.pageHint' | transloco }}</p>
+                <div class="ai-mode" role="group" [attr.aria-label]="'aiDesigner.mode' | transloco">
+                    <button type="button" [class.selected]="aiMode() === 'new'" [attr.aria-pressed]="aiMode() === 'new'"
+                        (click)="aiMode.set('new'); aiProposal.set(null)" [disabled]="aiBusy() || creatingPage()">{{
+                        'aiDesigner.newPageMode' | transloco }}</button>
+                    <button type="button" [class.selected]="aiMode() === 'edit'"
+                        [attr.aria-pressed]="aiMode() === 'edit'" (click)="aiMode.set('edit'); aiProposal.set(null)"
+                        [disabled]="aiBusy() || creatingPage() || !current()">{{ 'aiDesigner.editPageMode' | transloco
+                        }}</button>
+                </div>
+                <p class="ai-provider-note">{{ 'aiDesigner.providerNote' | transloco }}</p>
+                <label>{{ 'aiDesigner.command' | transloco }}<textarea autofocus rows="5" maxlength="2000"
+                        [value]="aiCommand()" (input)="updateAiCommand($event)"
+                        [disabled]="!editable() || aiBusy() || creatingPage()"
+                        [placeholder]="'aiDesigner.promptHint' | transloco"></textarea></label>
+                <button type="button" (click)="proposeAiPage()"
+                    [disabled]="!editable() || aiBusy() || !aiCommand().trim() || aiMode() === 'edit' && !current()">{{
+                    (aiBusy() ? 'aiDesigner.thinking' :
+                    (aiMode() === 'new' ? 'aiDesigner.generatePage' : 'aiDesigner.proposeEdit')) | transloco }}</button>
+                @if (aiError()) { <p role="alert">{{ aiError() | transloco }}</p> }
+                @if (aiProposal(); as proposal) {
+                <p>{{ (proposal.mode === 'new' ? 'aiDesigner.reviewPage' : 'aiDesigner.reviewEdit') | transloco }}</p>
+                @if (proposal.mode === 'new') { <strong>{{ proposal.title }}</strong> }
+                <p class="ai-plan"><strong>{{ 'aiDesigner.planSummary' | transloco }}</strong> {{ proposal.summary }}</p>
+                <pre class="ai-proposal" tabindex="0">{{ proposal.definition | json }}</pre>
+                @if (proposal.mode === 'new') {
+                <button type="button" (click)="createGeneratedPage()"
+                    [disabled]="!editable() || creatingPage() || saving()">{{ (creatingPage() ?
+                    'aiDesigner.creatingPage' : 'aiDesigner.createPage') | transloco }}</button>
+                } @else {
+                <button type="button" (click)="applyAiEdit()" [disabled]="!editable()">{{ 'aiDesigner.applyEdit' |
+                    transloco }}</button>
+                }
+                <button type="button" (click)="aiProposal.set(null)" [disabled]="creatingPage()">{{ 'aiDesigner.reject'
+                    | transloco }}</button>
+                }
+                <button type="button" (click)="undoAiChange()" [disabled]="!canUndoAi()">{{ 'aiDesigner.undo' |
+                    transloco }}</button>
+            </div>
+        </dialog>
+        @if (sidebarPanel() === 'pages') { <details open>
+            <summary>{{ 'ui.pages' | transloco }}</summary>
+            @for (page of pages(); track page.id) {
+            <div class="page-row" [class.page-row-editing]="renamingPageId() === page.id">
+                <button type="button" class="page-link" [class.active]="current()?.id === page.id"
+                    (click)="selectPage(page)">{{ page.title }}</button>
+                <button type="button" class="page-edit" (click)="beginRename(page, $event)"
+                    [disabled]="!editable() || renameBusy() || !!deletingPageId() || saving() || creatingPage()"
+                    [attr.aria-label]="translations.translate('pageRename.edit', { title: page.title })"
+                    [title]="translations.translate('pageRename.edit', { title: page.title })">
+                    <fa-icon [icon]="faEditIcon" aria-hidden="true" />
+                </button>
+                <button type="button" class="page-delete" (click)="deletePage(page)"
+                    [disabled]="!editable() || !!deletingPageId() || saving() || creatingPage() || renameBusy()"
+                    [attr.aria-label]="translations.translate('pageRename.delete', { title: page.title })"
+                    [title]="translations.translate('pageRename.delete', { title: page.title })">
+                    <fa-icon [icon]="faTrashIcon" aria-hidden="true" />
+                </button>
+                @if (renamingPageId() === page.id) {
+                <form class="page-edit-popover" role="dialog" [attr.aria-label]="'pageRename.editTitle' | transloco"
+                    [style.left.px]="pageEditPosition()?.left" [style.top.px]="pageEditPosition()?.top"
+                    (submit)="$event.preventDefault(); renamePage(page)">
+                    @if (renameError()) { <p class="page-edit-error" role="alert">{{ renameError() }}</p> }
+                    @if (pageNameIssue()) { <p class="page-edit-error" role="alert">{{ pageNameIssue() | transloco }}</p> }
+                    <label>{{ 'pageRename.name' | transloco }}
+                        <input name="pageName" required maxlength="120" [value]="pageName()"
+                            (input)="updatePageName($event)" [disabled]="renameBusy()" />
+                    </label>
+                    <div class="page-edit-actions">
+                        <button type="button" (click)="cancelRename()" [disabled]="renameBusy()">{{ 'ui.cancel' | transloco }}</button>
+                        <button type="submit" [disabled]="renameBusy() || !!pageNameIssue()">{{ 'pageRename.save' | transloco }}</button>
+                    </div>
+                </form>
+                }
+            </div>
+            }
+            <button #newPageButton type="button" (click)="beginNewPage()" [disabled]="!editable()"
+                [attr.aria-expanded]="newPageOpen()">{{ 'ui.new_page' | transloco }}
+            </button>
+            @if (newPageOpen()) {
+            <ant-inline-page-editor [busy]="creatingPage() || saving()" [error]="newPageError()"
+                (createPage)="addPage($event)" (cancelled)="cancelNewPage()" />
+            }
+        </details> }
+        @if (sidebarPanel() === 'components') { <details open>
+            <summary>{{ 'ui.components' | transloco }}</summary>
+            @if (nodes().length) {
+            <ng-container *ngTemplateOutlet="tree; context: {$implicit: nodes(), level: 1}" />
+            } @else {
+            <p class="component-tree-empty">{{ 'ui.no_components_yet' | transloco }}</p>
+            }
+        </details> }
+        @if (sidebarPanel() === 'dataModels') { <details open>
+            <summary>{{ 'ui.data_models' | transloco }}</summary>
+            <div class="data-model-list">
+                @for (obj of app()?.objects || []; track obj.id) {
+                <div class="data-model-row">
+                    <span class="data-model-icon" aria-hidden="true"><fa-icon [icon]="sidebarIcons.dataModels" /></span>
+                    <span class="data-model-copy"><strong>{{ obj.name }}</strong><small>{{ obj.key }} · {{
+                            obj.fields.length }} {{ 'ui.fields' | transloco }}</small></span>
+                </div>
+                } @empty {
+                <p class="data-model-empty">{{ 'designer.noDataModels' | transloco }}</p>
+                }
+            </div>
+            <small class="data-model-help">{{ 'ui.data_models_are_separate_from_page_elements' | transloco }}</small>
+            <a class="data-model-manage" [routerLink]="['/builder/applications', applicationId, 'data-sources']"
+                [queryParams]="{tenantId}">
+                {{ 'designer.manageDataModels' | transloco }} <span aria-hidden="true">→</span>
+            </a>
+        </details> }
+        @if (sidebarPanel() === 'elements') {
+        <div class="palette-tabs" role="tablist" [attr.aria-label]="'ui.elements' | transloco">
+            <button type="button" role="tab" [class.active]="paletteTab() === 'elements'" [attr.aria-selected]="paletteTab() === 'elements'"
+                (click)="paletteTab.set('elements')">{{ 'ui.palette_elements' | transloco }}</button>
+            <button type="button" role="tab" [class.active]="paletteTab() === 'blocks'" [attr.aria-selected]="paletteTab() === 'blocks'"
+                (click)="paletteTab.set('blocks')">{{ 'ui.palette_blocks' | transloco }}</button>
+            <button type="button" role="tab" [class.active]="paletteTab() === 'widgets'" [attr.aria-selected]="paletteTab() === 'widgets'"
+                (click)="paletteTab.set('widgets')">{{ 'ui.palette_widgets' | transloco }}</button>
+        </div>
+        <div class="elements-heading">
+            <h3>{{ 'ui.elements' | transloco }}</h3>
+            <label class="elements-search">
+                <!-- <span class="sr-only">{{ 'ui.search_elements' | transloco }}</span> -->
+                <input type="search" [value]="elementSearch()" (input)="updateElementSearch($event)"
+                    [placeholder]="'ui.search_elements' | transloco"
+                    [attr.aria-label]="'ui.search_elements' | transloco" autocomplete="off">
+            </label>
+        </div>
+        @for (group of paletteGroups(); track group.title) { @if (groupBlocks(group.keys, group.title).length) { <details
+            class="palette-group" open>
+            <summary>{{ group.title | transloco }}</summary>
+            <div class="block-palette">@for (block of groupBlocks(group.keys, group.title); track block.key) { <button
+                    type="button" draggable="true" (dragstart)="drag($event, block.key)" (click)="addNode(block.key)"
+                    [title]="block.name | transloco" [disabled]="!editable()"><fa-icon [icon]="blockIcon(block.key)"
+                        aria-hidden="true" /><span>{{ block.name | transloco }}</span></button> }</div>
+        </details> } }
+        @if (elementSearch().trim() && !hasMatchingElements()) { <p role="status" class="elements-empty">{{
+            'ui.no_matching_elements' | transloco }}</p> }
+        }
+        @if (sidebarPanel() === 'navigation') {
+        <section class="application-menu-panel" aria-label="{{ 'designer.menuStructure' | transloco }}">
+            <div class="application-menu-panel-heading">
+                <div><h2>{{ 'designer.menuStructure' | transloco }}</h2><p>{{ 'designer.menuEditorHelp' | transloco }}</p></div>
+                <span class="menu-count">{{ managedNavigation().length }}</span>
+            </div>
+            <div class="application-menu-actions">
+                <button type="button" (click)="createApplicationMenuGroup()" [disabled]="!editable() || menuBusy()">＋ {{ 'designer.addMenuGroup' | transloco }}</button>
+                <button type="button" (click)="createApplicationMenuLink()" [disabled]="!editable() || menuBusy() || !pages().length">＋ {{ 'designer.addMenuItem' | transloco }}</button>
+            </div>
+            @if (menuError()) { <p class="application-menu-error" role="alert">{{ menuError() }}</p> }
+            @if (managedNavigation().length) {
+            <ng-container *ngTemplateOutlet="applicationMenuEditorTree; context: {$implicit: managedNavigation(), level: 0}" />
+            } @else {
+            <div class="application-menu-empty"><span aria-hidden="true">☷</span><strong>{{ 'designer.noMenuGroups' | transloco }}</strong><small>{{ 'designer.menuEditorHelp' | transloco }}</small></div>
+            }
+        </section>
+        }
+        </div>
+        <div class="sidebar-resizer" role="separator" aria-orientation="vertical" tabindex="0"
+            [attr.aria-label]="'designer.resizeSidebar' | transloco"
+            [attr.aria-valuemin]="sidebarMinWidth" [attr.aria-valuemax]="sidebarMaxWidth"
+            [attr.aria-valuenow]="sidebarPanel() ? sidebarWidth() : 58"
+            (pointerdown)="startSidebarResize($event)" (pointermove)="resizeSidebar($event)"
+            (pointerup)="stopSidebarResize($event)" (pointercancel)="stopSidebarResize($event)"
+            (lostpointercapture)="stopSidebarResize($event)" (keydown)="resizeSidebarWithKeyboard($event)"></div>
+    </aside>
+    <main (dragover)="$event.preventDefault()" (drop)="drop($event)">
+        <h2>{{ current()?.title || ('ui.loading' | transloco) }}</h2>
+        <div class="canvas-surface">
+            <ng-container *ngTemplateOutlet="canvas; context: {$implicit: nodes()}" />
+            @if (!nodes().length) {
+            <p class="empty">{{ 'ui.add_a_container_text_block_or_form_this_page_does_not_require_a_data_model' |
+                transloco
+                }}</p> }
+        </div>
+    </main>
+    <aside class="inspector">
+        <div class="inspector-tabs">
+            <button type="button" [class.active]="inspectorTab() === 'properties'"
+                (click)="inspectorTab.set('properties')">
+                {{ 'ui.properties' | transloco }}
+            </button>
+            <button type="button" [class.active]="inspectorTab() === 'styling'" (click)="inspectorTab.set('styling')">
+                {{ 'ui.styling' | transloco }}
+            </button>
+        </div>
+        @if (selected(); as node) {
+
+
+        <div
+            class="flex text-start flex-row mt-2 justify-start text-lg
+    rounded-2xl p-2 gap-2 bg-neutral-600/20 dark:bg-neutral-400/20 dark:hover:bg-neutral-400/30 text-neutral-600 dark:text-neutral-300 backdrop-blur-[1px] border border-neutral-400/20">
+            <span class=" text-black text-sm font-semibold">{{ node.type }}</span>
+            <span class=" text-black mx-2 text-xs">:{{ node.id }}</span>
+        </div>
+        @if (menuEditorRoot(); as menuRoot) {
+        <section class="menu-editor" aria-label="{{ 'designer.menuStructure' | transloco }}">
+            <label>{{ 'designer.navigationPlacement' | transloco }}
+                <select [value]="menuRoot.navigationPlacement || 'left'"
+                    (change)="setNavigationPlacement(menuRoot, $any($event.target).value)" [disabled]="!editable()">
+                    <option value="left">{{ 'designer.navigationLeft' | transloco }}</option>
+                    <option value="right">{{ 'designer.navigationRight' | transloco }}</option>
+                    <option value="top">{{ 'designer.navigationTop' | transloco }}</option>
+                </select>
+            </label>
+            <label>{{ 'designer.companyLogoUrl' | transloco }}
+                <input type="text" maxlength="2048" placeholder="https://… or /assets/…"
+                    [value]="menuRoot.navigationLogoUrl || ''"
+                    (change)="setNavigationLogo(menuRoot, $any($event.target).value)" [disabled]="!editable()">
+                <small>{{ 'designer.systemLogoFallback' | transloco }}</small>
+            </label>
+            <div class="menu-editor-heading">
+                <div><strong>{{ 'designer.menuStructure' | transloco }}</strong><small>{{ 'designer.menuEditorHelp' |
+                        transloco }}</small></div>
+                <button type="button" class="menu-add-group" (click)="addMenuGroup()" [disabled]="!editable()">＋ {{
+                    'designer.addMenuGroup' | transloco }}</button>
+            </div>
+            @for (group of menuGroups(menuRoot); track group.id) {
+            <ng-container *ngTemplateOutlet="menuGroupEditor; context: {$implicit: group, level: 0}" />
+            } @empty { <p class="menu-empty">{{ 'designer.noMenuGroups' | transloco }}</p> }
+        </section>
+        }
+        <label class="move-container">{{ 'designer.moveToContainer' | transloco }}
+            <select (change)="moveSelectedTo($any($event.target).value); $any($event.target).value = ''"
+                [disabled]="!editable()">
+                <option value="">{{ 'designer.selectContainer' | transloco }}</option>
+                @for (container of containers(); track container.id) { <option [value]="container.id">{{ container.text
+                    || container.id }}</option> }
+            </select>
+        </label>
+        <div [hidden]="inspectorTab() !== 'properties'">
+            <details class="layout-controls" open>
+                <summary>{{ 'designer.layout' | transloco }}</summary>
+                @if (node.type === 'container') {
+                @for (device of devices; track device) {
+                <div class="column-device"><strong>{{ ('designer.' + device) | transloco }}</strong>
+                    <div class="column-presets">@for (preset of columnPresets; track $index) {
+                        <button type="button" [attr.aria-label]="preset.join(' / ')"
+                            [attr.aria-pressed]="node.responsiveColumns?.[device]?.join(',') === preset.join(',')"
+                            (click)="setResponsiveColumns(device, preset)" [disabled]="!editable()">
+                            @for (ratio of preset; track $index) { <span [style.flex-grow]="ratio"></span> }
+                        </button>
+                        }
+                    </div>
+                    <div class="column-ratios">@for (ratio of node.responsiveColumns?.[device] || []; track $index) {
+                        <input type="number" min="1" max="24" [value]="ratio"
+                            [attr.aria-label]="('designer.columnWeight' | transloco) + ' ' + ($index + 1)"
+                            (change)="updateColumnRatio(device, $index, $any($event.target).value)"
+                            [disabled]="!editable()">
+                        }
+                    </div>
+                </div>
+                }
+                <label>{{ 'ui.grid_columns' | transloco }}<select [value]="gridColumns(node)"
+                        (change)="setGridColumns($any($event.target).value)" [disabled]="!editable()">
+                        @for (size of gridSizes; track size) { <option [value]="size">{{ size }}</option> }
+                    </select></label>
+                }
+                <label>{{ 'designer.columnSpan' | transloco }}<select [value]="node.styling?.['grid-column'] || ''"
+                        (change)="setStyle('grid-column', $any($event.target).value)" [disabled]="!editable()">
+                        <option value="">{{ 'ui.default' | transloco }}</option>
+                        <option value="1 / -1">{{ 'designer.fullRow' | transloco }}</option>
+                        @for (span of spans; track span) { <option [value]="'span ' + span">{{ span }}</option> }
+                    </select></label>
+                <small>{{ 'designer.spanHelp' | transloco }}</small>
+                <div class="size-controls">
+                    <label>{{ 'designer.width' | transloco }}<input [value]="node.styling?.['width'] || ''"
+                            (change)="setStyle('width', $any($event.target).value)" placeholder="100% / 320px / auto"
+                            [disabled]="!editable()"></label>
+                    <label>{{ 'designer.height' | transloco }}<input [value]="node.styling?.['height'] || ''"
+                            (change)="setStyle('height', $any($event.target).value)" placeholder="240px / auto"
+                            [disabled]="!editable()"></label>
+                    <label>{{ 'designer.minWidth' | transloco }}<input [value]="node.styling?.['min-width'] || ''"
+                            (change)="setStyle('min-width', $any($event.target).value)" placeholder="0px"
+                            [disabled]="!editable()"></label>
+                    <label>{{ 'designer.maxWidth' | transloco }}<input [value]="node.styling?.['max-width'] || ''"
+                            (change)="setStyle('max-width', $any($event.target).value)" placeholder="100%"
+                            [disabled]="!editable()"></label>
+                </div>
+                <label>{{ 'designer.gap' | transloco }}<input [value]="node.styling?.['gap'] || ''"
+                        (change)="setStyle('gap', $any($event.target).value)" placeholder="16px"
+                        [disabled]="!editable()"></label>
+            </details>
+            @for (property of propertiesForNode(node); track property.key) {
+            @if (node.type !== 'button' || property.key !== 'pageKey') {
+            <label>{{ property.label | transloco }}
+                @switch (property.editor) {
+                @case ('multiline') { <textarea [attr.maxlength]="property.maxLength" [value]="node[property.key] || ''"
+                    (input)="updateRegisteredProperty(property, $event)" [disabled]="!editable()"></textarea> }
+                @case ('url') { <input type="url" [attr.maxlength]="property.maxLength"
+                    [value]="node[property.key] || ''" (change)="updateRegisteredProperty(property, $event)"
+                    [disabled]="!editable()"> }
+                @case ('page') { <select [value]="node[property.key] || ''"
+                    (change)="updateRegisteredProperty(property, $event)" [disabled]="!editable()">
+                    <option value="">{{ 'ui.choose_a_page' | transloco }}</option>@for (page of pages(); track page.id)
+                    { <option [value]="page.key">{{ page.title }}</option> }
+                </select> }
+                }
+            </label>
+            }
+            }
+            @if (node.type === 'button') {
+            <label>{{ 'designer.buttonAction' | transloco }}
+                <select [value]="buttonActionType(node)" (change)="setButtonActionType(node, $any($event.target).value)"
+                    [disabled]="!editable()">
+                    <option value="none">{{ 'designer.actionNone' | transloco }}</option>
+                    <option value="page">{{ 'designer.actionPage' | transloco }}</option>
+                    <option value="url">{{ 'designer.actionUrl' | transloco }}</option>
+                    @if (node.floatingButton) { <option value="form">{{ 'designer.actionFormDialog' | transloco }}</option> }
+                </select>
+            </label>
+            @if (buttonActionType(node) === 'page') {
+            <label>{{ 'designer.targetPage' | transloco }}
+                <select [value]="node.actionValue || node.pageKey || ''"
+                    (change)="setButtonActionValue(node, $any($event.target).value)" [disabled]="!editable()">
+                    <option value="">{{ 'ui.choose_a_page' | transloco }}</option>
+                    @for (page of pages(); track page.id) { <option [value]="page.key">{{ page.title }}</option> }
+                </select>
+            </label>
+            } @else if (buttonActionType(node) === 'url') {
+            <label>{{ 'designer.httpsAddress' | transloco }}
+                <input type="url" maxlength="2048" placeholder="https://example.com" [value]="node.actionValue || ''"
+                    (change)="setButtonActionValue(node, $any($event.target).value)" [disabled]="!editable()" />
+            </label>
+            <small class="property-hint">{{ 'designer.httpsOnly' | transloco }}</small>
+            }
+            }
+            @if (bindingForComponent(node.type) === 'form' || node.type === 'button' && node.floatingButton && node.actionType === 'form') { <label>{{ 'ui.data_form' | transloco }}<select
+                    [value]="node.formId || ''" (change)="bindForm($any($event.target).value)" [disabled]="!editable()">
+                    <option value="">{{ 'ui.choose_a_form' | transloco }}</option>@for (form of availableForms(); track form.id) {
+                    <option [value]="form.id">{{ form.objectName }} / {{ form.name }}</option>
+                    }
+                </select></label><button type="button" (click)="openForm(node)" [disabled]="saving()">{{
+                'ui.open_form_designer' | transloco }}</button> }
+
+            @if (bindingForComponent(node.type) === 'object' || bindingForComponent(node.type) === 'object-or-json') {
+            <label>{{ 'ui.data_source' |
+                transloco }}<select [value]="node.objectId || ''"
+                    (change)="setProperty('objectId', $any($event.target).value)" [disabled]="!editable()">
+                    <option value="">{{ 'ui.choose_data_object' | transloco }}</option>@for (obj of app()?.objects ||
+                    [];
+                    track obj.id) { <option [value]="obj.id">{{ obj.name }}</option> }
+                </select></label>@if (node.type === 'chart' || node.type === 'kanban') { <label>{{ (node.type ===
+                'chart' && node.chartKind === 'time-area' ? 'businessBlocks.dateField' : 'blocks.groupField') |
+                transloco }}<select [value]="node.columns?.[0] || ''" (change)="setColumns($any($event.target).value)"
+                    [disabled]="!editable()">
+                    <option value="">—</option>@for (field of tableFields(); track field.key) { <option
+                        [value]="field.key">{{ field.label }}</option> }
+                </select></label>
+            @if (node.type === 'chart') {
+            <label>{{ 'businessBlocks.chartType' | transloco }}<select [value]="node.chartKind || 'bar'"
+                    (change)="setProperty('chartKind', $any($event.target).value)" [disabled]="!editable()">
+                    @for (kind of ['bar','line','area','time-area','bar-line','pie','doughnut','funnel']; track kind) {
+                    <option [value]="kind">
+                        {{ ('businessBlocks.' + kind) | transloco }}</option> }</select></label>
+            <label>{{ 'businessBlocks.valueField' | transloco }}<select [value]="node.valueField || ''"
+                    (change)="setProperty('valueField', $any($event.target).value)" [disabled]="!editable()">
+                    <option value="">{{ 'businessBlocks.recordCount' | transloco }}</option>@for (field of
+                    tableFields(); track field.key) { <option [value]="field.key">{{ field.label }}</option> }
+                </select></label>
+            @if (node.chartKind === 'bar-line' || node.chartKind === 'stacked-column') {
+            <label>{{ 'businessBlocks.secondaryValueField' | transloco }}<select
+                    [value]="node.secondaryValueField || ''"
+                    (change)="setProperty('secondaryValueField', $any($event.target).value)" [disabled]="!editable()">
+                    <option value="">{{ 'businessBlocks.recordCount' | transloco }}</option>@for (field of
+                    tableFields(); track field.key) { <option [value]="field.key">{{ field.label }}</option> }
+                </select></label> }
+            } @else { <label>{{ 'businessBlocks.titleField' | transloco }}<select [value]="node.titleField || ''"
+                    (change)="setProperty('titleField', $any($event.target).value)" [disabled]="!editable()">
+                    <option value="">—</option>@for (field of tableFields(); track field.key) { <option
+                        [value]="field.key">{{ field.label }}</option> }
+                </select></label> }
+            } }
+            @if (node.type === 'calendar') {
+            <label>{{ 'businessBlocks.calendarTitleField' | transloco }}<select [value]="node.calendarTitleField || ''" (change)="setProperty('calendarTitleField', $any($event.target).value)" [disabled]="!editable()">
+                <option value="">{{ 'businessBlocks.calendarDefaultTitle' | transloco }}</option>@for (field of tableFields(); track field.key) { <option [value]="field.key">{{ field.label || field.key }}</option> }
+            </select></label>
+            <label>{{ 'businessBlocks.calendarStartField' | transloco }}<select [value]="node.calendarStartField || ''" (change)="setProperty('calendarStartField', $any($event.target).value)" [disabled]="!editable()">
+                <option value="">{{ 'businessBlocks.calendarChooseField' | transloco }}</option>@for (field of tableFields(); track field.key) { <option [value]="field.key">{{ field.label || field.key }}</option> }
+            </select></label>
+            @if (node.objectId && !node.calendarStartField) { <small class="property-hint">{{ 'businessBlocks.calendarChooseField' | transloco }}</small> }
+            <label>{{ 'businessBlocks.calendarEndField' | transloco }}<select [value]="node.calendarEndField || ''" (change)="setProperty('calendarEndField', $any($event.target).value)" [disabled]="!editable()">
+                <option value="">{{ 'businessBlocks.calendarNoEndField' | transloco }}</option>@for (field of tableFields(); track field.key) { <option [value]="field.key">{{ field.label || field.key }}</option> }
+            </select></label>
+            }
+            @if (node.type === 'pivot-table') {
+            <section class="pivot-settings">
+                <div class="pivot-settings-heading"><div><h3>{{ 'businessBlocks.pivotSetup' | transloco }}</h3><small>{{ 'businessBlocks.pivotFieldHint' | transloco }}</small></div><span class="pivot-source-badge">{{ node.objectId ? ('ui.data_source' | transloco) : ('businessBlocks.pivotNoSource' | transloco) }}</span></div>
+                @if (!node.objectId) { <p class="pivot-source-help">{{ 'businessBlocks.pivotChooseSource' | transloco }}</p> }
+                <label class="pivot-search"><span aria-hidden="true">⌕</span><input type="search" [value]="pivotFieldSearch()"
+                    [placeholder]="'businessBlocks.searchFields' | transloco" (input)="updatePivotFieldSearch($event)"
+                    [attr.aria-label]="'businessBlocks.searchFields' | transloco" autocomplete="off"></label>
+                <div class="pivot-config-tabs" role="tablist" [attr.aria-label]="'businessBlocks.pivotSetup' | transloco">
+                    <button type="button" role="tab" [class.active]="pivotConfigTab() === 'pivotRows'" [attr.aria-selected]="pivotConfigTab() === 'pivotRows'" (click)="pivotConfigTab.set('pivotRows')">{{ 'businessBlocks.pivotRows' | transloco }} <span>{{ node.pivotRows?.length || 0 }}/3</span></button>
+                    <button type="button" role="tab" [class.active]="pivotConfigTab() === 'pivotColumns'" [attr.aria-selected]="pivotConfigTab() === 'pivotColumns'" (click)="pivotConfigTab.set('pivotColumns')">{{ 'businessBlocks.pivotColumns' | transloco }} <span>{{ node.pivotColumns?.length || 0 }}/2</span></button>
+                    <button type="button" role="tab" [class.active]="pivotConfigTab() === 'pivotValues'" [attr.aria-selected]="pivotConfigTab() === 'pivotValues'" (click)="pivotConfigTab.set('pivotValues')">{{ 'businessBlocks.pivotValues' | transloco }} <span>{{ node.pivotValues?.length || 0 }}/5</span></button>
+                </div>
+                <div class="pivot-field-list" role="tabpanel">
+                    @if (!filteredPivotFields().length) { <p class="pivot-no-fields">{{ node.objectId ? ('ui.no_matching_elements' | transloco) : ('businessBlocks.pivotChooseSource' | transloco) }}</p> }
+                    @if (pivotConfigTab() === 'pivotRows') {
+                        @for (field of filteredPivotFields(); track field.key) { <label class="pivot-field-option">
+                            <input type="checkbox" [checked]="node.pivotRows?.includes(field.key)" [disabled]="!editable() || !node.pivotRows?.includes(field.key) && ((node.pivotRows?.length || 0) >= 3 || node.pivotColumns?.includes(field.key))" (change)="togglePivotDimension('pivotRows', field.key, $event)">
+                            <span [title]="field.label">{{ field.label }}</span>
+                        </label> }
+                    } @else if (pivotConfigTab() === 'pivotColumns') {
+                        @for (field of filteredPivotFields(); track field.key) { <label class="pivot-field-option">
+                            <input type="checkbox" [checked]="node.pivotColumns?.includes(field.key)" [disabled]="!editable() || !node.pivotColumns?.includes(field.key) && ((node.pivotColumns?.length || 0) >= 2 || node.pivotRows?.includes(field.key))" (change)="togglePivotDimension('pivotColumns', field.key, $event)">
+                            <span [title]="field.label">{{ field.label }}</span>
+                        </label> }
+                    } @else {
+                        @for (field of filteredPivotFields(); track field.key) { <div class="pivot-measure-option">
+                            <label class="pivot-field-option"><input type="checkbox" [checked]="!!pivotMeasure(node, field.key)" [disabled]="!editable() || !pivotMeasure(node, field.key) && (node.pivotValues?.length || 0) >= 5" (change)="togglePivotValue(field.key, $event)">
+                                <span [title]="field.label">{{ field.label }}</span></label>
+                            @if (pivotMeasure(node, field.key); as measure) { <select [value]="measure.aggregation" [attr.aria-label]="'businessBlocks.aggregationFor' | transloco: {field: field.label}" (change)="setPivotAggregation(field.key, $any($event.target).value)" [disabled]="!editable()">
+                                @for (aggregation of ['sum','average','count','min','max']; track aggregation) { <option [value]="aggregation">{{ ('businessBlocks.aggregate.' + aggregation) | transloco }}</option> }
+                            </select> }
+                        </div> }
+                    }
+                </div>
+                <div class="pivot-totals-controls">
+                    <label><input type="checkbox" [checked]="node.pivotRowTotals !== false" (change)="setPivotTotals('pivotRowTotals', $event)" [disabled]="!editable()">{{ 'businessBlocks.pivotRowTotals' | transloco }}</label>
+                    <label><input type="checkbox" [checked]="node.pivotColumnTotals !== false" (change)="setPivotTotals('pivotColumnTotals', $event)" [disabled]="!editable()">{{ 'businessBlocks.pivotColumnTotals' | transloco }}</label>
+                </div>
+            </section>
+            }
+            @if (node.type === 'crud') { <details open>
+                <summary>{{ 'crud.actions' | transloco }}</summary>
+                @for (action of crudActionNames; track action) { <label><input type="checkbox"
+                        [checked]="node.crudActions?.[action] !== false" (change)="setCrudAction(action, $event)"
+                        [disabled]="!editable()">
+                    {{ ('crud.' + (action === 'create' ? 'newRecord' : action)) | transloco }}</label> }
+            </details> }
+            @if (node.type === 'gallery' || node.type === 'data-grid') { <label>{{ 'businessBlocks.pageSize' | transloco
+                }}<input type="number" min="1" max="100" [value]="node.pageSize || 12"
+                    (change)="setBlockNumber('pageSize', $event)" [disabled]="!editable()"></label> }
+            @if (node.type === 'gallery') {
+            <label>{{ 'businessBlocks.galleryColumns' | transloco }}<input type="number" min="1" max="6"
+                    [value]="node.galleryColumns || 3" (change)="setBlockNumber('galleryColumns', $event)"
+                    [disabled]="!editable()"></label>
+            <label>{{ 'businessBlocks.imageField' | transloco }}<input [value]="node.imageField || ''"
+                    (change)="setProperty('imageField', $any($event.target).value)" [disabled]="!editable()"></label>
+            <label>{{ 'businessBlocks.titleField' | transloco }}<input [value]="node.titleField || ''"
+                    (change)="setProperty('titleField', $any($event.target).value)" [disabled]="!editable()"></label>
+            <label>{{ 'tableDesigner.json' | transloco }}<textarea [value]="node.tableJson || ''"
+                    (change)="setTableJson($any($event.target).value)" [disabled]="!editable()"></textarea></label>
+            }
+            @if (node.type === 'pagination') { <label>{{ 'businessBlocks.paginationTarget' | transloco }}<select
+                    [value]="node.targetNodeId || ''" (change)="setProperty('targetNodeId', $any($event.target).value)"
+                    [disabled]="!editable()">
+                    <option value="">—</option>@for (target of galleryTargets(); track target.id) { <option
+                        [value]="target.id">{{ target.text || target.id }}</option> }
+                </select></label> }
+            @if (node.type === 'table' || node.type === 'crud' || node.type === 'data-grid') { <details open
+                class="column-editor">
+                <summary>{{ 'tableDesigner.columns' | transloco }}</summary>
+                @if (node.type !== 'crud') { <label>{{ 'tableDesigner.json' | transloco }}<textarea rows="3"
+                        [value]="node.tableJson || ''" (change)="setTableJson($any($event.target).value)"
+                        [disabled]="!editable()"></textarea></label>
+                <small>{{ 'tableDesigner.sourceHelp' | transloco }}</small> }
+                @for (column of node.tableColumns || []; track $index; let index = $index) { <div class="column-card">
+                    <label>{{ 'tableDesigner.title' | transloco }}<input [value]="column.title"
+                            (input)="editTableColumn(index, 'title', $any($event.target).value)"
+                            [disabled]="!editable()"></label>
+                    <label>{{ 'tableDesigner.field' | transloco }}@if (node.objectId) { <select [value]="column.field"
+                            (change)="editTableColumn(index, 'field', $any($event.target).value)"
+                            [disabled]="!editable()">
+                            <option value="">—</option>@for (field of tableFields(); track field.key) { <option
+                                [value]="field.key">{{ field.label }} ({{ field.key }})</option> }
+                        </select> } @else { <input [value]="column.field"
+                            (change)="editTableColumn(index, 'field', $any($event.target).value)"
+                            [disabled]="!editable()"> }</label>
+                    <div class="size-controls"><label>{{ 'designer.width' | transloco }}<input type="number" min="40"
+                                max="1200" [value]="column.width || ''"
+                                (change)="editTableColumn(index, 'width', $any($event.target).value)"
+                                [disabled]="!editable()"></label><label>{{ 'tableDesigner.format' | transloco }}<select
+                                [value]="column.format || 'text'"
+                                (change)="editTableColumn(index, 'format', $any($event.target).value)"
+                                [disabled]="!editable()">@for (format of ['text','number','date']; track format) {
+                                <option [value]="format">{{ ('tableDesigner.' + format) | transloco }}</option>
+                                }
+                            </select></label></div>
+                    <label>{{ 'tableDesigner.alignment' | transloco }}<select [value]="column.align || 'left'"
+                            (change)="editTableColumn(index, 'align', $any($event.target).value)"
+                            [disabled]="!editable()">@for (align of ['left','center','right']; track align) { <option
+                                [value]="align">{{ ('tableDesigner.' + align) | transloco }}</option> }</select></label>
+                    <div class="column-actions"><button type="button" (click)="moveTableColumn(index,-1)"
+                            [disabled]="!editable() || index === 0">↑</button><button type="button"
+                            (click)="moveTableColumn(index,1)"
+                            [disabled]="!editable() || index === (node.tableColumns?.length || 0) - 1">↓</button><button
+                            type="button" (click)="removeTableColumn(index)" [disabled]="!editable()">{{
+                            'tableDesigner.remove' | transloco }}</button></div>
+                </div> }
+                <button type="button" (click)="addTableColumn()" [disabled]="!editable()">{{ 'tableDesigner.add' |
+                    transloco }}</button>
+            </details> }
+        </div>
+        <div [hidden]="inspectorTab() !== 'styling'">
+            <details open>
+                <summary>{{ 'ui.styling' | transloco }}</summary>@for (group of styleGroups; track group.title) {
+                <details open>
+                    <summary>{{ group.title }}</summary>@for (control of group.fields; track control.key) { <label>{{
+                        control.label }}@if ('options' in control) { <select [value]="node.styling?.[control.key] || ''"
+                            (change)="setStyle(control.key, $any($event.target).value)" [disabled]="!editable()">
+                            <option value="">{{ 'ui.default' | transloco }}</option>@for (option of control.options;
+                            track
+                            option) { <option [value]="option">{{ option }}</option> }
+                        </select> } @else if (isColorStyle(control.key)) { <ant-brand-color-picker
+                            [label]="control.label" [color]="node.styling?.[control.key] || '#334155'"
+                            [disabled]="!editable()" (colorChange)="setStyle(control.key, $event)" /> } @else { <input
+                            [value]="node.styling?.[control.key] || ''"
+                            (change)="setStyle(control.key, $any($event.target).value)"
+                            placeholder="16px / auto / #334155" [disabled]="!editable()"> }</label> }
+                </details> }
+            </details>
+        </div>
+        <button type="button" (click)="moveNode(-1)" [disabled]="!editable()">{{ 'ui.move_up' | transloco
+            }}</button><button type="button" (click)="moveNode(1)" [disabled]="!editable()">{{ 'ui.move_down' |
+            transloco }}</button><button type="button" (click)="removeNode()" [disabled]="!editable()">{{
+            'ui.remove_element' | transloco }}</button>
+        } @else { <p>{{ 'ui.select_an_element_on_the_canvas_or_tree' | transloco }}</p> }
+        <button type="button" (click)="selectedId.set(null)">{{ 'ui.select_page_root' | transloco }}</button>
+    </aside>
+</div>
+<ng-template #tree let-items let-level="level">
+    <ul class="component-tree">
+        @for (node of items; track node.id) {
+        <li class="component-tree-item" [class.is-selected]="selectedId() === node.id">
+            <div class="component-tree-row">
+                @if (node.children?.length) {
+                <button type="button" class="component-tree-toggle" (click)="toggleTreeNode(node.id, $event)"
+                    [attr.aria-label]="(isTreeExpanded(node.id) ? 'designer.collapseComponent' : 'designer.expandComponent') | transloco"
+                    [attr.aria-expanded]="isTreeExpanded(node.id)">
+                    <span aria-hidden="true">{{ isTreeExpanded(node.id) ? '▾' : '▸' }}</span>
+                </button>
+                } @else {
+                <span class="component-tree-spacer" aria-hidden="true"></span>
+                }
+                <fa-icon class="component-tree-icon" [icon]="blockIcon(node.type)" aria-hidden="true" />
+                @if (editingNodeId() === node.id) {
+                <input class="component-tree-rename" type="text" maxlength="120" [value]="node.text || ''"
+                    [attr.aria-label]="'designer.componentName' | transloco" (click)="$event.stopPropagation()"
+                    (keydown.enter)="finishTreeRename(node, $event)" (keydown.escape)="cancelTreeRename($event)"
+                    (blur)="finishTreeRename(node, $event)" autofocus>
+                } @else {
+                <button type="button" class="component-tree-select" [class.active]="selectedId() === node.id"
+                    (click)="selectedId.set(node.id)" (dblclick)="beginTreeRename(node, $event)"
+                    [title]="(node.text || node.type) + ' · ' + node.type">
+                    <span class="component-tree-name">{{ node.text || node.type }}</span>
+                    <span class="component-tree-type">{{ node.type }}</span>
+                </button>
+                }
+                @if (selectedId() === node.id && editable()) {
+                <div class="component-tree-actions">
+                    <button type="button" (click)="beginTreeRename(node, $event)"
+                        [attr.aria-label]="'designer.renameComponent' | transloco"
+                        [title]="'designer.renameComponent' | transloco">✎</button>
+                    <button type="button" (click)="moveTreeNode(node.id, -1)" [disabled]="!canMoveTreeNode(node.id, -1)"
+                        [attr.aria-label]="'designer.moveComponentUp' | transloco"
+                        [title]="'designer.moveComponentUp' | transloco">↑</button>
+                    <button type="button" (click)="moveTreeNode(node.id, 1)" [disabled]="!canMoveTreeNode(node.id, 1)"
+                        [attr.aria-label]="'designer.moveComponentDown' | transloco"
+                        [title]="'designer.moveComponentDown' | transloco">↓</button>
+                    <button type="button" class="component-tree-delete" (click)="removeTreeNode(node.id)"
+                        [attr.aria-label]="'ui.remove_element' | transloco"
+                        [title]="'ui.remove_element' | transloco">×</button>
+                </div>
+                }
+            </div>
+            @if (node.children?.length && isTreeExpanded(node.id)) {
+            <ng-container *ngTemplateOutlet="tree; context: {$implicit: node.children, level: level + 1}" />
+            }
+        </li>
+        }
+    </ul>
+</ng-template>
+<ng-template #menuGroupEditor let-group let-level="level">
+    <div class="menu-group-editor" [class.submenu-editor]="level > 0">
+        <div class="menu-group-title">
+            <label>{{ level ? ('designer.submenuName' | transloco) : ('designer.menuGroup' | transloco) }}
+                <input [value]="group.text || ''" maxlength="80"
+                    (change)="updateMenuText(group, $any($event.target).value)" [disabled]="!editable()">
+            </label>
+            <button type="button" class="menu-remove" [attr.aria-label]="'designer.removeMenuGroup' | transloco"
+                [title]="'designer.removeMenuGroup' | transloco" (click)="removeMenuNode(group)"
+                [disabled]="!editable()">×</button>
+        </div>
+        @for (item of menuItems(group); track item.id) {
+        <div class="menu-item-editor">
+            <label>{{ 'designer.menuItemLabel' | transloco }}
+                <input [value]="item.text || ''" maxlength="80"
+                    (change)="updateMenuText(item, $any($event.target).value)" [disabled]="!editable()">
+            </label>
+            <label>{{ 'designer.targetPage' | transloco }}
+                <select [value]="item.pageKey || ''" (change)="updateMenuPage(item, $any($event.target).value)"
+                    [disabled]="!editable()">
+                    <option value="">{{ 'designer.noPage' | transloco }}</option>
+                    @for (page of pages(); track page.id) { <option [value]="page.key">{{ page.title }}</option> }
+                </select>
+            </label>
+            <button type="button" class="menu-remove" [attr.aria-label]="'designer.removeMenuItem' | transloco"
+                [title]="'designer.removeMenuItem' | transloco" (click)="removeMenuNode(item)"
+                [disabled]="!editable()">×</button>
+        </div>
+        } @empty { <p class="menu-empty">{{ 'designer.noMenuItems' | transloco }}</p> }
+        <div class="menu-group-actions">
+            <button type="button" class="menu-add-item" (click)="addMenuItem(group.id)" [disabled]="!editable()">＋ {{
+                'designer.addMenuItem' | transloco }}</button>
+            <button type="button" class="menu-add-item" (click)="addMenuSubgroup(group.id)" [disabled]="!editable()">＋
+                {{ 'designer.addSubmenu' | transloco }}</button>
+        </div>
+        @for (submenu of menuSubgroups(group); track submenu.id) {
+        <ng-container *ngTemplateOutlet="menuGroupEditor; context: {$implicit: submenu, level: level + 1}" />
+        }
+    </div>
+</ng-template>
+<ng-template #applicationMenuEditorTree let-items let-level="level">
+    @for (node of items; track node.item.id) {
+    <div class="application-menu-tree-node" [class.has-children]="node.children.length > 0">
+        <div class="application-menu-tree-row">
+            <button type="button" class="application-menu-disclosure" [disabled]="!node.children.length"
+                [attr.aria-expanded]="node.children.length ? expandedMenuIds().has(node.item.id) : null"
+                [attr.aria-controls]="'application-menu-children-' + node.item.id"
+                [attr.aria-label]="(expandedMenuIds().has(node.item.id) ? 'designer.collapseMenu' : 'designer.expandMenu') | transloco"
+                (click)="toggleApplicationMenuNode(node.item.id)">
+                @if (node.children.length) { <span aria-hidden="true">{{ expandedMenuIds().has(node.item.id) ? '⌄' : '›'
+                    }}</span> }
+            </button>
+            <ant-icon-selector [value]="node.item.icon || ''" [label]="'designer.selectMenuIcon' | transloco"
+                [compact]="true" [disabled]="!editable() || menuBusy()"
+                (valueChange)="saveApplicationMenuIcon(node.item, $event)" />
+            <input class="application-menu-label" [value]="node.item.label" maxlength="80"
+                [attr.aria-label]="'designer.menuGroup' | transloco" [title]="node.item.label"
+                (change)="saveApplicationMenuLabel(node.item, $any($event.target).value)"
+                [disabled]="!editable() || menuBusy()" />
+            <div class="application-menu-tools" [attr.aria-label]="'designer.menuActions' | transloco">
+                <button type="button" class="application-menu-action application-menu-reorder"
+                    (click)="moveApplicationMenuItem(node.item, -1)" [title]="'designer.moveMenuUp' | transloco"
+                    [attr.aria-label]="'designer.moveMenuUp' | transloco"
+                    [disabled]="!editable() || menuBusy() || !canMoveApplicationMenuItem(node.item, -1)">↑</button>
+                <button type="button" class="application-menu-action application-menu-reorder"
+                    (click)="moveApplicationMenuItem(node.item, 1)" [title]="'designer.moveMenuDown' | transloco"
+                    [attr.aria-label]="'designer.moveMenuDown' | transloco"
+                    [disabled]="!editable() || menuBusy() || !canMoveApplicationMenuItem(node.item, 1)">↓</button>
+                <button type="button" class="application-menu-action"
+                    (click)="toggleApplicationMenuSettings(node.item.id)"
+                    [class.is-active]="menuSettingsId() === node.item.id" [title]="'designer.targetPage' | transloco"
+                    [attr.aria-label]="'designer.targetPage' | transloco"
+                    [attr.aria-expanded]="menuSettingsId() === node.item.id"
+                    [disabled]="!editable() || menuBusy()">↗</button>
+                <button type="button" class="application-menu-action" (click)="createApplicationMenuGroup(node.item.id)"
+                    [title]="'designer.addSubmenu' | transloco" [attr.aria-label]="'designer.addSubmenu' | transloco"
+                    [disabled]="!editable() || menuBusy()">+▤</button>
+                <button type="button" class="application-menu-action" (click)="createApplicationMenuLink(node.item.id)"
+                    [title]="'designer.addMenuItem' | transloco" [attr.aria-label]="'designer.addMenuItem' | transloco"
+                    [disabled]="!editable() || menuBusy() || !pages().length">＋</button>
+                <button type="button" class="application-menu-action application-menu-remove"
+                    (click)="removeApplicationMenuItem(node.item)" [title]="'designer.removeMenuItem' | transloco"
+                    [attr.aria-label]="'designer.removeMenuItem' | transloco"
+                    [disabled]="!editable() || menuBusy()">×</button>
+            </div>
+        </div>
+        @if (menuSettingsId() === node.item.id) {
+        <div class="application-menu-settings">
+            <label>{{ 'designer.targetPage' | transloco }}
+                <select [value]="menuPageKey(node.item)"
+                    (change)="setApplicationMenuTarget(node.item, $any($event.target).value)"
+                    [disabled]="!editable() || menuBusy()">
+                    <option value="">{{ 'designer.noPage' | transloco }}</option>
+                    @for (page of pages(); track page.id) { <option [value]="page.key">{{ page.title }}</option> }
+                </select>
+            </label>
+        </div>
+        }
+        @if (node.children.length && expandedMenuIds().has(node.item.id)) {
+        <div class="application-menu-children" [id]="'application-menu-children-' + node.item.id" role="group">
+            <ng-container
+                *ngTemplateOutlet="applicationMenuEditorTree; context: {$implicit: node.children, level: level + 1}" />
+        </div>
+        }
+    </div>
+    }
+</ng-template>
+<ng-template #canvas let-items>
+    <div class="page-tree-items" [class.navigation-layout-left]="navigationPlacement(items) === 'left'"
+        [class.navigation-layout-right]="navigationPlacement(items) === 'right'"
+        [class.navigation-layout-top]="navigationPlacement(items) === 'top'">@for (node of items; track node.id) {
+        <section class="node" [class.responsive-grid]="!!node.responsiveColumns"
+            [class.container-node]="node.type === 'container'" [class.side-navigation]="isNavigationRoot(node)"
+            [class.top-navigation]="isNavigationRoot(node) && node.navigationPlacement === 'top'"
+            [class.empty-container]="node.type === 'container' && !node.children?.length"
+            [attr.aria-label]="node.text || node.type" [ngStyle]="nodeStyle(node)" [draggable]="inlineEditingId() !== node.id"
+            (dragstart)="dragNode($event, node)" [class.selected]="selectedId() === node.id"
+            (click)="$event.stopPropagation(); selectedId.set(node.id)" tabindex="0"
+            (keydown.enter)="selectedId.set(node.id)" (dragover)="$event.preventDefault()" (drop)="drop($event, node)">
+            @if (isNavigationRoot(node)) { <div class="navigation-brand-preview"><img [src]="navigationLogo(node)"
+                    alt="" /><strong>{{ navigationBrand(node) }}</strong></div> }
+            @switch (node.type) { @case ('gallery') { <ant-gallery [node]="node" [designMode]="true" /> } @case
+            ('data-grid') { <ant-designer-data-grid [node]="node" [designMode]="true" /> } @case ('pivot-table') { <ant-pivot-table [node]="node" [designMode]="true" /> } @case ('pagination') {
+            <ant-block-pagination [node]="node" /> } @case ('kanban') { <ant-kanban [node]="node" [designMode]="true" />
+            }
+            @case ('kpi') { <ant-data-widget [node]="node" [designMode]="true" /> } @case ('chart') {
+            <ant-data-widget [node]="node" [designMode]="true" /> } @case ('text') {
+                <p data-inline-edit-target [class.inline-editing]="inlineEditingId() === node.id"
+                    [attr.contenteditable]="inlineEditingId() === node.id ? 'true' : null"
+                    (dblclick)="beginInlineEdit(node, $event)" (blur)="finishInlineEdit(node, $event)"
+                    (keydown)="handleInlineEditKeydown(node, $event)">{{ node.text || ('ui.text_block'| transloco) }}</p>
+            } @case ('heading') { <h2 data-inline-edit-target [class.inline-editing]="inlineEditingId() === node.id"
+                [attr.contenteditable]="inlineEditingId() === node.id ? 'true' : null"
+                (dblclick)="beginInlineEdit(node, $event)" (blur)="finishInlineEdit(node, $event)"
+                (keydown)="handleInlineEditKeydown(node, $event)">{{ node.text }}</h2> } @case ('image') { @if (node.imageUrl) { <img [src]="node.imageUrl"
+                [alt]="node.text || 'Image'" style="max-width:100%"> } @else { <p>Choose an image URL</p> } } @case
+            ('button') { <button type="button" data-inline-edit-target [class.inline-editing]="inlineEditingId() === node.id"
+                [attr.contenteditable]="inlineEditingId() === node.id ? 'true' : null"
+                (dblclick)="beginInlineEdit(node, $event)" (blur)="finishInlineEdit(node, $event)"
+                (keydown)="handleInlineEditKeydown(node, $event)">{{ node.text || ('ui.button' | transloco) }}</button> } @case ('table') {
+            <ant-component-table [node]="node" [designMode]="true" /> } @case
+            ('form') { <div class="form-block">▤
+                Form {{ node.formId ? ('ui.bound' | transloco) : ('ui.select_a_data_form' | transloco) }}</div> } @case
+            ('container') {
+            @if (node.presentation) { <ant-section-block [node]="node" [designMode]="true">
+                <div collapse-content><ng-container
+                        *ngTemplateOutlet="canvas; context: {$implicit: navigationChildren(node)}" />
+                </div>
+            </ant-section-block> } @else {
+            <ng-container *ngTemplateOutlet="canvas; context: {$implicit: navigationChildren(node)}" />
+            }
+            }
+            @case ('icon') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('crud') { <h3>{{ node.text }}</h3>
+            <ant-component-table [node]="node" [designMode]="true" />
+            <small>{{ 'crud.preview' | transloco }}</small>
+            }
+            @case ('calendar') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('date-time-picker') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('flippable-card') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('timeline') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('tooltip') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('markdown') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('badge') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('barcode-reader') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('countdown') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('countup') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('qr-renderer') { <ant-display-block [node]="node" [designMode]="true" /> }
+            @case ('stopwatch') { <ant-display-block [node]="node" [designMode]="true" /> }
+            }
+            @if (selectedId() === node.id && editable()) {
+            <div class="canvas-selection-toolbar" (click)="$event.stopPropagation()" (dblclick)="$event.stopPropagation()"
+                (dragstart)="$event.stopPropagation()" (keydown.escape)="selectionActionsOpen.set(false)">
+                <nav class="canvas-toolbar-path" [attr.aria-label]="'designer.elementPath' | transloco">
+                    @for (ancestor of selectionPath(); track ancestor.id; let last = $last) {
+                    @if (!last) { <button type="button" (click)="selectCanvasNode(ancestor.id)">{{ ancestor.text || ('blocks.' + ancestor.type | transloco) }}</button><span>›</span> }
+                    @else { <strong>{{ ancestor.text || ('blocks.' + ancestor.type | transloco) }}</strong> }
+                    }
+                </nav>
+                @if (isInlineEditable(node)) {
+                <button type="button" class="canvas-toolbar-button" (click)="beginInlineEdit(node, $event)">
+                    <span aria-hidden="true">✎</span>{{ 'designer.editOnCanvas' | transloco }}
+                </button>
+                }
+                @if (node.type === 'chart') {
+                <label class="canvas-toolbar-field"><span>{{ 'designer.legendPosition' | transloco }}</span>
+                    <select [value]="node.legendPosition ?? ''" (change)="setChartLegendPosition(node, $any($event.target).value)">
+                        <option value="">{{ 'designer.legendAutomatic' | transloco }}</option>
+                        <option value="top">{{ 'designer.legendTop' | transloco }}</option>
+                        <option value="bottom">{{ 'designer.legendBottom' | transloco }}</option>
+                        <option value="left">{{ 'designer.legendLeft' | transloco }}</option>
+                        <option value="right">{{ 'designer.legendRight' | transloco }}</option>
+                    </select>
+                </label>
+                <label class="canvas-toolbar-check"><input type="checkbox" [checked]="!!node.showDataLabels"
+                    (change)="setChartDataLabels(node, $event)" /><span>{{ 'designer.showDataLabels' | transloco }}</span></label>
+                }
+                @if (node.type === 'button') {
+                <label class="canvas-toolbar-field"><span>{{ 'designer.buttonAction' | transloco }}</span>
+                    <select [value]="buttonActionType(node)" (change)="setButtonActionType(node, $any($event.target).value)">
+                        <option value="none">{{ 'designer.actionNone' | transloco }}</option>
+                        <option value="page">{{ 'designer.actionPage' | transloco }}</option>
+                        <option value="url">{{ 'designer.actionUrl' | transloco }}</option>
+                        <option value="form">{{ 'designer.actionFormDialog' | transloco }}</option>
+                    </select>
+                </label>
+                }
+                @if (node.type === 'image') {
+                <label class="canvas-toolbar-field"><span>{{ 'designer.image' | transloco }}</span>
+                    <input [value]="node.imageUrl ?? ''" (change)="setProperty('imageUrl', $any($event.target).value)" />
+                </label>
+                }
+                @if (['data-grid','table','crud','gallery','kanban','kpi','pivot-table','calendar'].includes(node.type)) {
+                <label class="canvas-toolbar-field"><span>{{ 'designer.dataSource' | transloco }}</span>
+                    <select [value]="node.objectId ?? ''" (change)="setProperty('objectId', $any($event.target).value)">
+                        <option value="">{{ 'designer.bindSource' | transloco }}</option>
+                        @for (object of app()?.objects ?? []; track object.id) { <option [value]="object.id">{{ object.name }}</option> }
+                    </select>
+                </label>
+                }
+                @if (node.type === 'pivot-table') {
+                <details class="canvas-toolbar-pivot-control"><summary>{{ 'businessBlocks.pivotRows' | transloco }} <b>{{ node.pivotRows?.length || 0 }}</b></summary>
+                    <div class="canvas-toolbar-pivot-popover">@for (field of tableFields(); track field.key) { <label><input type="checkbox" [checked]="node.pivotRows?.includes(field.key)" [disabled]="!editable() || !node.pivotRows?.includes(field.key) && ((node.pivotRows?.length || 0) >= 3 || node.pivotColumns?.includes(field.key))" (change)="togglePivotDimension('pivotRows', field.key, $event)"><span>{{ field.label || field.key }}</span></label> }</div>
+                </details>
+                <details class="canvas-toolbar-pivot-control"><summary>{{ 'businessBlocks.pivotColumns' | transloco }} <b>{{ node.pivotColumns?.length || 0 }}</b></summary>
+                    <div class="canvas-toolbar-pivot-popover">@for (field of tableFields(); track field.key) { <label><input type="checkbox" [checked]="node.pivotColumns?.includes(field.key)" [disabled]="!editable() || !node.pivotColumns?.includes(field.key) && ((node.pivotColumns?.length || 0) >= 2 || node.pivotRows?.includes(field.key))" (change)="togglePivotDimension('pivotColumns', field.key, $event)"><span>{{ field.label || field.key }}</span></label> }</div>
+                </details>
+                <details class="canvas-toolbar-pivot-control"><summary>{{ 'businessBlocks.pivotValues' | transloco }} <b>{{ node.pivotValues?.length || 0 }}</b></summary>
+                    <div class="canvas-toolbar-pivot-popover">@for (field of tableFields(); track field.key) { <div class="canvas-toolbar-measure"><label><input type="checkbox" [checked]="!!pivotMeasure(node, field.key)" [disabled]="!editable() || !pivotMeasure(node, field.key) && (node.pivotValues?.length || 0) >= 5" (change)="togglePivotValue(field.key, $event)"><span>{{ field.label || field.key }}</span></label>
+                        @if (pivotMeasure(node, field.key); as measure) { <select [value]="measure.aggregation" [attr.aria-label]="'businessBlocks.aggregationFor' | transloco: {field: field.label || field.key}" (change)="setPivotAggregation(field.key, $any($event.target).value)">@for (aggregation of ['sum','average','count','min','max']; track aggregation) { <option [value]="aggregation">{{ ('businessBlocks.aggregate.' + aggregation) | transloco }}</option> }</select> }
+                    </div> }</div>
+                </details>
+                <label class="canvas-toolbar-check"><input type="checkbox" [checked]="node.pivotRowTotals !== false" (change)="setPivotTotals('pivotRowTotals', $event)"><span>{{ 'businessBlocks.pivotRowTotals' | transloco }}</span></label>
+                <label class="canvas-toolbar-check"><input type="checkbox" [checked]="node.pivotColumnTotals !== false" (change)="setPivotTotals('pivotColumnTotals', $event)"><span>{{ 'businessBlocks.pivotColumnTotals' | transloco }}</span></label>
+                }
+                <div class="canvas-toolbar-more">
+                    <button type="button" class="canvas-toolbar-button canvas-toolbar-more-trigger"
+                        [attr.aria-expanded]="selectionActionsOpen()" [attr.aria-label]="'designer.moreElementActions' | transloco"
+                        (click)="selectionActionsOpen.update(open => !open)">•••</button>
+                    @if (selectionActionsOpen()) {
+                    <div class="canvas-toolbar-menu" role="menu">
+                        <button type="button" role="menuitem" (click)="selectCanvasParent()">↑ {{ 'designer.selectParent' | transloco }} <kbd>Esc</kbd></button>
+                        <button type="button" role="menuitem" (click)="duplicateSelectedNode()">▢ {{ 'designer.duplicateElement' | transloco }}</button>
+                        <button type="button" role="menuitem" class="canvas-toolbar-delete" (click)="selectCanvasNode(node.id); removeNode()">⌫ {{ 'pageRename.deleteConfirm' | transloco }}</button>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+        </section>
+
+        }</div>
+</ng-template>
+</div>

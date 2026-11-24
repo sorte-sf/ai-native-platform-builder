@@ -1,0 +1,38 @@
+<div ngClass="ngx-org-connector-{{direction}}" class="ngx-org-border" *ngIf="hasParent"></div>
+
+<div [ngClass]="node?.cssClass" class="ngx-org-box ngx-org-border ngx-org-background w-auto h-auto"
+  (click)="itemClick.emit(node)">
+
+  @if(node?.photoId){
+  <div
+    class="w-12 h-12 rounded-full border-white border-opacity-20 border-2 overflow-hidden transition-transform duration-300 hover:scale-125 ease-in-out">
+    <img [src]="getPhoto(node)" alt=""
+      class="object-cover w-full h-full max-w-xs hover:scale-150 transition duration-1000 ease-in-out z-0" imgFallback>
+  </div>
+  } @else {
+  <div
+    class="flex items-center justify-center w-10 h-10 rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
+    {{node?.name.charAt(0)}}
+  </div>
+  }
+
+  <div class="mx-2 w-full h-full text-center justify-center p-2">
+    <div class="ngx-org-name text-sm font-medium">{{node?.name}}</div>
+    <div class="ngx-org-title text-xs">{{node?.title}}</div>
+  </div>
+
+</div>
+
+<div ngClass="ngx-org-connector-{{direction}}" class="ngx-org-border" *ngIf="node?.children?.length"></div>
+
+<!-- <div ngClass="ngx-org-connector-{{direction}}" class="ngx-org-border" *ngIf="hasParent"></div>
+<div [ngClass]="node?.cssClass" class="ngx-org-box ngx-org-border ngx-org-background" (click)="itemClick.emit(node)">
+  <div *ngIf="node?.image" class="ngx-org-image ngx-org-border"
+    [ngStyle]="{ 'background-image': 'url(\''+ node?.image+'\')'}">
+  </div>
+  <div>
+    <div class="ngx-org-name">{{node?.name}}</div>
+    <div class="ngx-org-title">{{node?.title}}</div>
+  </div>
+</div>
+<div ngClass="ngx-org-connector-{{direction}}" class="ngx-org-border" *ngIf="node?.children?.length"></div> -->

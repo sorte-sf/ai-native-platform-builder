@@ -1,0 +1,22 @@
+
+export enum IDataTypeEnum {
+    Text = 1,
+    DateOnly,
+    DateTime,
+    TimeOnly,
+    MultipleSelection,
+    Number,
+    Boolean,
+    Email,
+    Phone,
+    Url,
+    Image,
+    File,
+    Password,
+    TextArea,
+    Color,
+    PhotoUrl,
+    Link,
+    Currency,
+    FileUpload,
+}

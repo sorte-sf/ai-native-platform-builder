@@ -1,0 +1,324 @@
+<main class="management-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">TENANT ADMINISTRATION</p>
+      <h1>Access control</h1>
+      <p>Organize users into groups, grant application roles, and define table- or record-level permissions.</p>
+    </div>
+  </header>
+  @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="feedback success" role="status">{{ notice() }}</p> }
+  <nav class="tabs" aria-label="Access control sections">
+    <button type="button" [class.active]="tab() === 'groups'" (click)="setTab('groups')">Groups <span>{{ groups().length
+        }}</span></button>
+    <button type="button" [class.active]="tab() === 'roles'" (click)="setTab('roles')">Roles <span>{{ roles().length
+        }}</span></button>
+    <button type="button" [class.active]="tab() === 'applications'" (click)="setTab('applications')">Application
+      access</button>
+    <button type="button" [class.active]="tab() === 'permissions'" (click)="setTab('permissions')">Permissions</button>
+  </nav>
+
+  @if (tab() === 'groups') {
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Create a group</h2>
+        <p>Groups collect tenant users. Their application roles are assigned in the Application access tab.</p>
+      </div>
+    </div>
+    <form class="form-grid" (ngSubmit)="saveGroup()"><label>Group key<input name="groupKey" [(ngModel)]="groupKey"
+          required maxlength="100" placeholder="procurement-team"></label><label>Group name<input name="groupName"
+          [(ngModel)]="groupName" required maxlength="160"
+          placeholder="Procurement team"></label><label>Description<input name="groupDescription"
+          [(ngModel)]="groupDescription" maxlength="1000"></label><button class="primary" [disabled]="saving()">{{
+        groupEditId ? 'Save group' : 'Create group' }}</button></form>
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Groups</h2>
+        <p>Select a group to manage its users.</p>
+      </div><button class="secondary" type="button" (click)="load()">Refresh</button>
+    </div>
+    @if (!groups().length) { <p class="empty">No groups yet. Create one above.</p> }
+    @else { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Key</th>
+            <th>Members</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (group of groups(); track group.id) { <tr [class.selected]="selectedGroupId() === group.id">
+            <td><button class="text-button" (click)="selectGroup(group.id)">{{ group.name }}</button></td>
+            <td>{{ group.key }}</td>
+            <td>{{ group.memberCount ?? '—' }}</td>
+            <td class="actions"><button class="secondary" type="button" (click)="editGroup(group)">Edit</button><button
+                class="danger" type="button" (click)="removeGroup(group)">Delete</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> }
+  </section>
+  @if (selectedGroupId()) { <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Group members</h2>
+        <p>Membership applies across this tenant. App access still requires an application role assignment.</p>
+      </div>
+    </div>
+    <form class="inline-form" (ngSubmit)="addMember()"><label>Add tenant user<select name="member"
+          [(ngModel)]="selectedUserId" required>
+          <option value="">Choose a user</option>@for (user of users(); track user.id) { @if (user.isActive &&
+          !members().some(m => m.userId === user.id)) { <option [value]="user.id">{{ user.displayName }} · {{ user.email
+            }}</option> } }
+        </select></label><button class="primary" [disabled]="saving() || !selectedUserId">Add to group</button></form>
+    @if (members().length) { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (member of members(); track member.id) { <tr>
+            <td>{{ member.displayName }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.isActive ? 'Active' : 'Inactive' }}</td>
+            <td class="actions"><button class="danger" (click)="removeMember(member)">Remove</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> } @else { <p class="empty">This group has no users yet.</p> }
+  </section> }
+  }
+
+  @if (tab() === 'roles') {
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Create an application role</h2>
+        <p>Roles are tenant-defined and become effective only when assigned to a group for an application.</p>
+      </div>
+    </div>
+    <form class="form-grid" (ngSubmit)="saveRole()"><label>Role key<input name="roleKey" [(ngModel)]="roleKey" required
+          maxlength="100" placeholder="approver"></label><label>Role name<input name="roleName" [(ngModel)]="roleName"
+          required maxlength="160" placeholder="Approver"></label><label>Description<input name="roleDescription"
+          [(ngModel)]="roleDescription" maxlength="1000"></label><button class="primary" [disabled]="saving()">{{
+        roleEditId ? 'Save role' : 'Create role' }}</button></form>
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Roles</h2>
+        <p>Use permission grants to specify what each role can do.</p>
+      </div>
+    </div>@if (!roles().length) { <p class="empty">No roles yet.</p> } @else { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Key</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (role of roles(); track role.id) { <tr>
+            <td>{{ role.name }}</td>
+            <td>{{ role.key }}</td>
+            <td>{{ role.isActive ? 'Active' : 'Inactive' }}</td>
+            <td class="actions"><button class="secondary" [disabled]="role.isSystemRole"
+                (click)="editRole(role)">Edit</button><button class="danger" [disabled]="role.isSystemRole"
+                (click)="removeRole(role)">Delete</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> }
+  </section>
+  }
+
+  @if (tab() === 'applications' || tab() === 'permissions') {
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Choose an application</h2>
+        <p>Only published applications can receive user access rules.</p>
+        @if (selectedApplicationId()) { <p><a [href]="publishedAssistantUrl()">Open the published app assistant sign-in</a> to share with users who have access to this application.</p> }
+      </div>
+    </div>@if (!applications().length) { <p class="empty">Publish an application before configuring access.</p> } @else
+    { <label class="application-picker">Application<select [ngModel]="selectedApplicationId()"
+        (ngModelChange)="selectApplication($event)" name="application">@for (app of applications(); track app.id) {
+        <option [value]="app.id">{{ app.name }} · v{{ app.publishedVersion }}</option> }</select></label> }
+  </section>
+  }
+
+  @if (tab() === 'applications' && selectedApplicationId()) {
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Assign an individual user</h2>
+        <p>Direct assignments apply to this application only. For larger teams, use groups below.</p>
+      </div>
+    </div>
+    <form class="inline-form" (ngSubmit)="assignDirectUser()"><label>User<select name="directUser"
+          [(ngModel)]="selectedDirectUserId" required>
+          <option value="">Choose user</option>@for (user of users(); track user.id) { @if (user.isActive &&
+          !directMembers().some(m => m.userId === user.id)) { <option [value]="user.id">{{ user.displayName }} · {{
+            user.email }}</option> } }
+        </select></label><label>Application role<select name="directRole" [(ngModel)]="selectedDirectRoleId" required>
+          <option value="">Choose role</option>@for (role of roles(); track role.id) { @if (role.isActive) { <option
+            [value]="role.id">{{ role.name }}</option> } }
+        </select></label><button class="primary"
+        [disabled]="saving() || !selectedDirectUserId || !selectedDirectRoleId">Assign user</button></form>@if
+    (directMembers().length) { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Direct user</th>
+            <th>Email</th>
+            <th>Role key</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (member of directMembers(); track member.userId) { <tr>
+            <td>{{ member.displayName }}</td>
+            <td>{{ member.email }}</td>
+            <td><span class="role-pill">{{ member.role }}</span></td>
+            <td class="actions"><button class="danger" (click)="removeDirectUser(member)">Remove</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> }
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Assign a group role</h2>
+        <p>Membership in the group plus this app-specific role grants application access.</p>
+      </div>
+    </div>
+    <form class="inline-form" (ngSubmit)="assignGroupRole()"><label>Group<select name="group"
+          [ngModel]="selectedGroupId()" (ngModelChange)="selectGroup($event)" required>
+          <option value="">Choose group</option>@for (group of groups(); track group.id) { <option [value]="group.id">{{
+            group.name }}</option> }
+        </select></label><label>Role<select name="role" [(ngModel)]="selectedRoleId" required>
+          <option value="">Choose role</option>@for (role of roles(); track role.id) { @if (role.isActive) { <option
+            [value]="role.id">{{ role.name }}</option> } }
+        </select></label><button class="primary" [disabled]="saving() || !selectedGroupId() || !selectedRoleId">Assign
+        role</button></form>@if (groupRoles().length) { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Role</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (item of groupRoles(); track item.id) { <tr>
+            <td>{{ item.groupName }}</td>
+            <td><span class="role-pill">{{ item.roleName }}</span></td>
+            <td class="actions"><button class="danger" (click)="removeGroupRole(item)">Remove</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> } @else { <p class="empty">No group roles assigned to this application.</p> }
+  </section>
+  }
+
+  @if (tab() === 'permissions' && selectedApplicationId()) {
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Define a permission</h2>
+        <p>Create read, create, update or delete rules at application, table, or individual-record scope.</p>
+      </div>
+    </div>
+    <form class="form-grid permission-form" (ngSubmit)="savePermission()"><label>Permission key<input
+          name="permissionKey" [(ngModel)]="permissionKey" required maxlength="120"
+          placeholder="purchase-orders-read"></label><label>Display name<input name="permissionName"
+          [(ngModel)]="permissionName" required maxlength="200"
+          placeholder="Read purchase orders"></label><label>Action<select name="action" [(ngModel)]="permissionAction">
+          <option value="read">Read</option>
+          <option value="create">Create</option>
+          <option value="update">Update</option>
+          <option value="delete">Delete</option>
+        </select></label><label>Table / data object<select name="objectId" [ngModel]="permissionObjectId"
+          (ngModelChange)="selectPermissionObject($event)">
+          <option value="">Whole application</option>@for (object of objects(); track object.id) { <option
+            [value]="object.id">{{ object.name }}</option> }
+        </select></label>@if (permissionObjectId) { <label>Specific record (optional)<select name="recordId"
+          [(ngModel)]="permissionRecordId">
+          <option value="">All records in this table</option>@for (record of records(); track record.id) { <option
+            [value]="record.id">{{ record.id }} · {{ record.dataJson }}</option> }
+        </select></label> }<button class="primary" [disabled]="saving()">{{ permissionEditId ? 'Save permission' :
+        'Create permission' }}</button></form>@if (permissions().length) { <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Key</th>
+            <th>Scope</th>
+            <th>Action</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (permission of permissions(); track permission.id) { <tr>
+            <td>{{ permission.name }}</td>
+            <td>{{ permission.key }}</td>
+            <td>{{ permission.objectId ? 'Table' : 'Application' }}{{ permission.recordId ? ' / record' : '' }}</td>
+            <td>{{ permission.action }}</td>
+            <td class="actions"><button class="secondary" (click)="editPermission(permission)">Edit</button><button
+                class="danger" (click)="removePermission(permission)">Delete</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> } @else { <p class="empty">No permissions defined for this application yet.</p> }
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Grant a permission</h2>
+        <p>Grant to an individual user, group, or role. A grant is limited to this application.</p>
+      </div>
+    </div>
+    <form class="inline-form" (ngSubmit)="addGrant()"><label>Permission<select name="permission"
+          [(ngModel)]="selectedPermissionId" required>
+          <option value="">Choose permission</option>@for (permission of permissions(); track permission.id) { <option
+            [value]="permission.id">{{ permission.name }} · {{ permission.action }}</option> }
+        </select></label><label>Grant to<select name="subjectType" [(ngModel)]="subjectType"
+          (ngModelChange)="subjectId = ''">
+          <option value="group">Group</option>
+          <option value="role">Role</option>
+          <option value="user">User</option>
+        </select></label>@if (subjectType === 'group') { <label>Group<select name="subjectId" [(ngModel)]="subjectId"
+          required>
+          <option value="">Choose group</option>@for (group of groups(); track group.id) { <option [value]="group.id">{{
+            group.name }}</option> }
+        </select></label> } @else if (subjectType === 'user') { <label>User<select name="subjectId"
+          [(ngModel)]="subjectId" required>
+          <option value="">Choose user</option>@for (user of users(); track user.id) { @if (user.isActive) { <option
+            [value]="user.id">{{ user.displayName }} · {{ user.email }}</option> } }
+        </select></label> } @else { <label>Role<select name="subjectId" [(ngModel)]="subjectId" required>
+          <option value="">Choose role</option>@for (role of roles(); track role.id) { @if (role.isActive) { <option
+            [value]="role.key">{{ role.name }}</option> } }
+        </select></label> }<button class="primary"
+        [disabled]="saving() || !selectedPermissionId || !subjectId">Grant</button></form>@if (grants().length) { <div
+      class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Subject type</th>
+            <th>Subject ID / key</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>@for (grant of grants(); track grant.id) { <tr>
+            <td>{{ grant.permissionName }}</td>
+            <td>{{ grant.subjectType }}</td>
+            <td>{{ grant.subjectId }}</td>
+            <td class="actions"><button class="danger" (click)="removeGrant(grant)">Revoke</button></td>
+          </tr> }</tbody>
+      </table>
+    </div> } @else { <p class="empty">No permission grants yet.</p> }
+  </section>
+  }
+</main>

@@ -1,0 +1,152 @@
+@if (!range) {
+
+<ng-container>
+
+  <mat-form-field appearance="outline" class="cursor-pointer w-full" (click)="datepicker.open()">
+    <mat-label>{{datePlaceholderText | transloco}}</mat-label>
+    <input matInput [matDatepicker]="datepicker" [(ngModel)]="startDate" [readonly]="true">
+    <mat-datepicker-toggle matSuffix [for]="datepicker"></mat-datepicker-toggle>
+    <mat-datepicker #datepicker>
+      <mat-datepicker-actions>
+        <div class="flex flex-col gap-8 w-full items-center mt-4">
+
+          @if (!range) {
+          <div class="flex gap-2">
+            <select [(ngModel)]="fromHour" (change)="dateChange()">
+              @for (hour of hours; track hour.value) {
+              <option [value]="hour.value">
+                {{hour.text}}
+              </option>
+              }
+            </select>
+            <select [(ngModel)]="fromMin" (change)="dateChange()">
+              @for (min of mins; track min.value) {
+              <option [value]="min.value">
+                {{min.text}}
+              </option>
+              }
+            </select>
+          </div>
+          }
+
+          <div class="flex gap-4 justify-end w-full p-2">
+            <button class="text-gray-400 hover:text-gray-600" (click)="clearDates()">
+              {{'action.clear' | transloco}}
+            </button>
+            <button class="text-primary-600 hover:text-primary-700" matDateRangePickerApply (click)="dateChange()">
+              {{'action.apply' | transloco}}
+            </button>
+          </div>
+
+        </div>
+      </mat-datepicker-actions>
+    </mat-datepicker>
+  </mat-form-field>
+</ng-container>
+
+} @else {
+
+<ng-container>
+  <mat-form-field appearance="outline" class="cursor-pointer w-full" (click)="rangePicker.open()">
+    <mat-label>{{rangeDatePlaceholderText | transloco}}</mat-label>
+    <mat-date-range-input [rangePicker]="rangePicker" [max]="maxRangeEndDate" [comparisonStart]="startDate"
+      [comparisonEnd]="endDate">
+
+      <input matStartDate [placeholder]="rangeStartPlaceholderText | transloco " [(ngModel)]="startDate"
+        (dateChange)="rangeStartDateChange()" [readonly]="true">
+
+      <input matEndDate [placeholder]="rangeEndPlaceholderText | transloco" [(ngModel)]="endDate"
+        (dateChange)="rangeEndDateChange()" [readonly]="true">
+
+    </mat-date-range-input>
+    <mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
+    <mat-date-range-picker #rangePicker panelClass="custom-range-date-picker" id="test-datepicker"
+      (opened)="rangePickerOpened()">
+
+      <!-- <mat-date-range-picker-actions> -->
+
+      <div class="flex flex-col p-2 justify-between" #rangePickerActions>
+        <div class="flex flex-col border-b mb-2 pb-2">
+          <p class="border-b p-2 mb-2 font-bold text-gray-500 text-center">{{'common.preset' | transloco}}
+          </p>
+          <button class="text-gray-500 hover:text-black" (click)="selectToday()">
+            {{'action.today' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectYesterday()">
+            {{'action.yesterday' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectThreeDaysAgo()">
+            {{'action.threedaysago' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectLastWeek()">
+            {{'action.lastweek' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectThisWeek()">
+            {{'action.thisweek' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectThisMonth()">
+            {{'action.thismonth' | transloco}}
+          </button>
+          <button class="text-gray-500 hover:text-black" (click)="selectLastMonth()">
+            {{'action.lastmonth' | transloco}}
+          </button>
+        </div>
+
+        <div class="flex flex-col">
+          @if (_showTime) {
+          <div class="grid grid-cols-3 items-center">
+            <span class="font-bold">
+              {{'common.from' | transloco}}
+            </span>
+            <select [(ngModel)]="fromHour" (change)="dateChange(false)">
+              @for (hour of hours; track hour.value) {
+              <option [value]="hour.value">
+                {{hour.text}}
+              </option>
+              }
+            </select>
+            <select [(ngModel)]="fromMin" (change)="dateChange(false)">
+              @for (min of mins; track min.value) {
+              <option [value]="min.value">
+                {{min.text}}
+              </option>
+              }
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 items-center">
+            <span class="font-bold">{{'common.to' | transloco}}</span>
+            <select [(ngModel)]="toHour" (change)="dateChange(false)">
+              @for (hour of hours; track hour.value) {
+              <option [value]="hour.value">
+                {{hour.text}}
+              </option>
+              }
+            </select>
+            <select [(ngModel)]="toMin" (change)="dateChange(false)">
+              @for (min of mins; track min.value) {
+              <option [value]="min.value">
+                {{min.text}}
+              </option>
+              }
+            </select>
+          </div>
+          }
+
+          <div class="mt-4 flex gap-4 justify-center">
+            <button class="text-gray-400 hover:text-gray-600" (click)="clearDates()">
+              {{'action.clear' | transloco}}
+            </button>
+            <button class="text-primary-600 hover:text-primary-700" matDateRangePickerApply (click)="dateChange()">
+              {{'action.apply' | transloco}}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- </mat-date-range-picker-actions> -->
+
+    </mat-date-range-picker>
+  </mat-form-field>
+</ng-container>
+}

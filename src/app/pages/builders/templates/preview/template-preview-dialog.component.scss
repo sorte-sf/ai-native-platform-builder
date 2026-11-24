@@ -1,0 +1,133 @@
+ :host {
+     display: block;
+     color: #edf5fa;
+     background: #0d1722;
+ }
+
+ .preview-dialog {
+     display: flex;
+     flex-direction: column;
+     height: min(85vh, 900px);
+     min-height: 420px;
+ }
+
+ .preview-header {
+     display: flex;
+     align-items: center;
+     flex-wrap: wrap;
+     gap: 18px;
+     padding: 18px 22px;
+     border-bottom: 1px solid #314352;
+ }
+
+ .heading {
+     flex: 1;
+     min-width: 150px;
+ }
+
+ .eyebrow {
+     color: #faa61a;
+     font-size: 10px;
+     font-weight: 700;
+     letter-spacing: .15em;
+ }
+
+ h2 {
+     margin: 3px 0 0;
+     font-size: 20px;
+     line-height: 1.2;
+ }
+
+ .controls {
+     display: flex;
+     gap: 4px;
+     padding: 4px;
+     border: 1px solid #314352;
+     border-radius: 9px;
+ }
+
+ .controls button,
+ .close {
+     border: 0;
+     border-radius: 6px;
+     padding: 8px 13px;
+     background: transparent;
+     color: #b9cad5;
+     cursor: pointer;
+     font: inherit;
+ }
+
+ .controls button.active {
+     background: #5e4fa2;
+     color: #fff;
+ }
+
+ .controls button:hover,
+ .close:hover {
+     background: #403672;
+     color: #fff;
+ }
+
+ button:focus-visible {
+     outline: 2px solid #faa61a;
+     outline-offset: 2px;
+ }
+
+ .preview-stage {
+     flex: 1;
+     min-height: 0;
+     display: flex;
+     justify-content: center;
+     padding: 18px;
+     overflow: auto;
+     background: #121f2a;
+ }
+
+ .device {
+     width: 100%;
+     height: 100%;
+     min-height: 320px;
+     background: #fff;
+     box-shadow: 0 12px 36px #0007;
+     transition: width .25s ease;
+ }
+
+ .device.tablet {
+     width: min(768px, 100%);
+ }
+
+ .device.mobile {
+     width: min(390px, 100%);
+ }
+
+ iframe {
+     display: block;
+     width: 100%;
+     height: 100%;
+     border: 0;
+     background: #fff;
+ }
+
+ footer {
+     padding: 10px 22px;
+     border-top: 1px solid #314352;
+     color: #a9bac8;
+     font-size: 12px;
+ }
+
+ @media(max-width:640px) {
+     .preview-header {
+         gap: 10px;
+         padding: 12px;
+     }
+
+     .controls {
+         order: 3;
+         width: 100%;
+         justify-content: center;
+     }
+
+     .preview-stage {
+         padding: 8px;
+     }
+ }

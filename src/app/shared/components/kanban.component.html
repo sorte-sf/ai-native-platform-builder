@@ -1,0 +1,14 @@
+<h3>{{ node().text }}</h3>
+@if (loading()) { <p role="status">{{ 'ui.loading' | transloco }}</p> }
+@if (failed()) { <p role="alert">{{ 'blocks.loadError' | transloco }}</p> }
+<p>{{ 'businessBlocks.kanbanHelp' | transloco }}</p>
+@if (!designMode()) { <p>{{ 'businessBlocks.sampleScope' | transloco }}</p> }
+<div class="board">
+    @for (lane of lanes(); track lane.name) {
+    <section>
+        <h4>{{ lane.name }} · {{ lane.cards.length }}</h4>
+        @for (card of lane.cards; track $index) {
+        <article>{{ card }}</article>
+        }
+    </section> }
+</div>

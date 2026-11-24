@@ -1,0 +1,141 @@
+ .update-review {
+     color: var(--builder-text);
+     padding: 1.4rem;
+     max-height: 78vh;
+     overflow: auto
+ }
+
+ header,
+ footer {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     gap: 1rem
+ }
+
+ header {
+     align-items: flex-start
+ }
+
+ h2 {
+     margin: .35rem 0;
+     font-size: 1.25rem
+ }
+
+ h3 {
+     font-size: .95rem;
+     margin: 1.3rem 0 .6rem
+ }
+
+ .eyebrow {
+     font-size: .7rem;
+     font-weight: 700;
+     letter-spacing: .08em;
+     text-transform: uppercase;
+     color: var(--ant-primary)
+ }
+
+ p {
+     color: var(--builder-muted);
+     margin: .35rem 0
+ }
+
+ .close {
+     border: 0;
+     background: transparent;
+     font-size: 1.5rem;
+     cursor: pointer;
+     color: inherit
+ }
+
+ .safety-note {
+     margin: 1rem 0;
+     padding: .8rem 1rem;
+     border-radius: .65rem;
+     background: color-mix(in srgb, var(--ant-primary) 9%, var(--builder-panel));
+     font-size: .85rem
+ }
+
+ .change-list,
+ .notes {
+     list-style: none;
+     padding: 0;
+     margin: 0
+ }
+
+ .change-list {
+     border: 1px solid var(--builder-border);
+     border-radius: .65rem;
+     overflow: hidden
+ }
+
+ .change-list li {
+     display: grid;
+     grid-template-columns: 7rem minmax(0, 1fr) auto;
+     align-items: center;
+     gap: .75rem;
+     padding: .65rem .8rem;
+     border-bottom: 1px solid var(--builder-border)
+ }
+
+ .change-list li:last-child {
+     border-bottom: 0
+ }
+
+ .change-kind,
+ .change-action {
+     font-size: .75rem;
+     color: var(--builder-muted)
+ }
+
+ .change-kind {
+     text-transform: capitalize
+ }
+
+ .change-list small {
+     display: block;
+     color: var(--builder-muted);
+     font-size: .72rem
+ }
+
+ .notes {
+     margin-top: .8rem;
+     color: var(--builder-muted);
+     font-size: .78rem
+ }
+
+ .notes li {
+     margin: .35rem 0
+ }
+
+ .empty {
+     padding: 1rem;
+     border: 1px dashed var(--builder-border);
+     border-radius: .65rem
+ }
+
+ footer {
+     justify-content: flex-end;
+     margin-top: 1.4rem
+ }
+
+ .secondary,
+ .primary {
+     border: 1px solid var(--builder-border);
+     border-radius: .55rem;
+     padding: .65rem 1rem;
+     cursor: pointer;
+     background: var(--builder-panel);
+     color: inherit
+ }
+
+ .primary {
+     background: var(--ant-primary);
+     color: white;
+     border-color: var(--ant-primary)
+ }
+
+ .primary:disabled {
+     opacity: .55;
+     cursor: not-allowed
+ }

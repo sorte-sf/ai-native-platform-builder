@@ -1,0 +1,11 @@
+@if (node().presentation === 'collapse') {
+<details open>
+  <summary>{{ node().text || ('elements.collapse' | transloco) }}</summary><ng-container [ngTemplateOutlet]="content" />
+</details>
+} @else {
+<div class="section-buttons">@for (child of node().children || []; track child.id) { <button type="button"
+    [attr.aria-pressed]="active() === $index" (click)="select($index)">{{ child.text || (('elements.section' |
+    transloco) + ' ' + ($index + 1)) }}</button> }</div>
+<ng-container [ngTemplateOutlet]="content" />
+}
+<ng-template #content><ng-content /></ng-template>

@@ -1,0 +1,151 @@
+<aside id="builder-sidenav" [class.collapsed]="collapsed()">
+    <div class="brand">
+        <span class="rounded-full w-10 h-10 bg-transparent flex">
+            <ant-logo-widget />
+        </span>
+        @if (!collapsed()) {
+        <span>
+            <div class="flex flex-row justify-between">
+                <div class="text-xl flex flex-row">
+                    {{ 'ui.antsoft' | transloco }}
+                    <div class="ml-1 justify-end">
+                        <signalr-connection />
+                    </div>
+                </div>
+            </div>
+            <div class="text-muted">
+                {{ 'ui.builder_studio' | transloco }}
+            </div>
+        </span>
+        }
+    </div>
+
+    <nav [attr.aria-label]="'ui.builder_navigation' | transloco">
+        @if (!collapsed()) { <small class="nav-section-heading">{{ 'ui.builder_workspace' | transloco }}</small> }
+        <a routerLink="dashboard" routerLinkActive="active" [title]="'ui.system_status' | transloco"
+            [attr.aria-label]="'ui.system_status' | transloco">
+            <span class="nav-icon">
+                <fa-icon [icon]="icons.settings" />
+            </span>
+            @if (!collapsed()) { <span>{{ 'ui.system_status' | transloco }}</span> }
+        </a>
+        <a routerLink="applications" routerLinkActive="active" [title]="'ui.applications' | transloco"
+            [attr.aria-label]="'ui.applications' | transloco">
+            <span class="nav-icon">
+                <fa-icon [icon]="icons.applications" />
+            </span>
+            @if (!collapsed()) { <span>{{ 'ui.applications' | transloco }}</span> }
+        </a>
+        @if (auth.hasAnyRole(['SystemAdmin', 'TenantAdmin'])) {
+        <a routerLink="tenant-configurations" routerLinkActive="active" title="Tenants &amp; configurations"
+            aria-label="Tenants and configurations">
+            <span class="nav-icon"><fa-icon [icon]="icons.tenants" /></span>
+            @if (!collapsed()) { <span>Tenants &amp; configurations</span> }
+        </a>
+        }
+        @if (auth.hasAnyRole(['SystemAdmin', 'TenantAdmin'])) {
+        @if (!collapsed()) { <small class="nav-section-heading">User management</small> }
+        <a routerLink="user-management/users" routerLinkActive="active" title="Users" aria-label="Users">
+            <span class="nav-icon"><fa-icon [icon]="icons.users" /></span>
+            @if (!collapsed()) { <span>Users</span> }
+        </a>
+        <a routerLink="user-management/application-access" routerLinkActive="active" title="Application access" aria-label="Application access">
+            <span class="nav-icon"><fa-icon [icon]="icons.appAccess" /></span>
+            @if (!collapsed()) { <span>Application access</span> }
+        </a>
+        }
+        @if (!collapsed()) { <small class="nav-section-heading apps-heading">{{ 'ui.applications' | transloco }}</small>
+        }
+        <a routerLink="custom-dashboard" routerLinkActive="active" [title]="'ui.custom_dashboards' | transloco"
+            [attr.aria-label]="'ui.custom_dashboards' | transloco">
+            <span class="nav-icon">
+                <fa-icon [icon]="icons.bars" />
+            </span>
+            @if (!collapsed()) { <span>{{ 'ui.custom_dashboards' | transloco }}</span> }
+        </a>
+        <!-- <a routerLink="templates-hub" routerLinkActive="active" [title]="'ui.templates_hub' | transloco"
+            [attr.aria-label]="'ui.templates_hub' | transloco">
+            <span class="nav-icon">
+                <fa-icon [icon]="icons.template" />
+            </span>
+            @if (!collapsed()) { <span>{{ 'ui.templates_hub' | transloco }}</span> }
+        </a>
+        <a routerLink="assistant" routerLinkActive="active" [title]="'ui.assistants' | transloco"
+            [attr.aria-label]="'ui.assistants' | transloco">
+            <span class="nav-icon">
+                <fa-icon [icon]="icons.sparkles" />
+            </span>
+            @if (!collapsed()) { <span>{{ 'ui.assistants' | transloco }}</span> }
+        </a> -->
+    </nav>
+    @if (applicationMenu().length) {
+    <nav class="application-navigation" [attr.aria-label]="'ui.selected_application_modules' | transloco">
+        @if (!collapsed()) { <small class="app-menu-heading">{{ 'ui.application_modules' | transloco }}</small> }
+        @for (item of applicationMenu(); track item.id) {
+        @if (item.route) { <a [routerLink]="item.route"
+            [queryParams]="{tenantId: menuTenantId(), moduleId: item.moduleId}" routerLinkActive="active"
+            [title]="item.label" [attr.aria-label]="item.label">
+            <span class="nav-icon"><fa-icon [icon]="moduleIcon(item)" /></span>
+            @if (!collapsed()) { <span>{{ item.label | transloco }}</span> }
+        </a> }
+        }
+    </nav>
+    }
+
+    <!-- <footer class="relative shrink-0 border-t border-white/[.07] p-2.5"> -->
+    <div class="account-panel">
+        <button type="button" class="user account-trigger" (click)="toggleAccountMenu()"
+            [attr.aria-expanded]="accountMenuOpen()" aria-haspopup="menu"
+            [attr.aria-controls]="accountMenuOpen() ? 'sidenav-account-menu' : null"
+            [attr.aria-label]="'ui.open_account_menu' | transloco">
+            <span class="avatar">{{ auth.initials() }}</span>
+            @if (!collapsed()) { <span>
+                <strong class="text-lg text-center">{{ auth.displayName()}}</strong>
+                <small class="italic text-muted">{{ 'ui.builder_workspace' | transloco }}</small>
+            </span>
+            <span class="account-chevron" aria-hidden="true">⌄</span>
+            }
+        </button>
+        @if (accountMenuOpen()) { <div id="sidenav-account-menu" class="account-menu open" role="menu">
+            <div class="account-menu-heading">
+                <small>{{ 'ui.welcome_back' | transloco }}</small>
+                <strong>{{ auth.displayName() }}</strong>
+            </div>
+            @if (subscriptionUsage(); as usage) {
+            <section class="account-usage-card" [attr.aria-label]="'subscription.usageTitle' | transloco">
+                <div class="account-usage-heading">
+                    <strong>{{ 'subscription.usageTitle' | transloco }}</strong>
+                    @if (usage.endsOn) { <small>{{ usage.endsOn | date:'mediumDate' }}</small> }
+                </div>
+                <div class="account-usage-line">
+                    <span>{{ 'subscription.applications' | transloco }}</span>
+                    <strong>{{ usage.applicationsUsed }}/{{ usage.applicationsLimit }}</strong>
+                </div>
+                <div class="account-usage-meter"><span [style.width.%]="usage.applicationsLimit ? (usage.applicationsUsed / usage.applicationsLimit * 100) : 0"></span></div>
+                <div class="account-usage-line">
+                    <span>{{ 'subscription.teamMembers' | transloco }}</span>
+                    <strong>{{ usage.usersUsed }}/{{ usage.usersLimit }}</strong>
+                </div>
+                <div class="account-usage-meter"><span [style.width.%]="usage.usersLimit ? (usage.usersUsed / usage.usersLimit * 100) : 0"></span></div>
+                <div class="account-usage-line account-usage-secondary">
+                    <span>{{ 'subscription.aiRequests' | transloco }}</span><strong>{{ usage.aiRequestsThisMonth }}</strong>
+                </div>
+                <div class="account-usage-line account-usage-secondary">
+                    <span>{{ 'subscription.integrations' | transloco }}</span><strong>{{ usage.integrationsConfigured }}</strong>
+                </div>
+                <a class="account-upgrade" routerLink="/builder/subscription" role="menuitem" (click)="accountMenuOpen.set(false)">
+                    {{ 'subscription.managePlan' | transloco }} <span aria-hidden="true">↗</span>
+                </a>
+            </section>
+            }
+            <button type="button" class="account-action" role="menuitem" (click)="openChangePassword()">
+                <fa-icon [icon]="icons.changePassword" aria-hidden="true" />{{ 'ui.change_password' | transloco }}
+            </button>
+            <button type="button" class="account-action logout" role="menuitem" (click)="logout()">
+                {{ 'ui.sign_out'|transloco }}
+            </button>
+        </div> }
+    </div>
+    <!-- </footer> -->
+
+</aside>

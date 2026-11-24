@@ -1,0 +1,268 @@
+:host {
+    display: block;
+    height: 100%;
+    overflow: auto;
+    background: #f4f6fa;
+    color: #1d2939
+}
+
+.ai-page {
+    max-width: 1500px;
+    margin: auto;
+    padding: 30px clamp(16px, 3vw, 42px) 48px
+}
+
+.hero,
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px
+}
+
+.hero {
+    margin-bottom: 22px
+}
+
+.eyebrow {
+    color: #6852a3;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .12em
+}
+
+.hero h1 {
+    margin: 5px 0;
+    font-size: 28px;
+    letter-spacing: -.04em
+}
+
+.hero p,
+.section-heading p {
+    margin: 0;
+    color: #738096;
+    font-size: 13px;
+    line-height: 1.5
+}
+
+.tenant-picker {
+    width: min(560px, 48%)
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600
+}
+
+.tenant-picker select,
+.form-grid input,
+.form-grid select,
+.month {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 7px;
+    padding: 10px 11px;
+    border: 1px solid #d8deea;
+    border-radius: 8px;
+    background: white;
+    color: #273449;
+    font: inherit;
+    font-size: 12px
+}
+
+.panel {
+    margin-bottom: 16px;
+    padding: 22px;
+    border: 1px solid #e0e5ed;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 4px 16px #17203306
+}
+
+.muted,
+.empty {
+    color: #7d899b
+}
+
+.section-heading {
+    align-items: center;
+    margin-bottom: 18px
+}
+
+.section-heading h2 {
+    margin: 0 0 5px;
+    font-size: 17px
+}
+
+.mode-pill,
+.result {
+    padding: 5px 9px;
+    border-radius: 99px;
+    background: #e5f6ed;
+    color: #188052;
+    font-size: 11px;
+    font-weight: 650
+}
+
+.mode-pill.off,
+.result.failed {
+    background: #fff0ed;
+    color: #ba3d31
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px
+}
+
+.form-grid small {
+    display: block;
+    margin-top: 4px;
+    color: #8792a3;
+    font-size: 10px;
+    font-weight: 400
+}
+
+.form-grid .wide {
+    grid-column: span 2
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #eef0f4
+}
+
+.form-footer span {
+    color: #7c8798;
+    font-size: 11px
+}
+
+.form-footer button {
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 8px;
+    background: #584696;
+    color: white;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer
+}
+
+.form-footer button:disabled {
+    opacity: .6
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px
+}
+
+.stats article {
+    padding: 17px;
+    border: 1px solid #e0e5ed;
+    border-radius: 12px;
+    background: white
+}
+
+.stats small,
+.stats strong {
+    display: block
+}
+
+.stats small {
+    color: #7b8798;
+    font-size: 11px
+}
+
+.stats strong {
+    margin-top: 7px;
+    font-size: 23px
+}
+
+.month {
+    width: auto;
+    margin: 0
+}
+
+.table-wrap {
+    overflow: auto
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px
+}
+
+th,
+td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #edf0f4;
+    text-align: left;
+    white-space: nowrap
+}
+
+th {
+    color: #748096;
+    font-size: 10px;
+    font-weight: 650
+}
+
+td {
+    color: #354258
+}
+
+.empty {
+    padding: 32px;
+    text-align: center;
+    font-size: 12px
+}
+
+@media(max-width:850px) {
+    .hero {
+        align-items: stretch;
+        flex-direction: column
+    }
+
+    .tenant-picker {
+        width: 100%
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+@media(max-width:560px) {
+    .form-grid {
+        grid-template-columns: 1fr
+    }
+
+    .form-grid .wide {
+        grid-column: auto
+    }
+
+    .section-heading,
+    .form-footer {
+        align-items: stretch;
+        flex-direction: column
+    }
+
+    .form-footer button {
+        width: 100%
+    }
+}

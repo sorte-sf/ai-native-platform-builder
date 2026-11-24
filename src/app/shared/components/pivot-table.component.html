@@ -1,0 +1,42 @@
+@if (loading()) { <p role="status">{{ 'ui.loading_records' | transloco }}</p> }
+@else if (failed()) { <p role="alert">{{ 'tableDesigner.loadError' | transloco }}</p> }
+@else if (!node().pivotRows?.length || !node().pivotValues?.length) {
+  <p class="pivot-empty">{{ 'businessBlocks.pivotConfigure' | transloco }}</p>
+} @else {
+  @if (designMode()) { <small class="pivot-note">{{ 'businessBlocks.pivotPreview' | transloco }}</small> }
+  @else if (sampled()) { <small class="pivot-note pivot-sampled" role="note">{{ 'businessBlocks.sampleScope' | transloco }}</small> }
+  <div class="pivot-scroll">
+    <table>
+      <thead>
+        <tr>
+          @for (field of node().pivotRows ?? []; track field) { <th scope="col" rowspan="2">{{ field }}</th> }
+          @for (group of columnGroups(); track group.key) { <th scope="colgroup" [attr.colspan]="node().pivotValues?.length || 1">{{ group.title || ('businessBlocks.values' | transloco) }}</th> }
+          @if (node().pivotColumns?.length && node().pivotRowTotals !== false) { <th scope="colgroup" [attr.colspan]="node().pivotValues?.length || 1">{{ 'businessBlocks.rowTotal' | transloco }}</th> }
+        </tr>
+        <tr>
+          @for (column of measureColumns(); track column.key) { <th scope="col">{{ column.title }}</th> }
+          @if (node().pivotColumns?.length && node().pivotRowTotals !== false) { @for (measure of node().pivotValues ?? []; track $index) { <th scope="col">{{ measure.label || measure.field }}</th> } }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of pivotRows(); track row.key) {
+          <tr>
+            @for (label of row.labels; track $index) { <th scope="row">{{ label }}</th> }
+            @for (column of measureColumns(); track column.key) { <td>{{ display(row.values[column.key]) }}</td> }
+            @if (node().pivotColumns?.length && node().pivotRowTotals !== false) { @for (measure of node().pivotValues ?? []; track measure.field) { <td class="pivot-total">{{ display(row.total[measure.field]) }}</td> } }
+          </tr>
+        } @empty { <tr><td class="pivot-empty-cell" [attr.colspan]="(node().pivotRows?.length || 1) + measureColumns().length + (!node().pivotColumns?.length || node().pivotRowTotals === false ? 0 : (node().pivotValues?.length || 0))">{{ 'ui.no_records_yet' | transloco }}</td></tr> }
+      </tbody>
+      @if (node().pivotColumnTotals !== false) {
+        <tfoot><tr>
+          <th [attr.colspan]="node().pivotRows?.length || 1">{{ 'businessBlocks.columnTotal' | transloco }}</th>
+          @for (group of columnGroups(); track group.key; let groupIndex = $index) {
+            @for (measure of node().pivotValues ?? []; track measure.field) { <td class="pivot-total">{{ display(columnTotals()[groupIndex]?.[measure.field]) }}</td> }
+          }
+          @if (node().pivotRowTotals !== false && node().pivotColumns?.length) { @for (measure of node().pivotValues ?? []; track measure.field) { <td class="pivot-grand-total">{{ display(grandTotals()[measure.field]) }}</td> } }
+        </tr></tfoot>
+      }
+    </table>
+  </div>
+  @if (!designMode() && !sampled() && !rows().length) { <p class="pivot-empty">{{ 'ui.no_records_yet' | transloco }}</p> }
+}

@@ -1,0 +1,63 @@
+<section class="editor" aria-labelledby="campaign-title">
+    <header class="toolbar">
+        <div>
+            <h2 id="campaign-title">Welcome campaign</h2>
+            <p>Marketing journey sample</p>
+        </div>
+        <span class="status">Draft</span>
+    </header>
+
+    <f-flow fDraggable>
+        <f-canvas fZoom>
+            <f-background><f-circle-pattern /></f-background>
+
+            <article fNode fNodeId="trigger" [fNodePosition]="{ x: 80, y: 150 }" class="step trigger">
+                <span class="kind">TRIGGER</span>
+                <h3>New subscriber</h3>
+                <p>Added to the newsletter list</p>
+                <span class="connector" fConnector fConnectorId="trigger-out" aria-label="New subscriber output"></span>
+            </article>
+
+            <article fNode fNodeId="welcome-email" [fNodePosition]="{ x: 370, y: 150 }" class="step email">
+                <span class="kind">EMAIL</span>
+                <h3>Send welcome email</h3>
+                <p>Welcome to our community</p>
+                <span class="connector input" fConnector fConnectorId="email-in" aria-label="Email input"></span>
+                <span class="connector" fConnector fConnectorId="email-out" aria-label="Email output"></span>
+            </article>
+
+            <article fNode fNodeId="opened-email" [fNodePosition]="{ x: 660, y: 150 }" class="step condition">
+                <span class="kind">CONDITION</span>
+                <h3>Opened the email?</h3>
+                <p>Wait 2 days, then check</p>
+                <span class="connector input" fConnector fConnectorId="condition-in"
+                    aria-label="Condition input"></span>
+                <span class="connector branch-yes" fConnector fConnectorId="condition-yes"
+                    aria-label="Yes branch"></span>
+                <span class="connector branch-no" fConnector fConnectorId="condition-no" aria-label="No branch"></span>
+            </article>
+
+            <article fNode fNodeId="follow-up" [fNodePosition]="{ x: 950, y: 65 }" class="step sms">
+                <span class="kind">SMS · YES</span>
+                <h3>Send a thank-you SMS</h3>
+                <p>Only for opted-in contacts</p>
+                <span class="connector input branch-input-yes" fConnector fConnectorId="followup-in"
+                    aria-label="Yes branch input"></span>
+            </article>
+
+            <article fNode fNodeId="audience" [fNodePosition]="{ x: 950, y: 265 }" class="step audience">
+                <span class="kind">AUDIENCE · NO</span>
+                <h3>Add to engaged audience</h3>
+                <p>Continue with a later campaign</p>
+                <span class="connector input branch-input-no" fConnector fConnectorId="audience-in"
+                    aria-label="No branch input"></span>
+            </article>
+
+            <f-connection fConnectionId="trigger-to-email" fSourceId="trigger-out" fTargetId="email-in" />
+            <f-connection fConnectionId="email-to-condition" fSourceId="email-out" fTargetId="condition-in" />
+            <f-connection fConnectionId="condition-to-followup" fSourceId="condition-yes" fTargetId="followup-in" />
+            <f-connection fConnectionId="condition-to-audience" fSourceId="condition-no" fTargetId="audience-in" />
+        </f-canvas>
+    </f-flow>
+    <p class="hint">Drag the canvas to pan. Use the mouse wheel or trackpad to zoom.</p>
+</section>

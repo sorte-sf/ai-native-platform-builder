@@ -1,0 +1,112 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+.dashboard {
+    height: 100%;
+    padding: 1rem;
+    color: #172033;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .7rem;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.eyebrow,
+.hint {
+    margin: 0;
+    color: #64748b;
+    font-size: .72rem;
+}
+
+.eyebrow {
+    color: #5e4fa2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+}
+
+.save,
+.palette button {
+    border: 1px solid #bfdbfe;
+    border-radius: .35rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: .4rem .65rem;
+    font-size: .75rem;
+    cursor: pointer;
+}
+
+.palette {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem;
+    margin-bottom: .7rem;
+    padding: .55rem .7rem;
+    border: 1px dashed #94a3b8;
+    border-radius: .5rem;
+    background: #f8fafc;
+    font-size: .75rem;
+}
+
+.palette strong {
+    margin-right: .25rem;
+}
+
+.palette button {
+    cursor: grab;
+}
+
+.canvas {
+    min-height: 690px;
+}
+
+gridster {
+    min-height: 690px;
+    background: transparent;
+}
+
+gridster-item {
+    overflow: hidden;
+    border: 1px solid #dbe3ef;
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 2px 8px #1720330d;
+}
+
+.remove {
+    position: absolute;
+    top: .25rem;
+    right: .35rem;
+    z-index: 2;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.remove:hover {
+    color: #dc2626;
+}
+
+@media (max-width: 700px) {
+    .dashboard {
+        padding: .6rem;
+    }
+
+    .canvas,
+    gridster {
+        min-height: 1350px;
+    }
+}

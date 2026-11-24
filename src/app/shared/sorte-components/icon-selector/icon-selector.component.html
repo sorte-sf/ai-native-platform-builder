@@ -1,0 +1,5 @@
+<button type="button" class="icon-picker" [disabled]="isDisabled || disabled" (click)="openDialog()" [attr.aria-label]="label" [attr.title]="label">
+  @if (selectedIcon; as icon) { <fa-icon [icon]="icon.icon" aria-hidden="true" /> }
+  <span class="icon-picker-label">{{ value ? selectedIcon?.displayName : label }}</span>
+  <span class="icon-picker-chevron" aria-hidden="true">⌄</span>
+</button>

@@ -1,0 +1,46 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "baseUrl": "./src",
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve", 
+    "ignoreDeprecations": "6.0",
+    "paths": {
+            "@antsoft/sorte-action-flow": ["../dist/sorte-action-flow"],
+            "@app/*": [ "app/*"], 
+            "@core/*": ["app/core/*"],
+            "@pages/*": ["app/pages/*"],
+            "@utils/*": ["app/core/utils/*"],
+            "@core-services/*": ["app/core/services/*"],
+            "@layout/*": ["app/layout/*"], 
+            "@auth/*": ["app/auth/*"], 
+            "@shared/*": [ "app/shared/*"],
+            "@sorte-components/*": [ "app/shared/sorte-components/*"]
+      }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

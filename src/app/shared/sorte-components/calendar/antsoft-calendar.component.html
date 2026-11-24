@@ -1,0 +1,30 @@
+<div class="calendar-header">
+  <div class="calendar-navigation">
+    <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month">‹</button>
+    <button type="button" (click)="shiftMonth(1)" aria-label="Next month">›</button>
+  </div>
+  <strong>{{ title() }}</strong>
+  <select aria-label="Calendar view"><option value="month">Month</option></select>
+</div>
+<div class="calendar-weekdays">
+  @for (day of weekdays(); track $index) { <span class="weekday">{{ day }}</span> }
+</div>
+<div class="calendar-month">
+  @for (week of weeks(); track $index) {
+    <div class="calendar-week">
+      @for (cell of week.days; track cell.key; let dayIndex = $index) {
+        <div class="calendar-day" [style.grid-column]="dayIndex + 1" [class.outside]="cell.outside" [class.today]="cell.today">
+          <button type="button" class="calendar-day-number" (click)="selectDay(cell.key)">{{ cell.day }}</button>
+        </div>
+      }
+      @for (segment of week.events; track (segment.event.id || segment.event.title) + '-' + $index) {
+        <button type="button" class="calendar-event" [style.grid-column]="segment.startColumn + ' / span ' + segment.span"
+          [style.grid-row]="segment.lane + 2" [style.background-color]="segment.event.color"
+          [class.continues-before]="!segment.begins" [class.continues-after]="!segment.ends"
+          (click)="calendarEventClickData.emit(segment.event)">
+          @if (segment.begins) { <span class="event-dot" aria-hidden="true">◉</span><span class="event-title">{{ segment.event.title }}</span> }
+        </button>
+      }
+    </div>
+  }
+</div>

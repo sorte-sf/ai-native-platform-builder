@@ -1,0 +1,339 @@
+<section
+    class="flex h-full max-h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+
+    @if (loading || serverLoading()) {
+    <div class="h-1 shrink-0 overflow-hidden bg-sky-100" role="progressbar">
+        <div class="h-full w-1/3 animate-pulse rounded-full bg-primary-600"></div>
+    </div>
+    }
+    @if (serverError()) {
+    <div class="shrink-0 border-b border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ serverError()
+        }}</div>
+    }
+
+    <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:px-3">
+        <ng-content select="[grid-toolbar]"></ng-content>
+        <button
+            class="inline-grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-100"
+            type="button" (click)="refreshRequested.emit()" [title]="'ui.refresh' | transloco" [attr.aria-label]="'ui.refresh' | transloco">
+            <fa-icon [icon]="icons.clear" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        @if (enableSearch) {
+        <label
+            class="order-last z-50 flex h-9 w-full min-w-0 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm sm:order-none sm:ml-auto sm:w-64 lg:w-72">
+            <fa-icon class="text-slate-400" [icon]="icons.search" aria-hidden="true"></fa-icon>
+            <input class="w-full border-0 bg-transparent p-0 text-sm outline-none z-50"
+                [placeholder]="'common.search' | transloco" [value]="search()" (input)="setSearch($event)">
+        </label>
+        }
+
+        @if (enableColumnChooser) {
+        <details class="relative">
+            <summary
+                class="flex h-9 cursor-pointer list-none items-center rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-700">
+                {{ 'common.columns' | transloco }}
+            </summary>
+            <div
+                class="data-grid-columns-menu absolute right-0 top-full z-50 mt-2 w-56 rounded-md border border-slate-200 bg-white p-2 shadow-xl">
+                @for (column of columns; track column.field) {
+                <label class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-50">
+                    <input class="h-4 w-4 accent-primary-600" type="checkbox" [checked]="isColumnVisible(column)"
+                        (change)="toggleColumn(column)">
+                    <span class="truncate">{{ column.caption | transloco }}</span>
+                </label>
+                }
+            </div>
+        </details>
+        }
+
+        @if (enableColumnFilters) {
+        <button
+            class="inline-grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-100"
+            type="button" (click)="toggleFilterPanel()"
+            [class.bg-blue-50]="filterPanelOpen() || hasColumnFilters() || search()"
+            [attr.title]="'grid.filters' | transloco" [attr.aria-label]="'grid.filters' | transloco">
+            <fa-icon [icon]="icons.filter" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        }
+
+        @if (enableCreate) {
+        <button
+            class="inline-grid h-9 w-9 place-items-center rounded-md bg-primary-600 text-white shadow-sm hover:bg-primary-700"
+            type="button" (click)="createRequested.emit()" [attr.title]="'common.new' | transloco"
+            [attr.aria-label]="'common.new' | transloco">
+            <fa-icon [icon]="icons.add" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        }
+
+        <!-- @if (enableEditing) {
+        <button
+            class="h-9 rounded-md bg-neutral-800 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            type="button" [disabled]="!selectedRow()" (click)="requestEdit()">{{ 'common.edit' | transloco }}</button>
+        } -->
+
+        @if (hasColumnFilters()) {
+        <button
+            class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            type="button" (click)="clearColumnFilters()" [attr.title]="'common.clearFilters' | transloco"
+            [attr.aria-label]="'common.clearFilters' | transloco">
+            <fa-icon [icon]="icons.clear" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        }
+
+        @if (enableExport) {
+        <!-- <button
+            class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-semibold bg-green-800 text-white hover:bg-slate-50"
+            type="button" (click)="exportCsv()" [attr.title]="'grid.csv' | transloco"
+            [attr.aria-label]="'grid.csv' | transloco">
+            <fa-icon [icon]="icons.csv" aria-hidden="true" class="text-lg"></fa-icon> 
+        </button> -->
+        <button
+            class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-semibold bg-green-800 text-white hover:bg-slate-50"
+            type="button" (click)="exportExcel()" [attr.title]="'grid.excel' | transloco"
+            [attr.aria-label]="'grid.excel' | transloco">
+            <fa-icon [icon]="icons.excel" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        <button
+            class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-semibold bg-red-800 text-white hover:bg-slate-50"
+            type="button" (click)="exportPdf()" [attr.title]="'grid.pdf' | transloco"
+            [attr.aria-label]="'grid.pdf' | transloco">
+            <fa-icon [icon]="icons.pdf" aria-hidden="true" class="text-lg"></fa-icon>
+        </button>
+        }
+    </div>
+
+    <ant-data-grid-filter-panel [open]="enableColumnFilters && filterPanelOpen()" [search]="search()"
+        [columns]="visibleColumns()" [filters]="columnFilters()" [operators]="filterOperators"
+        (closed)="filterPanelOpen.set(false)" (searchChanged)="setSearch($event)"
+        (filterValueChanged)="setColumnFilterValue($event.column, $event.event)"
+        (filterOperatorChanged)="setColumnFilterOperator($event.column, $event.event)"
+        (filterCleared)="clearColumnFilter($event)" (allFiltersCleared)="clearColumnFilters()" />
+
+    @if (enableGrouping) {
+    <div class="flex min-h-12 flex-wrap items-center gap-2 border-b border-sky-200 bg-sky-50 px-3 py-2 transition-colors"
+        [class.bg-sky-100]="groupDropActive()" (dragover)="allowGroupDrop($event)"
+        (dragenter)="groupDropActive.set(true)" (dragleave)="groupDropActive.set(false)" (drop)="dropGroup($event)">
+
+        @if (groupedFields().length === 0) {
+        <span class="text-sm text-slate-500">{{ 'grid.groupPanelHint' | transloco }}</span>
+        } @else {
+        @for (field of groupedFields(); track field; let index = $index) {
+        <span
+            class="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm">
+            @if (index > 0) { <span class="text-slate-400">&#8250;</span> }
+            {{ columnForField(field)?.caption | transloco }}
+            <button class="text-lg leading-none text-slate-400 hover:text-red-600" type="button"
+                (click)="removeGroup(field)" [attr.title]="'grid.removeGroup' | transloco"
+                [attr.aria-label]="'grid.removeGroup' | transloco">
+                <fa-icon [icon]="icons.close" aria-hidden="true"></fa-icon>
+            </button>
+        </span>
+        }
+        <button class="ml-auto text-sm font-semibold text-slate-600 hover:text-slate-900" type="button"
+            (click)="clearGroups()">{{ 'grid.clearGrouping' | transloco }}</button>
+        }
+    </div>
+    }
+
+    <div class="min-h-0 flex-1 overflow-auto bg-white">
+        <table class="w-full table-fixed border-separate border-spacing-0 text-left text-xs"
+            [style.min-width]="gridMinWidth()">
+            <thead class="sticky top-0 z-20 bg-slate-200 text-[11px] uppercase text-slate-600">
+                <tr>
+                    @if (showActionsColumn()) {
+                    <th class="relative border-b border-slate-300 px-1 py-1.5 font-semibold"
+                        [style.width.px]="actionColumnWidth()" aria-hidden="true">
+                    </th>
+                    }
+                    @for (column of visibleColumns(); track column.field) {
+                    <th class="relative border-b border-slate-300 px-2 py-1.5 font-semibold"
+                        [attr.draggable]="enableGrouping ? true : null" (dragstart)="startColumnDrag($event, column)"
+                        [class.sticky]="column.sticky" [class.left-0]="column.sticky" [class.z-30]="column.sticky"
+                        [class.bg-slate-200]="column.sticky" [class.text-center]="column.align === 'center'"
+                        [class.text-right]="column.align === 'right'" [style.width]="columnWidth(column)">
+                        <button class="inline-flex max-w-full items-center gap-1 font-semibold" type="button"
+                            [disabled]="column.sortable === false" (click)="sortBy(column)">
+                            <span class="truncate">{{ column.caption | transloco }}</span>
+                            @if (sortField() === column.field) {
+                            <fa-icon [icon]="sortDirection() === 'asc' ? icons.sortAsc : icons.sortDesc"
+                                aria-hidden="true"></fa-icon>
+                            }
+                        </button>
+                        <span
+                            class="absolute right-0 top-0 h-full w-2 cursor-col-resize touch-none border-r border-transparent hover:border-primary-600 hover:bg-primary-600/10"
+                            (mousedown)="startColumnResize($event, column)"></span>
+                    </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (groupedFields().length > 0) {
+                @for (item of groupedDisplayRows(); track displayItemIdentity(item, $index)) {
+                @if (item.kind === 'group') {
+                <tr class="cursor-pointer bg-slate-100 hover:bg-slate-200" (click)="toggleGroup(item.key)">
+                    <td class="border-b border-slate-300 px-3 py-2 font-semibold text-slate-800"
+                        [attr.colspan]="tableColspan()">
+                        <span class="inline-flex items-center gap-2" [style.padding-left.px]="item.level * 18">
+                            <span class="text-xs">{{ item.collapsed ? '&#9656;' : '&#9662;' }}</span>
+                            <span>{{ columnForField(item.field)?.caption | transloco }}: {{ item.value }}</span>
+                            <span class="rounded-full bg-slate-300 px-2 py-0.5 text-xs">{{ item.count }}</span>
+                        </span>
+                    </td>
+                </tr>
+                } @else {
+                <ng-container
+                    *ngTemplateOutlet="dataRow; context: { $implicit: item.row, level: item.level, index: $index }" />
+                }
+                } @empty {
+                <ng-container *ngTemplateOutlet="emptyRows" />
+                }
+                } @else {
+                @for (row of pagedRows(); track rowIdentity(row, $index)) {
+                <ng-container *ngTemplateOutlet="dataRow; context: { $implicit: row, level: 0, index: $index }" />
+                } @empty {
+                <ng-container *ngTemplateOutlet="emptyRows" />
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <ng-template #dataRow let-row let-level="level" let-index="index">
+        <tr class="group cursor-pointer transition-colors hover:bg-blue-100 focus-within:bg-blue-100"
+            [class.bg-blue-100]="selectedRowId && selectedRowId === rowIdentity(row, index)"
+            [class.!bg-red-600]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+            [class.!text-white]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+            [class.!bg-yellow-600]="row.status === 'Waiting' || isOptionRow(row)"
+            [class.!text-black]="row.status === 'Waiting' || isOptionRow(row)" (click)="selectRow(row, index)"
+            (dblclick)="requestEdit(row)">
+            @if (showActionsColumn()) {
+            <td class="relative border-b border-slate-200 px-1 py-0.5 text-slate-700 transition-colors group-hover:bg-blue-100 group-focus-within:bg-blue-100"
+                [class.!bg-red-600]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+                [class.!text-white]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+                [class.!bg-yellow-600]="row.status === 'Waiting' || isOptionRow(row)"
+                [class.!text-black]="row.status === 'Waiting' || isOptionRow(row)"
+                [style.width.px]="actionColumnWidth()">
+                <div
+                    class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    @if (rowActionsForRow(row).includes('view')) {
+                    <button
+                        class="grid h-6 w-6 place-items-center rounded text-slate-500 hover:bg-white hover:text-blue-900 hover:shadow-sm"
+                        type="button" (click)="requestView($event, row)" [attr.title]="'grid.viewRow' | transloco"
+                        [attr.aria-label]="'grid.viewRow' | transloco">
+                        <fa-icon [icon]="icons.view" aria-hidden="true"></fa-icon>
+                    </button>
+                    }
+                    @if (rowActionsForRow(row).includes('create')) {
+                    <button
+                        class="grid h-6 w-6 place-items-center rounded text-slate-500 hover:bg-white hover:text-blue-900 hover:shadow-sm"
+                        type="button" (click)="requestCreate($event, row)" [attr.title]="'grid.viewCreate' | transloco"
+                        [attr.aria-label]="'grid.viewCreate' | transloco">
+                        <fa-icon [icon]="icons.add" aria-hidden="true"></fa-icon>
+                    </button>
+                    }
+
+                    @if (rowActionsForRow(row).includes('edit')) {
+                    <button
+                        class="grid h-6 w-6 place-items-center rounded text-slate-500 hover:bg-white hover:text-blue-900 hover:shadow-sm"
+                        type="button" (click)="requestRowEdit($event, row)" [attr.title]="'grid.editRow' | transloco"
+                        [attr.aria-label]="'grid.editRow' | transloco">
+                        <fa-icon [icon]="icons.edit" aria-hidden="true"></fa-icon>
+                    </button>
+                    }
+                    @if (rowActionsForRow(row).includes('delete')) {
+                    <button
+                        class="grid h-6 w-6 place-items-center rounded text-slate-500 hover:bg-white hover:text-red-700 hover:shadow-sm"
+                        type="button" (click)="requestDelete($event, row)" [attr.title]="'grid.deleteRow' | transloco"
+                        [attr.aria-label]="'grid.deleteRow' | transloco">
+                        <fa-icon [icon]="icons.delete" aria-hidden="true"></fa-icon>
+                    </button>
+                    }
+                </div>
+            </td>
+            }
+            @for (column of visibleColumns(); track column.field) {
+            <td class="border-b border-slate-200 px-2 py-1 text-slate-700 transition-colors group-hover:bg-blue-100 group-focus-within:bg-blue-100"
+                [class.!bg-red-600]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+                [class.!text-white]="row.isActive === false || row.isDepartingToday || isCancelledRow(row)"
+                [class.!bg-yellow-600]="row.status === 'Waiting' || isOptionRow(row)"
+                [class.!text-black]="row.status === 'Waiting' || isOptionRow(row)" [class.sticky]="column.sticky"
+                [class.left-0]="column.sticky" [class.z-10]="column.sticky"
+                [class.bg-white]="column.sticky && selectedRowId !== rowIdentity(row, index)"
+                [class.bg-blue-100]="selectedRowId === rowIdentity(row, index)" [class.font-medium]="column.sticky"
+                [class.text-center]="column.align === 'center'" [class.text-right]="column.align === 'right'"
+                [style.width]="columnWidth(column)">
+                @if (column.field === 'avatar') {
+                @if (row.photoUrl) {
+                <img class="max-w-xs hover:scale-150 transition duration-1000 ease-in-out z-0 h-8 w-8 rounded-full object-cover"
+                    [src]="row.photoUrl" alt="" />
+                } @else {
+                <span
+                    class="inline-grid h-8 w-8 place-items-center rounded-full bg-slate-500 text-xs font-bold text-white">
+                    {{ initials(row) }}
+                </span>
+                }
+                } @else {
+                <span class="block truncate" [class.rounded-full]="column.field === 'isActive'"
+                    [class.bg-red-100]="column.field === 'isActive' && row.isActive === false"
+                    [class.px-2]="column.field === 'isActive'" [class.py-0.5]="column.field === 'isActive'"
+                    [class.font-semibold]="column.field === 'isActive'"
+                    [class.!bg-red-600]="column.field === 'isActive' && row.isActive === false"
+                    [class.!text-white]="column.field === 'isActive' && row.isActive === false"
+                    [class.text-emerald-700]="column.field === 'isActive' && row.isActive === true"
+                    [style.padding-left.px]="column === visibleColumns()[0] ? level * 18 : 0">
+                    {{ displayValue(row,column) }}</span>
+                }
+            </td>
+            }
+        </tr>
+
+    </ng-template>
+    <ng-template #emptyRows>
+        <tr>
+            <td class="px-4 py-10 text-center text-sm text-slate-500" [attr.colspan]="tableColspan()">
+                {{ 'common.noRecords' | transloco }}
+            </td>
+        </tr>
+    </ng-template>
+
+    @if (enablePaging && groupedFields().length === 0) {
+    <div
+        class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-slate-100 border-slate-200 px-3 py-2 text-sm">
+        <div class="flex items-center gap-2 text-slate-600">
+            <span>{{ 'common.rows' | transloco }}</span>
+            <select class="h-8 rounded-md border border-slate-200 bg-white px-2" [value]="pageSize()"
+                (change)="setPageSize($event)">
+                @for (size of pageSizes; track size) {
+                <option [value]="size">{{ size }}</option>
+                }
+            </select>
+            <span>{{ rangeLabel() }}</span>
+        </div>
+
+        <div class="flex items-center gap-1">
+            <button class="h-8 rounded-md border border-slate-200 px-3 disabled:opacity-40" type="button"
+                [disabled]="page() === 1" (click)="goToPage(1)" [attr.title]="'common.first' | transloco"
+                [attr.aria-label]="'common.first' | transloco">
+                <fa-icon [icon]="icons.first" aria-hidden="true" class="text-lg"></fa-icon>
+            </button>
+            <button class="h-8 rounded-md border border-slate-200 px-3 disabled:opacity-40" type="button"
+                [disabled]="page() === 1" (click)="goToPage(page() - 1)" [attr.title]="'common.previous' | transloco"
+                [attr.aria-label]="'common.previous' | transloco">
+                <fa-icon [icon]="icons.previous" aria-hidden="true" class="text-lg"></fa-icon>
+            </button>
+            <span class="px-2 text-slate-600">{{ 'common.page' | transloco: { page: page(), pages: pageCount() }
+                }}</span>
+            <button class="h-8 rounded-md border border-slate-200 px-3 disabled:opacity-40" type="button"
+                [disabled]="page() === pageCount()" (click)="goToPage(page() + 1)"
+                [attr.title]="'common.next' | transloco" [attr.aria-label]="'common.next' | transloco">
+                <fa-icon [icon]="icons.next" aria-hidden="true" class="text-lg"></fa-icon>
+            </button>
+            <button class="h-8 rounded-md border border-slate-200 px-3 disabled:opacity-40" type="button"
+                [disabled]="page() === pageCount()" (click)="goToPage(pageCount())"
+                [attr.title]="'common.last' | transloco" [attr.aria-label]="'common.last' | transloco">
+                <fa-icon [icon]="icons.last" aria-hidden="true" class="text-lg"></fa-icon>
+            </button>
+        </div>
+    </div>
+    }
+</section>

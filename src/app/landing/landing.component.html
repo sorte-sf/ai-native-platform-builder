@@ -1,0 +1,64 @@
+<main class="landing-page simple-landing">
+  <header class="landing-header">
+    <a class="brand" routerLink="/" [attr.aria-label]="'landing.brand' | transloco"><span
+        class="brand-mark">
+           <ant-logo-widget/>
+        </span>
+        <span><strong>{{ 'landing.brand' | transloco }}</strong><small>{{
+          'landing.brandTagline' | transloco }}</small></span></a>
+    <nav class="landing-menu" aria-label="Landing page navigation">
+      <a href="#services-title">{{ 'landing.solutionsTitle' | transloco }}</a>
+      <a href="#landing-contact">{{ 'landing.supportEyebrow' | transloco }}</a>
+    </nav>
+    <div class="landing-header-actions">
+      <ant-language-selector id="landing-language-selector"></ant-language-selector>
+       <a class="login-link" routerLink="/login">
+          {{ 'landing.signIn' | transloco }} <span>↗</span>
+        </a>
+    </div>
+  </header>
+  <section class="service-intro">
+    <div class="eyebrow"><span></span>{{ 'landing.heroEyebrow' | transloco }}</div>
+    <h1>{{ 'landing.heroTitle' | transloco }}<br><em>{{ 'landing.heroTitleAccent' | transloco }}</em></h1>
+    <p class="hero-copy">{{ 'landing.heroText' | transloco }}</p>
+    <a class="primary-action" routerLink="/login">{{ 'landing.enterWorkspace' | transloco }} <span>→</span></a>
+  </section>
+  <section class="service-content" aria-labelledby="services-title">
+    <div class="service-heading">
+      <p class="eyebrow"><span></span>{{ 'landing.solutionsEyebrow' | transloco }}</p>
+      <h2 id="services-title">{{ 'landing.solutionsTitle' | transloco }} <em>{{ 'landing.solutionsTitleAccent' |
+          transloco }}</em></h2>
+      <p>{{ 'landing.solutionsText' | transloco }}</p>
+    </div>
+    <div class="service-grid">
+      <article><span class="service-number">01</span>
+        <h3>{{ 'landing.solutionItems.processTitle' | transloco }}</h3>
+        <p>{{ 'landing.solutionItems.processText' | transloco }}</p>
+      </article>
+      <article><span class="service-number">02</span>
+        <h3>{{ 'landing.solutionItems.customerTitle' | transloco }}</h3>
+        <p>{{ 'landing.solutionItems.customerText' | transloco }}</p>
+      </article>
+      <article><span class="service-number">03</span>
+        <h3>{{ 'landing.solutionItems.peopleTitle' | transloco }}</h3>
+        <p>{{ 'landing.solutionItems.peopleText' | transloco }}</p>
+      </article>
+      <article><span class="service-number">04</span>
+        <h3>{{ 'landing.solutionItems.automationTitle' | transloco }}</h3>
+        <p>{{ 'landing.solutionItems.automationText' | transloco }}</p>
+      </article>
+    </div>
+  </section>
+  <section class="proof-row" aria-label="{{ 'landing.statsLabel' | transloco }}">
+    <div><strong>20</strong><span>{{ 'landing.stats.experience' | transloco }}</span></div>
+    <div><strong>850</strong><span>{{ 'landing.stats.projects' | transloco }}</span></div>
+    <div><strong>1350</strong><span>{{ 'landing.stats.customers' | transloco }}</span></div>
+    <div><strong>42</strong><span>{{ 'landing.stats.support' | transloco }}</span></div>
+  </section>
+  <footer id="landing-contact" class="landing-contact">
+    <div>
+      <p class="eyebrow"><span></span>{{ 'landing.supportEyebrow' | transloco }}</p>
+      <p>{{ 'landing.contactText' | transloco }}</p>
+    </div><a class="primary-action" routerLink="/login">{{ 'landing.openPortal' | transloco }} <span>→</span></a>
+  </footer>
+</main>

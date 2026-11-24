@@ -1,0 +1,83 @@
+<section class="admin-dashboard" aria-labelledby="dashboard-title">
+  <header class="dashboard-header">
+    <div>
+      <p class="dashboard-kicker">{{ 'ui.system_overview' | transloco }}</p>
+      <h1 id="dashboard-title">Good to see you, {{ greetingName() }}<span class="sparkle"> ✦</span></h1>
+      <p class="dashboard-subtitle">{{ summary()?.scope === 'system' ? 'System-wide totals and tenant comparisons.' : 'Current statistics for your tenant only.' }}</p>
+    </div>
+    <div class="dashboard-tools">
+      @if (lastUpdated(); as updated) { <span class="updated-at">Updated {{ updated | date:'mediumTime' }}</span> }
+      <button type="button" class="refresh-button" (click)="refresh()" [disabled]="loading()">
+        <fa-icon [icon]="icons.trend" /> {{ loading() ? 'Refreshing…' : 'Refresh' }}
+      </button>
+    </div>
+  </header>
+
+  @if (error()) { <div class="dashboard-message error" role="alert">{{ error() }}</div> }
+  @if (loading() && !summary()) { <div class="dashboard-message" role="status">Loading current statistics…</div> }
+
+  @if (summary(); as data) {
+    <div class="metric-grid">
+      @for (metric of metrics(); track metric.label) {
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-icon" [class]="'metric-' + metric.tone"><fa-icon [icon]="metric.icon" /></span></div>
+          <p>{{ metric.label }}</p><strong>{{ metric.value | number }}</strong><small>{{ metric.detail }}</small>
+        </article>
+      }
+    </div>
+
+    <div class="dashboard-lower">
+      <section class="glass-card" aria-labelledby="app-status-heading">
+        <div class="card-heading"><div><h2 id="app-status-heading">Application status</h2><p>Current application counts by lifecycle state</p></div></div>
+        <div class="status-list">
+          @for (row of statusRows(); track row.label) {
+            <div class="status-row">
+              <div class="status-label"><span [class]="'status-dot ' + row.tone"></span><span>{{ row.label }}</span><strong>{{ row.value | number }}</strong></div>
+              <div class="progress-track"><span [class]="row.tone" [style.width]="row.width"></span></div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="glass-card recent-card" aria-labelledby="recent-apps-heading">
+        <div class="card-heading"><div><h2 id="recent-apps-heading">Recently updated</h2><p>Latest active applications</p></div></div>
+        @if (data.recentlyUpdatedApplications.length) {
+          <div class="recent-list">
+            @for (app of data.recentlyUpdatedApplications; track app.id) {
+              <article class="recent-item">
+                <span class="app-mark"><fa-icon [icon]="icons.trend" /></span>
+                <div class="recent-copy"><strong>{{ app.name }}</strong><small>{{ app.status }} · {{ app.updatedAt | date:'mediumDate' }}</small></div>
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="empty-state">No active applications yet.</p>
+        }
+      </section>
+    </div>
+
+    @if (data.scope === 'system') {
+      <section class="glass-card tenant-breakdown" aria-labelledby="tenant-stats-heading">
+        <div class="card-heading">
+          <div><h2 id="tenant-stats-heading">Tenant comparison</h2><p>Application and active-user counts by tenant · {{ data.tenantCount | number }} tenants total</p></div>
+        </div>
+        @if (tenantRows().length) {
+          <div class="tenant-chart">
+            @for (tenant of tenantRows(); track tenant.tenantId) {
+              <div class="tenant-chart-row">
+                <div class="tenant-name" [title]="tenant.name">{{ tenant.name }}</div>
+                <div class="tenant-bars">
+                  <div class="tenant-bar-line"><span class="bar-label">Apps</span><span class="bar-track"><span class="bar-fill apps" [style.width]="tenant.applicationWidth"></span></span><strong>{{ tenant.applicationCount | number }}</strong></div>
+                  <div class="tenant-bar-line"><span class="bar-label">Users</span><span class="bar-track"><span class="bar-fill users" [style.width]="tenant.userWidth"></span></span><strong>{{ tenant.activeUserCount | number }}</strong></div>
+                </div>
+                <small>{{ tenant.publishedCount | number }} published · {{ tenant.draftCount | number }} drafts</small>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-state">No active tenants to compare.</p>
+        }
+      </section>
+    }
+  }
+</section>

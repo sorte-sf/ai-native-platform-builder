@@ -1,0 +1,77 @@
+<header class="page-nav">
+  <a class="back-link" routerLink="/builder/applications">{{ 'ui.applications' | transloco }}</a>
+  <span aria-hidden="true">/</span>
+  <span>{{ 'applicationDocuments.title' | transloco }}</span>
+  <a class="design-link" [routerLink]="['/builder/applications', applicationId, 'design']" [queryParams]="{tenantId}">
+    <fa-icon [icon]="icons.back" /> {{ 'applicationDocuments.backToDesigner' | transloco }}
+  </a>
+</header>
+
+<main class="documents-page">
+  <section class="page-heading">
+    <div class="heading-icon"><fa-icon [icon]="icons.pdf" /></div>
+    <div>
+      <p class="eyebrow">{{ 'applicationDocuments.eyebrow' | transloco }}</p>
+      <h1>{{ 'applicationDocuments.title' | transloco }}</h1>
+      <p class="intro">{{ 'applicationDocuments.description' | transloco }}</p>
+    </div>
+    <label class="upload-button" [class.disabled]="uploading()">
+      <input type="file" accept="application/pdf,.pdf" [disabled]="uploading()" (change)="upload($event)" />
+      <fa-icon [icon]="icons.pdf" />
+      {{ (uploading() ? 'applicationDocuments.uploading' : 'applicationDocuments.upload') | transloco }}
+    </label>
+  </section>
+
+  @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="feedback success" role="status">{{ notice() }}</p> }
+
+  <section class="document-panel" aria-labelledby="document-list-title">
+    <div class="panel-heading">
+      <div>
+        <h2 id="document-list-title">{{ 'applicationDocuments.listTitle' | transloco }}</h2>
+        <p>{{ 'applicationDocuments.listDescription' | transloco }}</p>
+      </div>
+      <button type="button" class="refresh-button" (click)="load()" [disabled]="busy()" [attr.aria-label]="'applicationDocuments.refresh' | transloco">
+        <fa-icon [icon]="icons.reload" />
+      </button>
+    </div>
+
+    @if (busy()) {
+      <div class="empty-state" role="status">{{ 'applicationDocuments.loading' | transloco }}</div>
+    } @else if (!documents().length) {
+      <div class="empty-state">
+        <div class="empty-icon"><fa-icon [icon]="icons.pdf" /></div>
+        <h3>{{ 'applicationDocuments.emptyTitle' | transloco }}</h3>
+        <p>{{ 'applicationDocuments.emptyDescription' | transloco }}</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>{{ 'applicationDocuments.fileName' | transloco }}</th>
+            <th>{{ 'applicationDocuments.uploadedAt' | transloco }}</th>
+            <th>{{ 'applicationDocuments.fileSize' | transloco }}</th>
+            <th class="actions-heading">{{ 'applicationDocuments.actions' | transloco }}</th>
+          </tr></thead>
+          <tbody>
+            @for (document of documents(); track document.id) {
+              <tr>
+                <td><div class="file-cell"><span class="file-icon"><fa-icon [icon]="icons.pdf" /></span><span>{{ document.fileName }}</span></div></td>
+                <td>{{ document.createdAt | date:'mediumDate' }}</td>
+                <td>{{ formatSize(document.size) }}</td>
+                <td class="actions-cell">
+                  @if (document.fileId) {
+                    <button type="button" class="preview-button" (click)="preview(document)" [disabled]="previewingId() !== null">
+                      <fa-icon [icon]="icons.preview" />
+                      {{ (previewingId() === document.id ? 'applicationDocuments.opening' : 'applicationDocuments.preview') | transloco }}
+                    </button>
+                  } @else { <span class="pending">{{ 'applicationDocuments.previewUnavailable' | transloco }}</span> }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>

@@ -1,0 +1,92 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist/
+**/dist/
+/tmp
+/out-tsc
+/bazel-out
+/.output/
+/.next/
+/storybook-static/
+/playwright-report/
+/test-results/
+/cypress/videos/
+/cypress/screenshots/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+*.tsbuildinfo
+.npm-cache/
+.npm-cache/*
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Miscellaneous
+/.angular/
+**/.angular/cache/
+.sass-cache/
+/.cache/
+/.vite/
+/.eslintcache
+/.stylelintcache
+/connect.lock
+/coverage
+**/coverage/
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+
+AGENTS.md
+sort-rest.rest
+# Local environment configuration and secrets. Commit only example templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+*.local.*
+**/secrets.json
+**/secrets.*.json
+**/secrets.yaml
+**/secrets.yml
+
+# Local databases, logs, certificates, and private keys.
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+.firebase/
+.vercel/
+.netlify/
+
+# System files
+.DS_Store
+Thumbs.db

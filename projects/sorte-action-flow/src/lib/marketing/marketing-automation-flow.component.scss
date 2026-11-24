@@ -1,0 +1,156 @@
+:host {
+    display: block;
+    color: #172033;
+    font: 14px/1.45 system-ui, sans-serif;
+}
+
+.editor {
+    overflow: hidden;
+    border: 1px solid #d9e0eb;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+h2 {
+    font-size: 1rem;
+}
+
+.toolbar p,
+.step p,
+.hint {
+    color: #526176;
+}
+
+.toolbar p {
+    margin-top: 2px;
+    font-size: .8125rem;
+}
+
+.status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    font-size: .75rem;
+    font-weight: 650;
+}
+
+f-flow {
+    display: block;
+    height: 470px;
+    background: #f8fafc;
+}
+
+.step {
+    position: relative;
+    box-sizing: border-box;
+    width: 210px;
+    min-height: 104px;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #2563eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 3px 10px #0f172a12;
+}
+
+.trigger {
+    border-left-color: #0f766e;
+}
+
+.email {
+    border-left-color: #2563eb;
+}
+
+.condition {
+    border-left-color: #b45309;
+}
+
+.sms {
+    border-left-color: #7c3aed;
+}
+
+.audience {
+    border-left-color: #475569;
+}
+
+.kind {
+    display: block;
+    margin-bottom: 7px;
+    color: #475569;
+    font-size: .65rem;
+    font-weight: 750;
+    letter-spacing: .06em;
+}
+
+h3 {
+    font-size: .875rem;
+}
+
+.step p {
+    margin-top: 5px;
+    font-size: .75rem;
+}
+
+.connector {
+    position: absolute;
+    top: calc(50% - 6px);
+    right: -7px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #2563eb;
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+.connector.input {
+    right: auto;
+    left: -7px;
+    background: #64748b;
+    box-shadow: 0 0 0 1px #64748b;
+}
+
+.branch-yes {
+    top: 34%;
+    background: #16a34a;
+    box-shadow: 0 0 0 1px #16a34a;
+}
+
+.branch-no {
+    top: 72%;
+    background: #d97706;
+    box-shadow: 0 0 0 1px #d97706;
+}
+
+.branch-input-yes {
+    top: 38%;
+}
+
+.branch-input-no {
+    top: 62%;
+}
+
+.hint {
+    padding: 9px 20px 12px;
+    font-size: .75rem;
+}
+
+@media (max-width: 600px) {
+    f-flow {
+        height: 400px;
+    }
+}

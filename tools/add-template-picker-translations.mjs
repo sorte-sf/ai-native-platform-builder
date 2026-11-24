@@ -1,0 +1,3 @@
+import fs from 'node:fs';
+for (const [language, values] of Object.entries({ en: { title: 'Starter templates', close: 'Close', search: 'Search templates', categories: 'Template categories', all: 'All', empty: 'No matching templates', choose: 'Choose starter template' }, tr: { title: 'Başlangıç şablonları', close: 'Kapat', search: 'Şablon ara', categories: 'Şablon kategorileri', all: 'Tümü', empty: 'Eşleşen şablon yok', choose: 'Başlangıç şablonu seç' } })) {
+const path = new URL(`../public/i18n/${language}.json`, import.meta.url); const data = JSON.parse(fs.readFileSync(path, 'utf8')); data.templatePicker = values; fs.writeFileSync(path, JSON.stringify(data, null, 2) + '\n'); }

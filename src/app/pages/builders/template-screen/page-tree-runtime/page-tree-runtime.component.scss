@@ -1,0 +1,138 @@
+.responsive-grid {
+    display: grid;
+    grid-template-columns: var(--desktop-columns, 1fr);
+}
+
+@media (max-width: 1024px) {
+    .responsive-grid {
+        grid-template-columns: var(--tablet-columns, var(--desktop-columns, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .responsive-grid {
+        grid-template-columns: var(--mobile-columns, 1fr);
+    }
+}
+
+.responsive-grid>div {
+    min-width: 0;
+}
+
+.form-dialog-error { position: fixed; right: 20px; bottom: 92px; z-index: 1060; padding: 12px 16px; border-radius: 8px; background: #7f1d1d; color: #fff; }
+.form-dialog-backdrop { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 20px; background: rgb(15 23 42 / 55%); backdrop-filter: blur(3px); }
+.form-dialog { width: min(760px, 100%); max-height: min(90vh, 900px); overflow: auto; padding: 20px; border: 1px solid var(--ant-border, #dce3ea); border-radius: 16px; background: var(--app-surface, #fff); color: var(--app-text, #263746); box-shadow: 0 24px 72px rgb(15 23 42 / 28%); }
+.form-dialog > header, .form-dialog > footer { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.form-dialog > header p { margin: 0; color: var(--app-primary, #5e4fa2); font-size: 11px; }
+.form-dialog > header h2 { margin: 4px 0; }
+.form-dialog-close { padding: 2px 9px; border: 0; background: transparent; color: inherit; font-size: 25px; cursor: pointer; }
+.form-dialog ant-runtime-form { display: block; }
+.form-dialog ant-runtime-form ::ng-deep .runtime-form { max-width: none; padding: 0; border: 0; background: transparent; }
+.form-dialog ant-runtime-form ::ng-deep .runtime-form > header { display: none; }
+.form-dialog > footer { justify-content: flex-end; margin-top: 14px; }
+
+.floating-action-host {
+    position: fixed !important;
+    right: max(24px, env(safe-area-inset-right)) !important;
+    bottom: max(24px, env(safe-area-inset-bottom)) !important;
+    z-index: 1050;
+    display: grid !important;
+    width: 56px !important;
+    height: 56px !important;
+    place-items: center;
+    box-shadow: 0 8px 22px rgb(22 119 255 / 35%);
+}
+
+.floating-action-host > button,
+.floating-action-host > a {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    place-items: center;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: inherit !important;
+    color: inherit !important;
+    font-size: 28px;
+    line-height: 1;
+    box-shadow: inherit;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .floating-action-host { right: max(16px, env(safe-area-inset-right)) !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; }
+}
+
+.side-navigation {
+    min-height: 320px;
+    align-content: start !important;
+    gap: 8px !important;
+    border: 1px solid #39333f !important;
+    border-radius: 12px !important;
+    background: #1b1c24 !important;
+    color: #f2edf5 !important;
+    box-shadow: 0 12px 28px #0003;
+}
+
+.side-navigation h1,
+.side-navigation h2,
+.side-navigation h3 { color:#fff !important; }
+
+.side-navigation a,
+.side-navigation button {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 9px 11px !important;
+    text-align: left;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    color: #c9a7d2 !important;
+    background: transparent !important;
+    text-decoration: none;
+}
+
+.side-navigation a:hover,
+.side-navigation button:hover {
+    border-color: #51448f !important;
+    background: #292631 !important;
+    color: #fff !important;
+}
+
+.side-navigation a:focus-visible,
+.side-navigation button:focus-visible {
+    outline: 2px solid #faa61a;
+    outline-offset: 2px;
+}
+
+.page-tree-items { display: contents; }
+.page-tree-items.navigation-layout-left,
+.page-tree-items.navigation-layout-right { display: grid; grid-template-columns: minmax(200px, 260px) minmax(0, 1fr); align-items: stretch; min-height: 100vh; }
+.page-tree-items.navigation-layout-right { grid-template-columns: minmax(0, 1fr) minmax(200px, 260px); }
+.page-tree-items.navigation-layout-top { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: start; }
+.page-tree-items.navigation-layout-right > .side-navigation { grid-column: 2; grid-row: 1; }
+.page-tree-items.navigation-layout-right > .side-navigation ~ div { grid-column: 1; grid-row: 1; }
+.page-tree-items.navigation-layout-top > .side-navigation { grid-column: 1; grid-row: 1; }
+.page-tree-items.navigation-layout-top > .side-navigation ~ div { grid-column: 1; grid-row: 2; }
+.navigation-brand { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #ffffff22; }
+.navigation-brand img { width: 36px; height: 36px; object-fit: contain; }
+.navigation-brand strong { overflow-wrap: anywhere; }
+.side-navigation { box-sizing: border-box; align-self: stretch; min-height: 100vh; width: 100%; }
+.side-navigation.top-navigation { display: flex; flex-wrap: wrap; align-items: center; min-height: 64px; height: auto; width: 100%; }
+.top-navigation > .page-tree-items { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 12px; }
+.top-navigation > .page-tree-items > div { min-width: 0; }
+.top-navigation ant-section-block [collapse-content] { position: absolute; top: 100%; left: 0; z-index: 20; min-width: 200px; padding: 6px; border: 1px solid #ffffff33; border-radius: 8px; background: #1b1c24; box-shadow: 0 10px 24px #0004; }
+.top-navigation .runtime-menu-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.top-navigation .runtime-menu-list .runtime-menu-list { display: grid; position: absolute; z-index: 5; min-width: 180px; padding: 6px; border: 1px solid #ffffff22; border-radius: 8px; background: var(--shell-sidebar-bg, #1b1c24); }
+@media (max-width: 700px) {
+    .page-tree-items.navigation-layout-left,
+    .page-tree-items.navigation-layout-right { grid-template-columns: minmax(0, 1fr); }
+    .page-tree-items.navigation-layout-right > .side-navigation,
+    .page-tree-items.navigation-layout-right > .side-navigation ~ div,
+    .page-tree-items.navigation-layout-top > .side-navigation ~ div { grid-column: 1; grid-row: auto; }
+    .side-navigation { min-height: 100vh; }
+    .side-navigation.top-navigation { min-height: 56px; }
+}

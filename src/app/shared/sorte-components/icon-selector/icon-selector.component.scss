@@ -1,0 +1,7 @@
+:host input, :host fa-icon{
+    cursor: pointer !important;
+}
+.icon-picker{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 14px;border:1px solid #64748b;border-radius:9px;background:transparent;color:inherit;text-align:left;cursor:pointer}.icon-picker span:last-child{margin-left:auto}.icon-picker:focus-visible{outline:2px solid #56d3c8;outline-offset:2px}
+:host(.compact) .icon-picker{justify-content:center;width:28px;min-width:28px;height:30px;min-height:30px;padding:4px;border:0;border-radius:6px;background:transparent}
+:host(.compact) .icon-picker:hover:not(:disabled){background:#eae6f2}
+:host(.compact) .icon-picker-label,:host(.compact) .icon-picker-chevron{display:none}

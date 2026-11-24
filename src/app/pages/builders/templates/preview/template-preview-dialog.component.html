@@ -1,0 +1,26 @@
+<div class="preview-dialog">
+  <header class="preview-header">
+    <div class="heading"><span class="eyebrow">{{ 'ui.template_preview' | transloco }}</span>
+      <h2>{{ template.name }}</h2>
+    </div>
+    <div class="controls" role="group" [attr.aria-label]="'ui.preview_screen_size' | transloco">
+      <button type="button" [class.active]="mode() === 'web'" [attr.aria-pressed]="mode() === 'web'"
+        (click)="mode.set('web')">{{ 'ui.web' | transloco }}</button>
+      <button type="button" [class.active]="mode() === 'tablet'" [attr.aria-pressed]="mode() === 'tablet'"
+        (click)="mode.set('tablet')">{{ 'ui.tablet' | transloco }}</button>
+      <button type="button" [class.active]="mode() === 'mobile'" [attr.aria-pressed]="mode() === 'mobile'"
+        (click)="mode.set('mobile')">{{ 'ui.mobile' | transloco }}</button>
+    </div>
+    <button class="close" type="button" [attr.aria-label]="'ui.close_preview' | transloco"
+      (click)="dialogRef.close()">✕</button>
+  </header>
+  <div class="preview-stage">
+    <div class="device" [class.tablet]="mode() === 'tablet'" [class.mobile]="mode() === 'mobile'">
+      <iframe #frame title="Preview of {{ template.name }}" sandbox="" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+  <footer>
+    {{ mode() === 'web' ? 'Responsive desktop width' : mode() === 'tablet' ? '768 px viewport' : '390 px viewport' }}
+    {{ 'ui.preview_only_scripts_are_disabled' | transloco }}
+  </footer>
+</div>

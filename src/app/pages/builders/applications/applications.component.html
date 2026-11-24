@@ -1,0 +1,378 @@
+<div class="workspace">
+  <nav class="workspace-nav" [attr.aria-label]="'workspace.navigation' | transloco">
+    <div class="workspace-label">{{ 'workspace.title' | transloco }}</div>
+    <button type="button" [class.active]="view() === 'recent'" [attr.aria-current]="view() === 'recent' ? 'page' : null"
+      (click)="setView('recent')"><span aria-hidden="true">
+        <fa-icon [icon]="['fal','times-circle']"></fa-icon>
+      </span>{{ 'workspace.recent' | transloco }}
+    </button>
+
+    <!-- Temporarily hide the New Application workspace tab while the flow is being revised.
+    <button type="button" [class.active]="view() === 'apps'" [attr.aria-current]="view() === 'apps' ? 'page' : null"
+      (click)="setView('apps')">
+      <span aria-hidden="true">
+        <fa-icon [icon]="['fal','plus']"></fa-icon>
+      </span>
+      {{ 'workspace.myApps' | transloco }}
+    </button>
+    -->
+
+    <button type="button" [class.active]="view() === 'templates'"
+      [attr.aria-current]="view() === 'templates' ? 'page' : null" (click)="setView('templates')"><span
+        aria-hidden="true">▤</span>{{ 'workspace.templates' | transloco }}
+    </button>
+
+  </nav>
+
+  <div class="workspace-body">
+    @if (view() === 'templates') {
+    <div class="starters">
+      <section class="template-browser" aria-labelledby="template-heading">
+        <header class="browser-heading my-2">
+          <div>
+            <p class="eyebrow">{{ 'workspace.startTemplates' | transloco }}</p>
+            <h2 id="template-heading">{{ 'workspace.catalogTitle' | transloco }}</h2>
+            <p class="browser-subtitle">{{ 'workspace.catalogSubtitle' | transloco }}</p>
+          </div>
+          <label class="browser-search">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" [value]="templateSearch()" (input)="templateSearch.set($any($event.target).value)"
+              [placeholder]="'workspace.searchTemplates' | transloco"
+              [attr.aria-label]="'workspace.searchTemplates' | transloco" />
+          </label>
+        </header>
+        @if (templatesLoading()) { <p class="muted" role="status">{{ 'workspace.loading' | transloco }}</p> }
+        @else if (templateError()) { <p role="alert">{{ templateError() | transloco }} <button type="button"
+            class="text-button" (click)="loadTemplates()">{{ 'workspace.retry' | transloco }}</button></p> }
+        @else {
+        <nav class="source-tabs my-2" [attr.aria-label]="'workspace.templateSources' | transloco">
+          @for (source of [ 'prebuilt', 'studio']; track source) {
+          <button type="button" [class.active]="templateSourceFilter() === source"
+            [attr.aria-pressed]="templateSourceFilter() === source" (click)="selectTemplateSource($any(source))">
+            {{ ('workspace.' + (source === 'prebuilt' ? 'prebuiltTemplates' : 'studioTemplates')) | transloco }}
+            <span class="tab-count">{{ sourceCount($any(source)) }}</span>
+          </button>
+          }
+        </nav>
+
+        <div class="catalog-groups">
+          @for (source of templateGroups(); track source) {
+          <section class="catalog-group" [attr.aria-labelledby]="'catalog-group-' + source">
+            <div class="catalog-group-heading">
+              <div>
+                <h3 [id]="'catalog-group-' + source">{{ (source === 'studio' ? 'workspace.studioTemplates' :
+                  'workspace.prebuiltTemplates') | transloco }}</h3>
+                <p>{{ (source === 'studio' ? 'workspace.studioDescription' : 'workspace.prebuiltDescription') |
+                  transloco }}</p>
+              </div><span class="group-count">{{ starterTemplates(source).length }}</span>
+            </div>
+            @if (starterTemplates(source).length) {
+            <div class="template-grid">@for (template of starterTemplates(source); track template.id) {
+              <button type="button" class="starter-card template-choice" (click)="startTemplate(template.id)"
+                [disabled]="!canCreate"
+                [attr.aria-label]="('workspace.useTemplate' | transloco) + ': ' + template.name">
+                <div class="template-art" [class.studio-art]="source === 'studio'"
+                  [class.prebuilt-art]="source === 'prebuilt'" aria-hidden="true">
+                  @if (template.previewImageUrl) { <img class="starter-preview" [src]="template.previewImageUrl"
+                    alt="" /> }
+                  @else { <span class="template-art-icon" aria-hidden="true">{{ source === 'studio' ? '✦' : '▦'
+                    }}</span>
+                  <div class="mock-window art-window">
+                    <div></div><span><i></i><i></i><i></i></span>
+                  </div> }
+                  <span class="type-badge">{{ template.category || ('ui.web' | transloco) }}</span>
+                </div>
+                <div class="starter-info"><small>{{ source === 'studio' ? ('workspace.studioBadge' | transloco) :
+                    ('workspace.prebuiltBadge' | transloco) }}</small><strong>{{ template.name }}</strong><span>{{
+                    template.description || ('workspace.reusable' | transloco) }}</span><span class="template-action">{{
+                    'workspace.useTemplate' | transloco }} <span aria-hidden="true">→</span></span></div>
+              </button>
+              }
+            </div>
+            } @else if (source === 'studio') {
+            <div class="studio-empty-state">
+              <p class="muted group-empty">{{ 'workspace.noTemplatesInGroup' | transloco }}</p>
+              <a class="studio-launch-button" [href]="designerStudioUrl" target="_blank" rel="noopener noreferrer">
+                {{'workspace.launchDesignerStudio' | transloco }} <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            } @else { <p class="muted group-empty">{{ 'workspace.noTemplatesInGroup' | transloco }}</p> }
+            @if (source === 'studio' && starterTemplates(source).length) {
+            <div class="studio-launch-row">
+              <a class="studio-launch-button" [href]="designerStudioUrl" target="_blank" rel="noopener noreferrer">
+                {{ 'workspace.launchDesignerStudio' | transloco }} <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            }
+          </section>
+          }
+        </div>
+        }
+      </section>
+    </div>
+    }
+    @if (view() !== 'templates') {
+    <section class="listing" #appslisting id="appslisting"> 
+      @if (view() === 'apps') {
+
+      <section class="create-hub" aria-labelledby="create-hub-title">
+
+        <header class="create-hub-heading"> 
+          <div class="text-4xl font-bond" id="create-hub-title">
+           <span [innerHTML]="'workspace.buildGreeting' | transloco:{ name: auth.displayName() }"></span>
+          </div>
+          <p>{{ 'workspace.buildSubtitle' | transloco }}</p> 
+        </header>
+  
+        <div class="prompt-composer">
+          <label class="visually-hidden" for="application-prompt">
+            {{ 'workspace.describeApplication' | transloco}}
+          </label>
+          <textarea id="application-prompt" rows="3" maxlength="5000" [value]="aiPrompt()"
+            (input)="aiPrompt.set($any($event.target).value); aiError.set('')"
+            [placeholder]="'workspace.describeApplication' | transloco"></textarea>
+          <div class="composer-footer">
+            <div class="model-picker" (click)="$event.stopPropagation()">
+              <button type="button" class="model-picker-trigger" [attr.aria-expanded]="aiModelMenuOpen()"
+                (click)="aiModelMenuOpen.update(open => !open)">
+                <span class="model-picker-mark" aria-hidden="true">✿</span>
+                {{ selectedAiModel()?.model || ('workspace.selectAiModel' | transloco) }} <span aria-hidden="true">⌄</span>
+              </button>
+              @if (aiModelMenuOpen()) {
+              <div class="model-picker-menu" role="menu">
+                <strong>{{ 'workspace.selectAiModel' | transloco }}</strong>
+                @for (model of aiModels(); track model.provider + ':' + model.model) {
+                <button type="button" role="menuitemradio" [attr.aria-checked]="selectedAiModel()?.model === model.model"
+                  (click)="selectAiModel(model)">
+                  <span>{{ model.model }}</span><small>{{ model.provider }}</small>
+                  @if (selectedAiModel()?.model === model.model) { <span aria-hidden="true">✓</span> }
+                </button>
+                }
+                @if (!aiModels().length) { <p>{{ 'workspace.noAiModels' | transloco }}</p> }
+                <button type="button" class="model-settings-link" role="menuitem" (click)="aiModelSettingsOpen.set(true); aiModelMenuOpen.set(false)">
+                  {{ 'workspace.configureAiModel' | transloco }} <span aria-hidden="true">›</span>
+                </button>
+              </div>
+              }
+            </div>
+            <div class="composer-actions">
+              <button type="button" class="new-application-button" (click)="createNewApplication()"
+                [disabled]="!canCreate">
+                <span aria-hidden="true">＋</span>{{ 'workspace.createApplication' | transloco }}
+              </button>
+              @if (canUseAi()) {
+              <button type="button" class="generate-application-button" (click)="createApplicationFromPrompt()"
+                [disabled]="aiBusy() || !aiPrompt().trim()" [attr.aria-label]="'workspace.generateWithAi' | transloco">
+                {{ aiBusy() ? ('workspace.generating' | transloco) : ('workspace.generateWithAi' | transloco) }}
+                @if (!aiBusy()) { <span aria-hidden="true">↑</span> }
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+        @if (aiModelSettingsOpen()) {
+        <div class="model-settings-backdrop" (click)="aiModelSettingsOpen.set(false)">
+          <section class="model-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="ai-model-settings-title" (click)="$event.stopPropagation()">
+            <header><div><h2 id="ai-model-settings-title">{{ 'workspace.configureAiModel' | transloco }}</h2><p>{{ 'workspace.aiKeyPrivacy' | transloco }}</p></div>
+              <button type="button" (click)="aiModelSettingsOpen.set(false)" [attr.aria-label]="'workspace.close' | transloco">×</button></header>
+            <label>{{ 'workspace.aiProvider' | transloco }}<input type="text" [(ngModel)]="aiProvider" /></label>
+            <label>{{ 'workspace.aiEndpoint' | transloco }}<input type="url" [(ngModel)]="aiEndpoint" placeholder="https://api.example.com/v1/chat/completions" /></label>
+            <label>{{ 'workspace.aiModelName' | transloco }}<input type="text" [(ngModel)]="aiModelName" /></label>
+            <label>{{ 'workspace.aiApiKey' | transloco }}<input type="password" [(ngModel)]="aiApiKey" autocomplete="new-password" /></label>
+            <label>{{ 'workspace.aiAuthScheme' | transloco }}
+              <select [(ngModel)]="aiAuthScheme"><option value="bearer">Bearer</option><option value="api-key">X-API-Key</option></select>
+            </label>
+            @if (aiModelError()) { <p role="alert">{{ aiModelError() | transloco }}</p> }
+            <footer><button type="button" (click)="aiModelSettingsOpen.set(false)">{{ 'workspace.cancel' | transloco }}</button>
+              <button type="button" class="save-model-button" [disabled]="aiModelBusy()" (click)="saveAiModel()">{{ aiModelBusy() ? ('workspace.savingAiModel' | transloco) : ('workspace.saveAiModel' | transloco) }}</button></footer>
+          </section>
+        </div>
+        }
+        @if (aiError()) { <p class="create-hub-error" role="alert">{{ aiError() | transloco }}</p> }
+        <div class="prompt-suggestions">
+          <span>{{ 'workspace.tryPrompt' | transloco }}</span>
+          <button type="button"
+            (click)="usePromptSuggestion('A sales CRM to track companies, contacts, deals, and follow-up activities.')">{{
+            'workspace.salesCrm' | transloco }}</button>
+          <button type="button"
+            (click)="usePromptSuggestion('An expense approval app with employee claims, receipts, manager approvals, and payment status.')">{{
+            'workspace.expenseApprovals' | transloco }}</button>
+          <button type="button"
+            (click)="usePromptSuggestion('An inventory tracker for products, stock movements, suppliers, and reorder alerts.')">{{
+            'workspace.inventoryTracker' | transloco }}</button>
+        </div>
+
+        <!-- <section class="featured-templates" aria-labelledby="featured-templates-title">
+          <div class="featured-templates-heading">
+            <div>
+              <h2 id="featured-templates-title">{{ 'workspace.startFromTemplate' | transloco }}</h2>
+              <p>{{ 'workspace.prebuiltDescription' | transloco }}</p>
+            </div>
+            <button type="button" class="browse-templates-button" (click)="setView('templates')">{{
+              'workspace.browseAllTemplates' | transloco }} <span aria-hidden="true">→</span></button>
+          </div>
+          @if (templatesLoading()) { <p class="muted" role="status">{{ 'workspace.loading' | transloco }}</p> }
+        @else if (starterTemplates('prebuilt').length) {
+          <div class="featured-template-grid">
+            @for (template of starterTemplates('prebuilt').slice(0, 4); track template.id) {
+            <button type="button" class="featured-template-card" (click)="startTemplate(template.id)"
+              [disabled]="!canCreate">
+              <span class="featured-template-icon" aria-hidden="true">{{ template.previewImageUrl ? '✦' : '▦' }}</span>
+              <span class="featured-template-copy"><strong>{{ template.name }}</strong><small>{{ template.description ||
+                  ('workspace.reusable' | transloco) }}</small></span>
+              <span class="featured-template-arrow" aria-hidden="true">→</span>
+            </button>
+            }
+          </div>
+          } @else { <p class="muted">{{ 'workspace.noTemplates' | transloco }}</p> }
+        </section> -->
+
+      </section>
+      }
+      @if (view() === 'recent' && deletionMessage()) { <p class="deletion-message" role="status">{{ deletionMessage() |
+        transloco }}</p> }
+      @if (view() === 'recent' && isAdmin && deletionQueue().length) {
+      <section class="deletion-queue" aria-labelledby="deletion-queue-heading">
+        <h2 id="deletion-queue-heading">{{ 'workspace.deletionApprovals' | transloco }} <span class="queue-count">{{
+            deletionQueue().length }}</span></h2>
+        @for (request of deletionQueue(); track request.id) {
+        <article class="deletion-request">
+          <div><strong>{{ request.applicationName }}</strong>
+            <p>{{ request.reason }}</p><small>{{ 'workspace.requestedBy' | transloco }} {{ request.requestedByUserId }}
+              · {{ request.createdAt | date:'medium' }}</small>
+          </div>
+          <div class="review-actions"><input type="text" [(ngModel)]="rejectionReason"
+              [placeholder]="'workspace.reviewNoteOptional' | transloco"
+              [attr.aria-label]="'workspace.reviewNoteOptional' | transloco" />
+            <button type="button" class="danger-button" (click)="reviewDeletion(request.id, true)">{{
+              'workspace.approveDelete' | transloco }}</button>
+            <button type="button" class="secondary-button" (click)="reviewDeletion(request.id, false)">{{
+              'workspace.reject' | transloco }}</button>
+          </div>
+        </article>
+        }
+      </section>
+      }
+      @if (view() !== 'apps') {
+      <div class="section-heading list-heading">
+        <h2>{{ (view() === 'templates' ? 'workspace.templates' : view() === 'apps' ? 'workspace.myApps' :
+          'workspace.recentApps') | transloco }}</h2>
+        <label class="search"><span aria-hidden="true">⌕</span><input type="search" [value]="search()"
+            (input)="search.set($any($event.target).value)" [placeholder]="'workspace.search' | transloco"
+            [attr.aria-label]="'workspace.search' | transloco" /></label>
+      </div>
+      @if (loading()) { <p class="empty" role="status">{{ 'workspace.loading' | transloco }}</p> }
+      @else if (error) { <div class="empty" role="alert">
+        <p>{{ error }}</p><button type="button" (click)="load()">{{ 'workspace.retry' | transloco }}</button>
+      </div> }
+      @else { <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'workspace.appName' | transloco }}</th>
+              <th scope="col">{{ 'workspace.type' | transloco }}</th>
+              <th scope="col">{{ 'workspace.status' | transloco }}</th>
+              <th scope="col">{{ 'workspace.updated' | transloco }}</th>
+              <th scope="col">{{ 'workspace.actions' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of visibleApps(); track item.id) { <tr>
+              <td>
+                <div class="app-name"><span class="app-icon" aria-hidden="true">@if
+                    (iconFor(item.icon); as icon) { <fa-icon [icon]="icon" /> } @else { ▦ }</span><span><strong>{{
+                      item.name }}</strong><small>{{ item.description }}</small>@if (item.status === 'Published') {
+                    <small class="version-meta">App v{{ item.publishedVersion }}@if (item.appliedTemplateVersion) {
+                      · Template v{{ item.appliedTemplateVersion }}
+                      }</small>
+                    }</span></div>
+              </td>
+              <td>{{ item.applicationType || ('ui.web' | transloco) }}</td>
+              <td><span class="status">{{ item.status }}</span>@if (item.status === 'Published') {
+                <span class="operational-status" [class.passive]="item.operationalState === 'Passive'">{{
+                  (item.operationalState === 'Passive' ? 'workspace.passive' : 'workspace.active') | transloco }}</span>
+                }
+              </td>
+              <td>{{ item.updatedAt ? (item.updatedAt | date:'mediumDate') : '—' }}</td>
+              <td class="actions">
+                <div class="app-action-group">
+                  @if (templateUpdates().get(item.id); as templateUpdate) {
+                  @if (templateUpdate.updateAvailable && item.status === 'Draft' && item.canEdit &&
+                  !item.pendingDeletion) {
+                  <button type="button" class="app-action icon-action template-update-action"
+                    (click)="reviewTemplateUpdate(item)" [disabled]="templateUpdateBusyId() === item.id"
+                    [title]="'workspace.reviewTemplateUpdate' | transloco"
+                    [attr.aria-label]="'workspace.reviewTemplateUpdate' | transloco"><fa-icon
+                      [icon]="icons().get('arrows-rotate')!" aria-hidden="true" /></button>
+                  }
+                  }
+                  @if (item.status === 'Published') {
+                  @if (item.canEdit && !item.pendingDeletion) {
+                  <button type="button" class="app-action icon-action" (click)="createDraftFromPublished(item)"
+                    [disabled]="createDraftBusyId() === item.id"
+                    [title]="'workspace.createDraftFromPublished' | transloco"
+                    [attr.aria-label]="'workspace.createDraftFromPublished' | transloco"><fa-icon
+                      [icon]="icons().get('copy')!" aria-hidden="true" /></button>
+                  }
+                  <button type="button" class="app-action icon-action" disabled
+                    [title]="'workspace.publishedEditDisabled' | transloco"
+                    [attr.aria-label]="'workspace.edit' | transloco"><fa-icon [icon]="icons().get('pen-to-square')!"
+                      aria-hidden="true" /></button>
+                  } @else if (item.canEdit && !item.pendingDeletion) {
+                  <a class="app-action icon-action" [routerLink]="['/builder/applications', item.id, 'design']"
+                    [queryParams]="{tenantId: item.tenantId}" [title]="'workspace.edit' | transloco"
+                    [attr.aria-label]="'workspace.edit' | transloco"><fa-icon [icon]="icons().get('pen-to-square')!"
+                      aria-hidden="true" /></a>
+                  }
+                  @if (item.status === 'Published') {
+                  @if (item.operationalState === 'Active' && item.startScreenKey) {
+                  <a class="app-action primary-action icon-action"
+                    [routerLink]="['/builder/applications', item.id, 'screens', item.startScreenKey]"
+                    [queryParams]="{tenantId: item.tenantId}" [title]="'workspace.launchApp' | transloco"
+                    [attr.aria-label]="'workspace.launchApp' | transloco"><fa-icon
+                      [icon]="icons().get('arrow-up-right-from-square')!" aria-hidden="true" /></a>
+                  } @else {
+                  <button type="button" class="app-action icon-action" disabled
+                    [title]="'workspace.passiveLaunchHelp' | transloco"
+                    [attr.aria-label]="'workspace.passiveLaunchHelp' | transloco"><fa-icon
+                      [icon]="icons().get('arrow-up-right-from-square')!" aria-hidden="true" /></button>
+                  }
+                  @if (item.canEdit) {
+                  <button type="button" class="app-action icon-action" (click)="setOperationalState(item)"
+                    [disabled]="!!operationalStateBusyId()"
+                    [attr.aria-label]="(item.operationalState === 'Passive' ? 'workspace.activateApp' : 'workspace.setPassive') | transloco"
+                    [title]="(item.operationalState === 'Passive' ? 'workspace.activateApp' : 'workspace.setPassive') | transloco">
+                    <fa-icon [icon]="icons().get(item.operationalState === 'Passive' ? 'toggle-on' : 'toggle-off')!"
+                      aria-hidden="true" />
+                  </button>
+                  }
+                  }
+                  @if (item.pendingDeletion) { <span class="pending-badge" [title]="item.pendingDeletion.reason">{{
+                    'workspace.deletionPending' | transloco }}</span> }
+                  @else if (item.status === 'Draft' && item.canEdit) {
+                  <details class="delete-request">
+                    <summary class="app-action icon-action danger-action" [title]="'workspace.softDelete' | transloco"
+                      [attr.aria-label]="'workspace.softDelete' | transloco"><fa-icon [icon]="icons().get('trash-can')!"
+                        aria-hidden="true" /></summary>
+                    <label>{{ 'workspace.deletionDetails' | transloco }}<textarea required maxlength="2000" rows="3"
+                        [(ngModel)]="deletionReason" [attr.aria-label]="'workspace.deletionDetails' | transloco"
+                        [placeholder]="'workspace.deletionDetailsHint' | transloco"></textarea></label>
+                    <button type="button" class="danger-button" [disabled]="!deletionReason.trim()"
+                      (click)="requestDeletion(item)">{{ 'workspace.submitDeletionRequest' | transloco }}</button>
+                  </details>
+                  }
+                </div>
+              </td>
+            </tr> }
+            @empty { <tr>
+              <td colspan="5" class="empty">{{ (search() ? 'workspace.noMatches' : 'workspace.noApps') | transloco }}
+              </td>
+            </tr> }
+          </tbody>
+        </table>
+      </div> }
+      }
+    </section>
+    }
+  </div>
+</div>

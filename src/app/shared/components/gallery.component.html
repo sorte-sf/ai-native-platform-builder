@@ -1,0 +1,14 @@
+<h3>{{ node().text }}</h3>
+@if (loading()) { <p role="status">{{ 'ui.loading' | transloco }}</p> }
+@if (failed()) { <p role="alert">{{ 'blocks.loadError' | transloco }}</p> }
+<div class="grid gap-3" [style.grid-template-columns]="'repeat(' + (node().galleryColumns || 3) + ', minmax(0, 1fr))'">
+    @for (row of visibleRows(); track $index) { <figure class="m-0 min-w-0">@if (url(row); as image) { <img
+            class="aspect-video w-full rounded object-cover" [src]="image" [alt]="title(row)" loading="lazy" /> }
+        <figcaption>{{ title(row) }}</figcaption>
+    </figure> }
+    @if (designMode() && !rows().length) { @for (placeholder of [1,2,3,4,5,6]; track placeholder) { <div
+        class="flex aspect-video items-center justify-center rounded bg-purple-50 text-purple-700">{{
+        'businessBlocks.image' | transloco }} {{ placeholder }}</div> } }
+</div>
+<ant-block-pagination [node]="node()" />
+@if (!designMode() && !node().tableJson) { <small>{{ 'businessBlocks.sampleScope' | transloco }}</small> }

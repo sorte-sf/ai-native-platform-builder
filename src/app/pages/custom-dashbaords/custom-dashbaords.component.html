@@ -1,0 +1,28 @@
+<main class="dashboard" aria-labelledby="custom-dashboard-title">
+    <header>
+        <div>
+            <p class="eyebrow">{{ 'ui.prototype' | transloco }}</p>
+            <h1 id="custom-dashboard-title">{{ 'ui.custom_dashboard' | transloco }}</h1>
+        </div>
+        <button type="button" class="save" (click)="saveLayout()">
+            {{ 'ui.save_layout' | transloco }}
+        </button>
+        
+    </header>
+    <aside class="palette" [attr.aria-label]="'ui.dashboard_components' | transloco"><strong>{{
+            'ui.drag_components_into_the_dashboard' | transloco }}</strong>@for (item of available; track item.type)
+        {<button type="button" draggable="true" (dragstart)="dragStart($event, item.type)" (click)="add(item.type)">{{
+            item.label }}</button>}</aside>
+    <section class="canvas" (dragover)="allowDrop($event)" (drop)="drop($event)">
+        <gridster [options]="options">@for (widget of widgets(); track widget.id) {<gridster-item
+                [item]="widget"><button class="remove" type="button" (click)="remove(widget.id)"
+                    [attr.aria-label]="'Remove ' + widget.type">×</button>@switch (widget.type) {@case ('table')
+                {<app-dashboard-table />}@case ('pie') {<app-dashboard-pie-chart />}@case ('doughnut')
+                {<app-dashboard-doughnut-chart />}@case ('bar') {<app-dashboard-bar-chart />}@case ('stacked-line')
+                {<app-dashboard-stacked-line-chart />}}</gridster-item>}</gridster>
+    </section>
+
+
+
+
+</main>

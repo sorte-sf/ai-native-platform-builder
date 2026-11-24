@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>{{ data ? 'Edit template' : 'New template' }}</h2>
+<form [formGroup]="form" (ngSubmit)="save()">
+
+    <mat-dialog-content class="dialog-content">
+        <label>{{ 'ui.name' | transloco }}<input formControlName="name" /></label>
+        <label>{{ 'ui.description' | transloco }}<textarea rows="2" formControlName="description"></textarea></label>
+        <label>{{ 'ui.html_content' | transloco }}<textarea rows="8" formControlName="htmlContent"></textarea></label>
+        <label>{{ 'ui.scss_content' | transloco }}<textarea rows="8" formControlName="scssContent"></textarea></label>
+        <label>{{ 'ui.blueprint_manifest_json' | transloco }}<textarea rows="8"
+                formControlName="manifestJson"></textarea></label>
+        @if (form.controls.manifestJson.hasError('invalidJson')) { <small role="alert">{{ 'ui.enter_valid_manifest_json'
+            | transloco }}</small> }
+        <label>{{ 'ui.default_theme_json' | transloco }}<textarea rows="5"
+                formControlName="themeJson"></textarea></label>
+        @if (form.controls.themeJson.hasError('invalidJson')) { <small role="alert">{{ 'ui.enter_valid_theme_json' |
+            transloco }}</small> }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="ref.close()">{{ 'ui.cancel' | transloco }}</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+
+            {{ 'ui.save_template' | transloco }}
+        </button>
+    </mat-dialog-actions>
+
+</form>

@@ -1,0 +1,85 @@
+<main class="ai-page">
+    <header class="hero">
+        <div><span class="eyebrow">PLATFORM CONTROLS</span>
+            <h1>AI governance</h1>
+            <p>Choose how each tenant uses AI, set fair-use limits, and monitor request and token activity.</p>
+        </div>
+        <label class="tenant-picker">Tenant<select [(ngModel)]="tenantId" (ngModelChange)="loadTenant()">
+                <option value="">Choose a tenant</option>@for (tenant of tenants(); track tenant.id) {<option
+                    [value]="tenant.id">{{tenant.name}} · {{tenant.id}}</option>}
+            </select></label>
+    </header>
+    @if (loading()) {<section class="panel muted">Loading tenant policy and usage…</section>}
+    @else if (!tenantId) {<section class="panel muted">Select a tenant to review its AI settings.</section>}
+    @else {
+    <section class="panel">
+        <div class="section-heading">
+            <div>
+                <h2>Tenant policy</h2>
+                <p>AI mode determines which provider handles prompts for this tenant.</p>
+            </div><span class="mode-pill" [class.off]="mode === 'Disabled'">{{mode}}</span>
+        </div>
+        <div class="form-grid">
+            <label>AI mode<select [(ngModel)]="mode">
+                    <option>Disabled</option>
+                    <option>Local</option>
+                    <option>CustomerCloud</option>
+                    <option>PlatformManaged</option>
+                </select></label>
+            <label>Provider<input [(ngModel)]="provider" placeholder="openai-compatible, ollama…"></label>
+            <label class="wide">HTTPS endpoint<input [(ngModel)]="endpoint"
+                    placeholder="https://provider.example/v1/chat/completions"></label>
+            <label>Model<input [(ngModel)]="model" placeholder="model name"></label>
+            <label>Secret reference<input [(ngModel)]="apiKeyReference" placeholder="vault://tenant-ai/key"></label>
+            <label>Authentication<select [(ngModel)]="authScheme">
+                    <option value="bearer">Bearer token</option>
+                    <option value="api-key">X-API-Key</option>
+                </select></label>
+            <label>Monthly token limit<input type="number" min="0" [(ngModel)]="monthlyTokenLimit"><small>0 means
+                    unlimited</small></label>
+            <label>Monthly request limit<input type="number" min="0" [(ngModel)]="monthlyRequestLimit"><small>0 means
+                    unlimited</small></label>
+            <label>Max output tokens<input type="number" min="1" max="32000" [(ngModel)]="maxOutputTokens"></label>
+        </div>
+        <div class="form-footer"><span>Credentials use the configured secret resolver; raw keys are not stored in this
+                policy.</span><button [disabled]="saving()" (click)="save()">{{saving() ? 'Saving…' : 'Save
+                policy'}}</button></div>
+    </section>
+    <section class="stats">
+        <article><small>Requests this month</small><strong>{{usage()?.totalRequests ?? 0}}</strong></article>
+        <article><small>Tokens this month</small><strong>{{(usage()?.totalTokens ?? 0) | number}}</strong></article>
+        <article><small>Input tokens</small><strong>{{(usage()?.inputTokens ?? 0) | number}}</strong></article>
+        <article><small>Output tokens</small><strong>{{(usage()?.outputTokens ?? 0) | number}}</strong></article>
+    </section>
+    <section class="panel">
+        <div class="section-heading">
+            <div>
+                <h2>Recent AI activity</h2>
+                <p>Estimated token counts are marked when provider usage data was unavailable.</p>
+            </div><input class="month" type="month" [(ngModel)]="month" (ngModelChange)="loadUsage()">
+        </div>
+        @if (!usage()?.items?.length) {<div class="empty">No AI requests recorded for this month.</div>} @else {<div
+            class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Feature</th>
+                        <th>Provider / model</th>
+                        <th>Tokens</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>@for (item of usage()!.items; track $index) {<tr>
+                        <td>{{item.createdAt | date:'medium'}}</td>
+                        <td>{{item.feature}}</td>
+                        <td>{{item.provider}} · {{item.model}}</td>
+                        <td>{{item.inputTokens + item.outputTokens | number}}{{item.isEstimated ? ' ~' : ''}}</td>
+                        <td><span class="result" [class.failed]="item.outcome !== 'completed'">{{item.outcome}}</span>
+                        </td>
+                    </tr>}</tbody>
+            </table>
+        </div>}
+    </section>
+    }
+</main>

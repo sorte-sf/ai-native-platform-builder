@@ -1,0 +1,1 @@
+export type DesignerFieldType = 'Text' | 'LongText' | 'Integer' | 'Decimal' | 'Boolean' | 'Date' | 'Email' | 'Choice' | 'MultiChoice';

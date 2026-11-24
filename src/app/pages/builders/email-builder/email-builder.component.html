@@ -1,0 +1,209 @@
+<div class="email-builder">
+    <header class="page-header">
+        <div class="heading-copy">
+            <a class="back-link" [routerLink]="['/builder/applications', applicationId, 'design']" [queryParams]="{tenantId}">← {{ 'emailBuilder.back' | transloco }}</a>
+            <div class="page-title"><span class="title-icon" aria-hidden="true">✉</span><div>
+                <h1>{{ 'emailBuilder.title' | transloco }}</h1>
+                <p>{{ 'emailBuilder.pageDescription' | transloco }}</p>
+            </div></div>
+        </div>
+        @if (!editorOpen()) {
+        <div class="header-actions">
+            <button class="secondary-action" type="button" (click)="showTemplateGallery.set(!showTemplateGallery())" [attr.aria-expanded]="showTemplateGallery()"><span aria-hidden="true">▤</span>{{ 'emailBuilder.fromTemplate' | transloco }}</button>
+            <button class="primary-action" type="button" (click)="blank()"><span aria-hidden="true">＋</span>{{ 'emailBuilder.blank' | transloco }}</button>
+        </div>
+        }
+    </header>
+
+    @if (error()) { <p role="alert" class="error">{{ error() | transloco }}</p> }
+    @if (notice()) { <p role="status" class="notice">{{ notice() | transloco }}</p> }
+    @if (!editorOpen()) {
+    @if (showTemplateGallery()) {
+    <section id="email-template-gallery" class="template-gallery"
+        [attr.aria-label]="'emailBuilder.fromTemplate' | transloco">
+        <div class="gallery-heading">
+            <div>
+                <h2>{{ 'emailBuilder.galleryTitle' | transloco }}</h2>
+                <p>{{ 'emailBuilder.galleryHint' | transloco }}</p>
+            </div><button type="button" (click)="showTemplateGallery.set(false)"
+                [attr.aria-label]="'emailBuilder.closeGallery' | transloco">×</button>
+        </div>
+        <div class="gallery-tools">
+            <div class="gallery-categories" role="group"
+                [attr.aria-label]="'emailBuilder.templateCategories' | transloco">
+                @for (category of ['all', 'account', 'notifications', 'events']; track category) { <button type="button"
+                    [attr.aria-pressed]="templateCategory() === category"
+                    (click)="templateCategory.set($any(category))">{{ ('emailBuilder.category.' + category) | transloco
+                    }}</button> }
+            </div>
+            <label class="gallery-search">
+                <span>{{ 'emailBuilder.searchTemplates' | transloco }}</span>
+                <input
+                    type="search" [value]="templateSearch()" (input)="templateSearch.set($any($event.target).value)"
+                    [placeholder]="'emailBuilder.searchTemplates' | transloco">
+            </label>
+        </div>
+        <div class="template-grid">
+            @for (template of visibleStarterTemplates(); track template.name) {
+            <article class="template-card">
+                <div class="template-art" [class]="'template-art theme-' + template.theme" aria-hidden="true">
+                    <div class="template-sheet">
+                        <div class="template-banner"><span>{{ template.icon }}</span></div>
+                        <div class="template-lines"><b></b><i></i><i></i><i></i></div>
+                        <div class="template-cta"></div>
+                        <div class="template-foot"></div>
+                    </div>
+                </div>
+                <div class="template-card-body">
+                    <small>{{ ('emailBuilder.category.' + template.category) | transloco}}</small>
+                    <h3>{{ ('emailBuilder.' + template.label) | transloco }}</h3>
+                    <button type="button"
+                        (click)="preset(template.name)">{{ 'emailBuilder.useTemplate' | transloco }} →</button>
+                </div>
+            </article>
+            } @empty { <p>{{ 'emailBuilder.noMatchingTemplates' | transloco }}</p> }
+        </div>
+    </section>
+    }
+    <section class="content-panel">
+    <div class="library-heading"><div><h2>{{ 'emailBuilder.libraryTitle' | transloco }}</h2><p>{{ filtered().length }} {{ 'emailBuilder.templates' | transloco }}</p></div>
+    <div class="list-tools">
+        <div role="group" [attr.aria-label]="'emailBuilder.filter' | transloco">
+            <button type="button" [attr.aria-pressed]="tab() === 'all'" (click)="tab.set('all')">{{
+                'emailBuilder.recent' | transloco }}</button>
+            <button type="button" [attr.aria-pressed]="tab() === 'emails'" (click)="tab.set('emails')">{{
+                'emailBuilder.emails' | transloco }}</button>
+            <button type="button" [attr.aria-pressed]="tab() === 'templates'" (click)="tab.set('templates')">{{
+                'emailBuilder.templates' | transloco }}</button>
+        </div>
+        <label>
+            {{ 'emailBuilder.search' | transloco }} 
+            <input type="search" [value]="search()"
+                (input)="search.set($any($event.target).value)" />
+        </label>
+    </div></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ 'emailBuilder.name' | transloco }}</th>
+                    <th>{{ 'emailBuilder.type' | transloco }}</th>
+                    <th>{{ 'emailBuilder.language' | transloco }}</th>
+                    <th>{{ 'emailBuilder.created' | transloco }}</th>
+                    <th>{{ 'emailBuilder.modified' | transloco }}</th>
+                </tr>
+            </thead>
+            <tbody>@for (item of filtered(); track item.id) { <tr>
+                    <td><button type="button" (click)="open(item)">✉ {{ item.name }}</button></td>
+                    <td>{{ item.templateType }}</td>
+                    <td>{{ item.language }}</td>
+                    <td>{{ item.createdAt }}</td>
+                    <td>{{ item.updatedAt }}</td>
+                </tr> }
+                @empty { <tr>
+                    <td colspan="5">{{ 'emailBuilder.empty' | transloco }}</td>
+                </tr> }
+            </tbody>
+        </table>
+    </div>
+    </section>
+    } @else {
+    <div class="editor-toolbar"><button type="button" (click)="editorOpen.set(false)">← {{ 'emailBuilder.templates' |
+            transloco }}</button>
+        <strong>{{ selected()?.name || ('emailBuilder.newDraft' | transloco) }}</strong>
+        <button type="button" (click)="openPreview()">{{ 'emailBuilder.preview' | transloco }}</button>
+        @if (selected()) { <button type="button" class="danger" (click)="deleteSelected()" [disabled]="busy()">{{
+            'emailBuilder.delete' | transloco }}</button> }
+    </div>
+    <div class="editor-grid">
+        <section class="settings">
+            <h2>{{ 'emailBuilder.details' | transloco }}</h2>
+            <ant-platform-dynamic-form [config]="config()" (submitted)="save($event)" />
+            <p>{{ 'emailBuilder.saveHint' | transloco }}</p>
+        </section>
+        <section class="design">
+            <h2>{{ 'emailBuilder.content' | transloco }}</h2>
+            @if (hasParagraph()) {
+            <div id="email-rich-toolbar" class="ql-toolbar ql-snow design-toolbar" role="toolbar" [attr.aria-label]="'emailBuilder.formatting' | transloco">
+                <span class="ql-formats"><button type="button" class="ql-bold" aria-label="Bold"></button><button type="button" class="ql-italic" aria-label="Italic"></button><button type="button" class="ql-underline" aria-label="Underline"></button><button type="button" class="ql-strike" aria-label="Strikethrough"></button></span>
+                <span class="ql-formats"><select class="ql-header" aria-label="Heading"><option value="1">Heading 1</option><option value="2">Heading 2</option><option selected>Normal</option></select></span>
+                <span class="ql-formats"><button type="button" class="ql-list" value="ordered" aria-label="Numbered list"></button><button type="button" class="ql-list" value="bullet" aria-label="Bulleted list"></button><button type="button" class="ql-blockquote" aria-label="Quote"></button><button type="button" class="ql-code-block" aria-label="Code block"></button></span>
+                <span class="ql-formats"><button type="button" class="ql-script" value="sub" aria-label="Subscript"></button><button type="button" class="ql-script" value="super" aria-label="Superscript"></button><button type="button" class="ql-indent" value="-1" aria-label="Decrease indent"></button><button type="button" class="ql-indent" value="+1" aria-label="Increase indent"></button></span>
+                <span class="ql-formats"><select class="ql-size" aria-label="Text size"><option value="small">Small</option><option selected>Normal</option><option value="large">Large</option><option value="huge">Huge</option></select><select class="ql-font" aria-label="Font"><option selected>Sans serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></span>
+                <span class="ql-formats"><select class="ql-color" aria-label="Text color"></select><select class="ql-background" aria-label="Highlight color"></select><select class="ql-align" aria-label="Alignment"></select><button type="button" class="ql-direction" value="rtl" aria-label="Right-to-left text"></button></span>
+                <span class="ql-formats"><button type="button" class="ql-link" aria-label="Link"></button><button type="button" class="ql-clean" aria-label="Clear formatting"></button></span>
+            </div>
+            }
+            <div class="block-picker" role="group" [attr.aria-label]="'emailBuilder.addBlock' | transloco">
+                <button type="button" (click)="addBlock('heading')">+ {{ 'emailBuilder.heading' | transloco }}</button>
+                <button type="button" (click)="addBlock('paragraph')" [disabled]="hasParagraph()">+ {{
+                    'emailBuilder.paragraph' | transloco
+                    }}</button>
+                <button type="button" (click)="addBlock('button')">+ {{ 'emailBuilder.button' | transloco }}</button>
+                <button type="button" (click)="addBlock('divider')">+ {{ 'emailBuilder.divider' | transloco }}</button>
+            </div>
+            @for (block of blocks(); track block.id) { <div class="block-editor">
+                <div class="block-heading">
+                    <strong>{{ ('emailBuilder.' + block.type) | transloco }}</strong>
+                    <span>
+                        <button type="button" (click)="moveBlock(block.id,-1)" [disabled]="$first"
+                            [attr.aria-label]="'emailBuilder.moveUp' | transloco">↑</button>
+                        <button type="button" (click)="moveBlock(block.id,1)" [disabled]="$last"
+                            [attr.aria-label]="'emailBuilder.moveDown' | transloco">↓</button>
+                        <button type="button" (click)="removeBlock(block.id)"
+                            [attr.aria-label]="'emailBuilder.removeBlock' | transloco">×</button>
+                    </span>
+                </div>
+                @if (block.type === 'paragraph') {
+                <div class="paragraph-editor" role="group" [attr.aria-label]="'emailBuilder.paragraph' | transloco">
+                    <!-- <span>{{ 'emailBuilder.text' | transloco }}</span> -->
+                    <ant-email-paragraph-editor [value]="paragraphDelta(block)"
+                        (valueChange)="setParagraphDelta(block.id, $event)"
+                        [placeholder]="'emailBuilder.richTextPlaceholder' | transloco" />
+                </div>
+                } @else if (block.type !== 'divider') {
+                <label>
+                    {{ 'emailBuilder.text' | transloco }}
+                    <input [value]="block.text" (input)="setBlock(block.id,'text',$any($event.target).value)"
+                        maxlength="10000" />
+                </label>
+                }
+                @if (block.type === 'button') {
+                <label>{{ 'emailBuilder.link' | transloco }}
+                    <input type="url" [value]="block.url || ''"
+                        (input)="setBlock(block.id,'url',$any($event.target).value)" />
+                </label>
+                }
+            </div>
+            }
+        </section>
+    </div>
+    <dialog #previewDialog class="preview-dialog" [attr.aria-label]="'emailBuilder.preview' | transloco">
+        <div class="preview-dialog-header">
+            <h2>{{ 'emailBuilder.preview' | transloco }}</h2><button type="button" (click)="closePreview()"
+                [attr.aria-label]="'emailBuilder.closePreview' | transloco">×</button>
+        </div>
+        <div class="email-preview">
+            <p class="subject">{{ details().subject }}</p>
+            @for (block of blocks(); track block.id) {
+            @switch (block.type) {
+            @case ('heading') {
+            <h3>{{ block.text }}</h3>
+            }
+            @case ('paragraph') {
+            <quill-view format="json" [content]="paragraphDelta(block)" [formats]="paragraphFormats" /> }
+            @case ('divider') {
+            <hr> }
+            @case ('button') { @if (safeUrl(block.url); as url) {
+            <a [href]="url" target="_blank" rel="noopener noreferrer">{{ block.text }}</a>
+            }
+            @else {
+            <span class="preview-button"> {{ block.text}}</span>
+            }
+            }
+            }
+            }
+        </div>
+    </dialog>
+    }
+</div>

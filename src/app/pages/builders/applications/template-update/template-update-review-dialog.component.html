@@ -1,0 +1,28 @@
+<section class="update-review" aria-labelledby="template-update-title">
+    <header>
+        <div><span class="eyebrow">{{ 'workspace.templateUpdate' | transloco }}</span>
+            <h2 id="template-update-title">{{ data.app.name }}</h2>
+            <p>{{ 'workspace.templateUpdateVersions' | transloco:{ current: data.review.currentVersion || '—', latest:
+                data.review.latestVersion || '—' } }}</p>
+        </div><button type="button" mat-dialog-close class="close"
+            [attr.aria-label]="'workspace.close' | transloco">×</button>
+    </header>
+    <div class="safety-note">{{ 'workspace.templateUpdateSafeNote' | transloco }}</div>
+    <h3>{{ 'workspace.templateUpdateChanges' | transloco }}</h3>
+    @if (data.review.changes.length) {
+    <ul class="change-list">@for (change of data.review.changes; track change.kind + change.key) {
+        <li><span class="change-kind">{{ change.kind }}</span><span><strong>{{ change.name }}</strong><small>{{
+                    change.key }}</small></span>
+            <span class="change-action">{{ actionLabel(change.action) | transloco }}</span>
+        </li>
+        }
+    </ul>
+    } @else { <p class="empty">{{ 'workspace.templateUpdateNoChanges' | transloco }}</p> }
+    @if (data.review.notes.length) { <ul class="notes">@for (note of data.review.notes; track note) { <li>{{ note }}
+        </li> }</ul> }
+    <footer><button type="button" class="secondary" mat-dialog-close>{{ 'workspace.cancel' | transloco }}</button>
+        <button type="button" class="primary" [disabled]="!data.review.canApply || applying()" (click)="apply()">
+            {{ (applying() ? 'workspace.templateUpdateApplying' : 'workspace.templateUpdateApply') | transloco }}
+        </button>
+    </footer>
+</section>

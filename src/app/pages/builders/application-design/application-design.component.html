@@ -1,0 +1,161 @@
+<div class="designer">
+  <header class="designer-header">
+    <div>
+      <a routerLink="/builder/applications">{{ 'ui.applications_2' | transloco }}</a>
+      <span class="eyebrow">{{ 'ui.application_studio' | transloco }}</span>
+      <h1>{{ application()?.name || 'Application design' }}</h1>
+      <p>{{ 'ui.customize_your_template_add_screens_then_build_the_forms_and_data_model' | transloco }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="secondary" (click)="openFormDesigner()">{{ 'ui.data_forms' | transloco }}</button>
+      <button type="button" class="primary" [disabled]="readOnly || saving() || loading()" (click)="save()">{{ saving()
+        ? ('ui.saving' | transloco) : ('ui.save_design' | transloco) }}</button>
+    </div>
+  </header>
+
+  @if (error()) { <div class="message error" role="alert">{{ error() }}</div> }
+  @if (notice()) { <div class="message success" role="status">{{ notice() }}</div> }
+  @if (loading()) { <p class="loading" role="status">{{ 'ui.loading_application_design' | transloco }}</p> }
+  @else if (application()) {
+  @if (readOnly) { 
+    <p class="message">
+      {{ 'ui.this_application_can_be_viewed_but_its_current_status_or_your_role_prevents_draft_editing' | transloco }}
+    </p> 
+  }
+  <div class="workspace">
+    <aside class="tools" [attr.aria-label]="'ui.application_design_tools' | transloco">
+      <section>
+        <div class="section-title">
+          <h2>{{ 'ui.screens' | transloco }}</h2><button type="button" (click)="newScreen()" [disabled]="readOnly">{{
+            'ui.new' | transloco }}</button>
+        </div>
+        @for (screen of screens(); track screen.id) {
+        <button type="button" class="screen-item" [class.active]="currentScreen()?.id === screen.id"
+          (click)="selectScreen(screen)">{{ screen.title }}</button>
+        }
+        @if (!screens().length) { <p class="hint">{{ 'ui.no_screens_yet_create_the_first_screen_and_save_it' | transloco
+          }}</p> }
+      </section>
+      <section>
+        <h2>{{ 'ui.add_to_screen' | transloco }}</h2>
+        <div class="block-grid">
+          <button type="button" (click)="addBlock('heading')" [disabled]="readOnly">{{ 'ui.heading' | transloco
+            }}</button>
+          <button type="button" (click)="addBlock('paragraph')" [disabled]="readOnly">{{ 'ui.text' | transloco
+            }}</button>
+          <button type="button" (click)="addBlock('card')" [disabled]="readOnly">{{ 'ui.card' | transloco }}</button>
+          <button type="button" (click)="addBlock('button')" [disabled]="readOnly">{{ 'ui.button' | transloco
+            }}</button>
+        </div>
+      </section>
+      <section>
+        <h2>{{ 'ui.build_next' | transloco }}</h2>
+        <p class="hint">{{ 'ui.add_fields_and_configure_the_form_used_to_collect_application_data' | transloco }}</p>
+        <button type="button" class="wide-action" (click)="openFormDesigner()">{{ 'ui.open_form_designer' | transloco
+          }}</button>
+        @if (currentScreen()) {
+        <a class="wide-action" [routerLink]="['/builder/applications', applicationId, 'screens', currentScreen()!.key]"
+          [queryParams]="{tenantId}">{{ 'ui.open_application' | transloco }}</a>
+        }
+      </section>
+    </aside>
+
+    <main class="canvas">
+      <div class="canvas-toolbar">
+        <div><strong>{{ 'ui.live_preview' | transloco }}</strong><span>{{ title() }}</span></div>
+        <div class="viewport-controls" role="group" [attr.aria-label]="'ui.preview_viewport' | transloco">
+          <button type="button" [class.active]="viewport() === 'web'" (click)="setViewport('web')">{{ 'ui.web' |
+            transloco }}</button>
+          <button type="button" [class.active]="viewport() === 'tablet'" (click)="setViewport('tablet')">
+            {{ 'ui.tablet'|transloco }}
+          </button>
+          <button type="button" [class.active]="viewport() === 'mobile'" (click)="setViewport('mobile')">
+            {{ 'ui.mobile'| transloco }}
+          </button>
+        </div>
+      </div>
+      <div class="preview-stage">
+        <div class="device" [class.tablet]="viewport() === 'tablet'" [class.mobile]="viewport() === 'mobile'">
+          @if (definitionPreview() && pageNodes().length) {
+          <div class="definition-preview" [style.--app-primary]="theme().primaryColor"
+            [style.--app-bg]="theme().backgroundColor" [style.--app-surface]="theme().surfaceColor"
+            [style.--app-text]="theme().textColor" [style.--app-scale]="theme().fontScale">
+            <div class="preview-app-shell">
+              <aside class="preview-sidenav" aria-label="Application navigation">
+                <div class="preview-brand"><img [src]="theme().logoUrl || '/images/logo/small-logo.png'" alt="" />
+                  <strong>{{ application()?.name }}</strong>
+                </div>
+                <nav>@for (item of navigation(); track item.item.id) {
+                  <ng-container [ngTemplateOutlet]="previewMenu"
+                    [ngTemplateOutletContext]="{$implicit: item, level: 0}" />
+                  }
+                </nav>
+              </aside>
+              <div class="preview-workspace">
+                <header class="preview-topbar"><span>{{ previewTitle() }}</span><span class="preview-user">{{
+                    previewUserName() }}</span></header>
+                <ant-page-tree-runtime [nodes]="previewNodes()" [tenantId]="tenantId" [applicationId]="applicationId"
+                  [localOnly]="true" [availablePages]="screens()" />
+              </div>
+            </div>
+          </div>
+          } @else {
+          <iframe #previewFrame [title]="'ui.application_screen_preview' | transloco" sandbox=""
+            referrerpolicy="no-referrer"></iframe>
+          }
+        </div>
+      </div>
+    </main>
+
+    <aside class="properties" [attr.aria-label]="'ui.screen_properties' | transloco">
+      <section>
+        <h2>{{ 'ui.screen_properties' | transloco }}</h2>
+        <label>{{ 'ui.screen_title' | transloco }}<input type="text" [value]="title()" (input)="setTitle($event)"
+            [disabled]="readOnly" /></label>
+
+        <label>{{ 'ui.screen_key' | transloco }}<input type="text" [value]="key()" (input)="setKey($event)"
+            [disabled]="readOnly || !!currentScreen()" /></label>
+
+        <p class="hint">{{ 'ui.the_key_becomes_part_of_the_application_url_and_cannot_change_after_saving' | transloco
+          }}</p>
+        <label>{{ 'ui.html_content' | transloco }}
+          <textarea rows="12" [value]="html()" (input)="setHtml($event)" [disabled]="readOnly"></textarea>
+        </label>
+      </section>
+
+      <section>
+        <h2>{{ 'ui.appearance' | transloco }}</h2>
+        <div class="color-grid">
+          <ant-brand-color-picker [label]="'ui.primary' | transloco" [color]="theme().primaryColor"
+            [disabled]="readOnly" (colorChange)="setColor('primaryColor', $event)" />
+          <ant-brand-color-picker [label]="'ui.background' | transloco" [color]="theme().backgroundColor"
+            [disabled]="readOnly" (colorChange)="setColor('backgroundColor', $event)" />
+          <ant-brand-color-picker [label]="'ui.surface' | transloco" [color]="theme().surfaceColor"
+            [disabled]="readOnly" (colorChange)="setColor('surfaceColor', $event)" />
+          <ant-brand-color-picker [label]="'ui.text' | transloco" [color]="theme().textColor" [disabled]="readOnly"
+            (colorChange)="setColor('textColor', $event)" />
+        </div>
+        <label>{{ 'ui.logo_url' | transloco }}<input type="url" [value]="theme().logoUrl" (change)="setLogo($event)"
+            [disabled]="readOnly" placeholder="https://… or /assets/…" /></label>
+        <label>
+          {{ 'ui.font_scale' | transloco }}
+          <input type="range" min="0.8" max="1.4" step="0.05" [value]="theme().fontScale" (input)="setFontScale($event)"
+            [disabled]="readOnly" />
+        </label>
+      </section>
+    </aside>
+  </div>
+  }
+</div>
+
+<ng-template #previewMenu let-node let-level="level">
+  @if (node.item.route) {
+  <button type="button" class="preview-menu-item" [class.submenu]="level > 0" (click)="previewNavigate(node.item)"
+    [class.active]="node.item.route.endsWith('/' + previewKey())">
+    <fa-icon [icon]="menuIcon(node.item.icon)" aria-hidden="true" /><span>{{ node.item.label }}</span>
+  </button>
+  } @else { <div class="preview-menu-group" [class.submenu]="level > 0">{{ node.item.label }}</div> }
+  @for (child of node.children; track child.item.id) {
+  <ng-container [ngTemplateOutlet]="previewMenu" [ngTemplateOutletContext]="{$implicit: child, level: level + 1}" />
+  }
+</ng-template>

@@ -1,0 +1,62 @@
+<main class="published-ai-page">
+  @if (!tenantId || !applicationId) {
+    <section class="auth-card"><p class="eyebrow">PUBLISHED APPLICATION</p><h1>Application link is incomplete</h1><p>Open this page from the application access link provided by your administrator.</p></section>
+  } @else if (!signedIn()) {
+    <section class="auth-card">
+      <p class="eyebrow">PUBLISHED APPLICATION</p><h1>Sign in</h1>
+      <p>Use your application account to access AI-generated views and your saved favourites.</p>
+      @if (notice()) { <p class="notice">{{ notice() }}</p> }
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      @if (userSession.session()?.mustChangePassword && userSession.session()?.applicationId === applicationId) {
+        <form (ngSubmit)="changePassword()">
+          <label>Temporary password<input type="password" name="currentPassword" [(ngModel)]="currentPassword" autocomplete="current-password" required /></label>
+          <label>New password<input type="password" name="newPassword" [(ngModel)]="newPassword" minlength="12" autocomplete="new-password" required /><small>At least 12 characters.</small></label>
+          <label>Confirm new password<input type="password" name="confirmPassword" [(ngModel)]="confirmPassword" autocomplete="new-password" required /></label>
+          <button [disabled]="busy() || newPassword.length < 12 || newPassword !== confirmPassword">{{ busy() ? 'Saving…' : 'Change password' }}</button>
+        </form>
+      } @else {
+        <form (ngSubmit)="login()">
+          <label>Email address<input type="email" name="email" [(ngModel)]="email" autocomplete="username" required /></label>
+          <label>Password<input type="password" name="password" [(ngModel)]="password" autocomplete="current-password" required /></label>
+          <button [disabled]="busy() || !email.trim() || !password">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+        </form>
+      }
+    </section>
+  } @else {
+    <header class="page-header">
+      <div><p class="eyebrow">APPLICATION ASSISTANT</p><h1>Ask your application</h1><p>Generate a read-only view using data you’re allowed to access. Saved views are rechecked whenever you open them.</p></div>
+      <div class="user-actions"><span>{{ userSession.session()?.user?.displayName }}</span><button type="button" class="quiet" (click)="logout()">Sign out</button></div>
+    </header>
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+    <section class="workspace">
+      <div class="assistant-panel">
+        <h2>Create a view</h2>
+        <form (ngSubmit)="generate()">
+          <label for="app-ai-prompt">What would you like to see?</label>
+          <textarea id="app-ai-prompt" name="prompt" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)" rows="4" maxlength="5000" placeholder="For example: show open purchase requests by department"></textarea>
+          <button [disabled]="busy() || !prompt().trim()">{{ busy() ? 'Working…' : 'Generate view' }}</button>
+        </form>
+        @if (result(); as view) {
+          <section class="generated-view" aria-live="polite">
+            <div class="view-heading"><div><h2>{{ view.name || 'Generated view' }}</h2><p>{{ view.answer }}</p></div><span>App v{{ view.publishedVersion }}</span></div>
+            <div class="widget-grid">
+              @for (widget of view.widgets; track $index) {
+                <article class="widget"><h3>{{ widget.title }}</h3>
+                  @if (widget.type === 'metric') { <strong class="metric">{{ widget.value | number:'1.0-2' }}</strong><small>{{ widget.total }} matching records</small> }
+                  @if (widget.type === 'table') { <div class="table-wrap"><table><thead><tr>@for (field of widget.fields ?? []; track field.key) { <th>{{ field.label }}</th> }</tr></thead><tbody>@for (row of widget.rows ?? []; track $index) { <tr>@for (field of widget.fields ?? []; track field.key) { <td>{{ row[field.key] }}</td> }</tr> }</tbody></table></div><small>Showing {{ widget.rows?.length ?? 0 }} of {{ widget.total }} matching records</small> }
+                  @if (widget.type === 'barChart' || widget.type === 'donutChart') { <div class="bars">@for (group of widget.groups ?? []; track group.label) { <div class="bar-row"><span>{{ group.label }}</span><i><b [style.width.%]="chartWidth(group.value, widget.groups)"></b></i><strong>{{ group.value | number:'1.0-2' }}</strong></div> }</div> }
+                </article>
+              }
+            </div>
+            <div class="save-row"><input aria-label="Favourite name" name="favouriteName" [ngModel]="favouriteName()" (ngModelChange)="favouriteName.set($event)" maxlength="120" placeholder="Name this favourite" /><button type="button" (click)="saveFavourite()" [disabled]="busy() || !favouriteName().trim()">{{ view.id ? 'Update favourite' : 'Save to favourites' }}</button></div>
+          </section>
+        }
+      </div>
+      <aside class="favourites-panel"><h2>Your saved views</h2>
+        @if (!favourites().length) { <p class="muted">Saved views you create will appear here.</p> }
+        @for (item of favourites(); track item.id) { <div class="favourite"><button type="button" (click)="openFavourite(item)">{{ item.name }}<small>App v{{ item.publishedVersion }}</small></button><button type="button" class="remove" (click)="deleteFavourite(item)" [attr.aria-label]="'Remove ' + item.name">×</button></div> }
+      </aside>
+    </section>
+  }
+</main>

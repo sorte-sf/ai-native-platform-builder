@@ -1,0 +1,18 @@
+<article>
+  <h3>{{ node().text }}</h3>
+  @if (designMode()) {
+  <p>{{ 'blocks.designPlaceholder' | transloco }}</p>
+  @if (node().type === 'chart') {
+  <div echarts [options]="options()" class="echart"></div>
+  }
+  @else { <strong class="metric">—</strong> }
+  } @else if (loading()) { <p role="status">{{ 'ui.loading' | transloco }}</p> }
+  @else if (failed()) { <p role="alert">{{ 'blocks.loadError' | transloco }}</p> }
+  @else if (!node().objectId) { <p>{{ 'blocks.bindSource' | transloco }}</p> }
+  @else if (node().type === 'kpi') { <strong class="metric">{{ total() }}</strong> }
+  @else {
+  <p>{{ 'businessBlocks.sampleScope' | transloco }}</p>
+  <div echarts [options]="options()" class="echart"></div>
+  @if (!chartData().length) { <p>{{ 'blocks.noGroups' | transloco }}</p> }
+  }
+</article>

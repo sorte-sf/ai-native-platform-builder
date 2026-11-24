@@ -1,0 +1,12 @@
+@if (failed()) {
+<p role="alert">{{ 'blocks.loadError' | transloco }}</p>
+}
+
+<ant-data-grid [title]="node().text || ''" [rows]="rows()" [columns]="columns()" [fileName]="'designer-' + node().id"
+    [pageSizes]="[node().pageSize || 25]" [loading]="loading()" [enableSearch]="true" [enableColumnFilters]="true"
+    [enablePaging]="true" [enableExport]="false" [enableCreate]="false" [enableRowActions]="false"
+    (refreshRequested)="refresh.update(refreshValue)" />
+
+@if (!designMode() && !node().tableJson) {
+<small>{{ 'businessBlocks.sampleScope' | transloco }}</small>
+}

@@ -1,0 +1,203 @@
+<main class="login-page-grid min-h-screen bg-gray-800">
+    <div class="flex flex-col flex-auto items-center sm:justify-center min-w-0 md:p-8">
+
+        <div class="login-panel bg relative bg-cover ring-2 ring-white/20 flex flex-1 items-center justify-center md:flex-none w-full md:w-auto md:max-w-6xl md:rounded-2xl shadow-lg overflow-hidden"
+            [style.background-image]="backgroundImage">
+            <!-- @for (background of [backgrounds[backgroundIndex]]; track backgroundIndex) {
+            <img class="login-background" [src]="background" alt="" aria-hidden="true">
+            } -->
+            <div class="login-image-shade" aria-hidden="true"></div>
+            <div class="login-hero relative hidden md:flex items-center p-12 lg:px-16 overflow-hidden">
+                @for (slide of [heroSlides[heroSlideIndex]]; track heroSlideIndex) {
+                <div class="hero-content relative w-full max-w-xl">
+                    <h1 class="hero-title">{{ slide.title | transloco }}</h1>
+                    <p class="hero-copy">{{ slide.text | transloco }}</p>
+                </div>
+                }
+            </div>
+
+            <div class="login-form-panel w-full sm:w-auto mx-4">
+                <div class="login-glass-panel rounded-2xl sm:shadow overflow-hidden">
+                    <div class="login-form-header bg-white">
+                        <div class="login-language">
+                            <ant-language-selector id="login-language" />
+                        </div>
+                        <div class="text-center item-center justify-center">
+                            <ant-logo-widget class="w-16 h-16" />
+                        </div>
+                    </div>
+
+                    <div class="login-card-stage bg-white">
+
+                        <antsoft-card [flippable]="true" #antsoftCard id="antsoftCard"
+                            class="w-full h-auto item-center justify-center text-center" [dropShadow]="false">
+
+                            <ng-container antsoftCardFront>
+
+                                <div class="frosty-primary-2 p-4 pt-0">
+                                    <div>
+                                        <div
+                                            class="hidden sm:block mt-4 text-3xl font-extrabold tracking-tight leading-tight">
+                                            {{ "auth.signIn" |transloco}}
+                                        </div>
+
+                                        <form class="mt-4" [formGroup]="form" #signInNgForm="ngForm">
+
+                                            <mat-form-field class="w-full frosty thin-ice " appearance="outline">
+                                                <mat-label>{{ 'auth.userName' |transloco}}</mat-label>
+                                                <input id="userName" matInput formControlName="userName" type="text"
+                                                    autocomplete="username">
+                                            </mat-form-field>
+
+                                            <mat-form-field class="w-full frosty thin-ice" appearance="outline">
+                                                <mat-label>{{ 'auth.password' |transloco}}</mat-label>
+                                                <input id="password" matInput type="password" formControlName="password"
+                                                    #passwordField>
+                                                <button mat-icon-button type="button"
+                                                    (click)="passwordField.type === 'password' ? passwordField.type = 'text' : passwordField.type = 'password'"
+                                                    matSuffix>
+                                                    @if(passwordField.type === 'password') {
+                                                    <fa-icon [icon]="['fal', 'eye-slash']"></fa-icon>
+                                                    }
+                                                    @if(passwordField.type === 'text') {
+                                                    <fa-icon [icon]="['fal', 'eye']"></fa-icon>
+                                                    }
+                                                </button>
+                                            </mat-form-field>
+
+                                            <div
+                                                class="flex flex-col items-center justify-between w-full mt-1.5 sm:flex-row sm:justify-between md:items-end">
+
+                                                <a (click)="antsoftCard.face='back';showRegister = false"
+                                                    class="text-md font-medium  text-slate-600 cursor-pointer hover:underline mt-2 sm:mt-0">
+                                                    <span class="text-green-600 text-sm">
+                                                        {{"auth.forgottenpassword" | transloco }}
+                                                    </span>
+                                                </a>
+                                            </div>
+
+                                            <div class="flex items-baseline font-medium">
+                                                <!-- <div class="mr-1">{{'auth.donthaveaccount' | transloco}}
+                                                </div> -->
+                                                <a class="text-md font-medium text-primary-500 hover:underline cursor-pointer mt-2"
+                                                    (click)="antsoftCard.face = 'back';showRegister = true">
+                                                    {{ 'auth.registerNewUser' | transloco }}
+                                                </a>
+                                            </div>
+
+                                            <button
+                                                class="w-full mt-6 rounded-md frosty thin-ice bg-gray-600 text-white hover:bg-red-600"
+                                                mat-flat-button (click)="submit()" [disabled]="!form.valid">
+                                                <span>
+                                                    {{ (auth.loading() ? 'auth.signingIn' : 'auth.signIn') | transloco}}
+                                                </span>
+                                                <fa-icon [icon]="icons.arrow" aria-hidden="true" />
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+                                </div>
+
+                            </ng-container>
+
+                            <ng-container antsoftCardBack>
+
+                                <div class="frosty-primary-2 p-4 pt-0">
+                                    <!-- <div class="flex items-center justify-between">
+                                        <div>
+                                            <button mat-icon-button [color]="'primary'"
+                                                (click)="antsoftCard.face = 'front'">
+                                                <mat-icon class="icon-size-5"
+                                                    [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                                            </button>
+                                        </div>
+                                        <div></div>
+                                    </div> -->
+
+                                    <!-- FORGOT PASSWORD & REGISTER FORM -->
+                                    <div class="flex flex-col flex-auto w-full">
+
+                                        @if(showRegister === false){
+                                        <div class="py-4">
+                                            <a class="text-md font-medium  text-slate-600 cursor-pointer hover:underline mt-2 sm:mt-0"
+                                                (click)="antsoftCard.face = 'front'">
+                                                <span class="text-green-600 text-sm">
+                                                    {{"auth.forgottenpassword" | transloco }}
+                                                </span>
+                                            </a>
+                                        </div>
+                                        <ant-reset-password />
+                                        <div class="py-4">
+                                            <a class="text-md font-medium  text-slate-600 cursor-pointer hover:underline mt-2 sm:mt-0"
+                                                (click)="antsoftCard.face = 'front'">
+                                                <span class="text-green-600 text-sm">
+                                                    {{"auth.returntologin" | transloco }}
+                                                </span>
+                                            </a>
+                                        </div>
+
+                                        } @else{
+                                        <div class="text-2xl font-extrabold tracking-tight leading-tight">
+                                            {{'register.createAccount' | transloco}}
+                                        </div>
+                                        <ant-register-user />
+                                        <div class="py-4">
+                                            <a class="text-md font-medium  text-slate-600 cursor-pointer hover:underline mt-2 sm:mt-0"
+                                                (click)="antsoftCard.face = 'front'">
+                                                <span class="text-green-600 text-sm">
+                                                    {{"auth.returntologin" | transloco }}
+                                                </span>
+                                            </a>
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+
+
+                                <!-- <div class="flex flex-col flex-auto p-6 overflow-hidden">
+
+                            <div class="text-center justify-center text-2xl text-gray-600">
+                                <div class="my-1 text-2xl tracking-tight leading-tight">
+                                    {{ "auth.resetpassword" |transloco}}
+                                </div>
+
+                            </div>
+
+                            <form class="flex mt-4 flex-col" [formGroup]="forgottenForm">
+
+                                <div class="py-3">
+                                    <mat-form-field class="fuse-mat-no-subscript w-full" appearance="outline">
+                                        <mat-label>
+                                            {{ "auth.email" |transloco}}
+                                        </mat-label>
+                                        <input id="emailAddress" type="email" matInput formControlName="emailAddress">
+                                    </mat-form-field>
+                                </div>
+                                <button class="fuse-mat-button-large w-full mt-4 hover:bg-red-600" mat-flat-button
+                                    [color]="'primary'" [disabled]="!forgottenForm.valid">
+                                    {{ "auth.resetpassword" | transloco }}
+                                </button>
+                            </form>
+
+                            <div class="py-4">
+                                <a class="text-md font-medium  text-slate-600 cursor-pointer hover:underline mt-2 sm:mt-0"
+                                    (click)="antsoftCard.face = 'front'">
+                                    <span class="text-green-600 text-sm">
+                                        {{"auth.returntologin" | transloco }}
+                                    </span>
+                                </a>
+                            </div>
+                        </div> -->
+
+                            </ng-container>
+
+                        </antsoft-card>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>

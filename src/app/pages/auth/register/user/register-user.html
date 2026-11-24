@@ -1,0 +1,86 @@
+ 
+<form class="" [formGroup]="signUpForm" (ngSubmit)="signUp()">
+    <mat-form-field class="w-full text-sm">
+        <mat-label>{{'auth.email' | transloco}}</mat-label>
+        <input matInput formControlName="email">
+        <mat-error *ngIf="signUpForm.controls.email.hasError('required')">
+            {{'validationerror.emailrequired' | transloco}}
+        </mat-error>
+        <mat-error *ngIf="signUpForm.controls.email.hasError('email')">
+            {{'validationerror.emailinvalid' | transloco}}
+        </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="w-full text-sm -mt-2">
+        <mat-label>{{'auth.password' | transloco}}</mat-label>
+        <input matInput [type]="showPassword ? 'text' : 'password'" formControlName="password">
+        <span matSuffix (click)="togglePasswordVisibility()">
+            <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </span>
+        <mat-error *ngIf="signUpForm.controls.password.hasError('required')">
+            {{'validationerror.passwordrequired' | transloco}}
+        </mat-error>
+        <mat-error *ngIf="signUpForm.controls.password.hasError('pattern')">
+            {{'validationerror.passwordinvalidpattern' | transloco}}
+        </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="w-full text-sm -mt-2">
+        <mat-label>{{'auth.passwordconfirm' | transloco}}</mat-label>
+        <input matInput type="password" formControlName="passwordConfirm">
+        <mat-error *ngIf="signUpForm.hasError('mismatch')">
+            {{'validationerror.passwordmismatch' | transloco}}
+        </mat-error>
+        <mat-error *ngIf="signUpForm.controls.passwordConfirm.hasError('required')">
+            {{'validationerror.passwordrequired' | transloco}}
+        </mat-error>
+    </mat-form-field>
+
+    <!-- <mat-form-field class="w-full text-sm -mt-2">
+        <mat-label>{{'common.phone' | transloco}}</mat-label>
+        <ngx-mat-intl-tel-input [preferredCountries]="['gb', 'tr']" [enablePlaceholder]="true" [enableSearch]="true"
+            [searchPlaceholder]="'action.searchinlist' | transloco" formControlName="phoneNumber">
+        </ngx-mat-intl-tel-input>
+        <mat-error *ngIf="signUpForm.get('phoneNumber').hasError('required')">
+            {{'validationerror.phonerequired' | transloco}}
+        </mat-error>
+    </mat-form-field> -->
+
+    <div class="flex items-center gap-2">
+        <mat-slide-toggle formControlName="registrationType" class="my-2">
+            {{'workspace.coorporate'|transloco}}
+        </mat-slide-toggle>
+    </div>
+
+    <mat-form-field class="w-full text-sm mt-4">
+        <mat-label>{{'auth.fullName' | transloco}}</mat-label>
+        <input matInput formControlName="fullName">
+        <mat-error *ngIf="signUpForm.controls.fullName.hasError('required')">
+            {{'validationerror.namesurnamerequired' | transloco}}
+        </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="w-full text-sm mt-4">
+        <mat-label>{{'workspace.company' | transloco}}</mat-label>
+        <input matInput formControlName="company">
+        <mat-error *ngIf="signUpForm.controls.company.hasError('required')">
+            {{'validationerror.companyrequired' | transloco}}
+        </mat-error>
+    </mat-form-field>
+
+    <div class="w-full text-sm">
+        <mat-checkbox formControlName="isAggrementApproved">
+            <label class="mdc-label" for="mat-mdc-checkbox-2-input"><span>I agree with</span><a
+                    class="ml-1 text-primary-500" (click)="openTermsAndConditions()">Terms and Conditions</a></label>
+        </mat-checkbox>
+    </div>
+
+    <button type="submit" class="fuse-mat-button-large w-full mt-2" mat-flat-button [color]="'primary'"
+        [disabled]="signUpForm.invalid || isRequesting">
+        <span *ngIf="!isRequesting">
+            {{'register.createAccount' | transloco}}
+        </span>
+        <!-- <mat-progress-spinner *ngIf="isRequesting" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner> -->
+    </button>
+
+</form>

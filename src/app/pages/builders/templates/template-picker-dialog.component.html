@@ -1,0 +1,40 @@
+<div class="picker-heading">
+    <h2 mat-dialog-title>{{ 'templatePicker.title' | transloco }}</h2><button type="button" mat-dialog-close
+        [attr.aria-label]="'templatePicker.close' | transloco">×</button>
+</div>
+<mat-dialog-content>
+    <label class="search"><span>{{ 'templatePicker.search' | transloco }}</span><input type="search" [value]="search()"
+            (input)="search.set($any($event.target).value)"></label>
+    <nav class="categories" [attr.aria-label]="'templatePicker.categories' | transloco"><button type="button"
+            [class.active]="!category()" (click)="category.set('')">{{ 'templatePicker.all' | transloco }}</button>@for
+        (item of categories; track item) { <button type="button" [class.active]="category() === item"
+            (click)="category.set(item)">{{ item }}</button> }</nav>
+    @for (group of grouped(); track group.key) {
+    <section class="template-group" [attr.aria-labelledby]="'template-group-' + group.key">
+    <h3 [id]="'template-group-' + group.key">{{ group.title | transloco }}</h3>
+    <div class="catalogue">@for (template of group.templates; track template.id) {
+        <article class="template">
+            <button type="button" class="template-preview" (click)="preview(template)"
+                [attr.aria-label]="'Preview ' + template.name">
+                <div class="thumbnail">@if (template.previewImageUrl) { <img [src]="template.previewImageUrl"
+                        [alt]="template.name" loading="lazy"> } @else { <span>{{ template.name }}</span> }</div>
+                <span class="preview-overlay">{{ 'ui.open_preview' | transloco }}</span>
+            </button>
+            <div class="template-details">
+                <strong>{{ template.name }}</strong>
+                <small>{{ template.description }}</small>
+                <span>{{ template.blueprintVersion || template.manifestVersion }}</span>
+                <div class="template-actions">
+                    <button type="button" class="preview-action" (click)="preview(template)">{{ 'ui.open_preview' |
+                        transloco }}</button>
+                    <button type="button" class="use-action" (click)="dialog.close(template.id)">{{
+                        'templatePicker.choose' | transloco }}</button>
+                </div>
+            </div>
+        </article>
+        }
+    </div>
+    </section>
+    }
+    @if (!filtered().length) { <p>{{ 'templatePicker.empty' | transloco }}</p> }
+</mat-dialog-content>

@@ -1,0 +1,70 @@
+<section class="editor" aria-labelledby="purchase-flow-title">
+    <header class="toolbar">
+        <div>
+            <h2 id="purchase-flow-title">Purchase approval</h2>
+            <p>Request routing · Finance operations</p>
+        </div>
+        <span class="status">Active</span>
+    </header>
+
+    <f-flow fDraggable>
+        <f-canvas fZoom>
+            <f-background><f-circle-pattern /></f-background>
+
+            <article fNode fNodeId="purchase-request" [fNodePosition]="{ x: 70, y: 155 }" class="node request">
+                <div class="node-heading">
+                    <span class="icon" aria-hidden="true">₺</span>
+                    <span class="eyebrow">PURCHASE REQUEST</span>
+                </div>
+                <h3>New purchase</h3>
+                <p>Request submitted by an employee</p>
+                <div class="details"><span>Amount</span><strong>₺12,500</strong></div>
+                <span class="port output" fConnector fConnectorId="purchase-out" fConnectorType="source"
+                    fConnectorConnectableSide="right" aria-label="Purchase request output"></span>
+            </article>
+
+            <article fNode fNodeId="manager-review" [fNodePosition]="{ x: 400, y: 155 }" class="node review">
+                <div class="node-heading">
+                    <span class="icon" aria-hidden="true">✓</span>
+                    <span class="eyebrow">MANAGER REVIEW</span>
+                </div>
+                <h3>Manager approval</h3>
+                <p>Review request and supporting documents</p>
+                <div class="details"><span>Approver</span><strong>Department manager</strong></div>
+                <span class="port input" fConnector fConnectorId="review-in" fConnectorType="target"
+                    fConnectorConnectableSide="left" aria-label="Review input"></span>
+                <span class="port approved" fConnector fConnectorId="review-approved" fConnectorType="source"
+                    fConnectorConnectableSide="right" aria-label="Approved output"></span>
+                <span class="port rejected" fConnector fConnectorId="review-rejected" fConnectorType="source"
+                    fConnectorConnectableSide="right" aria-label="Rejected output"></span>
+            </article>
+
+            <article fNode fNodeId="approved" [fNodePosition]="{ x: 750, y: 65 }" class="node outcome approved-card">
+                <div class="node-heading">
+                    <span class="icon" aria-hidden="true">✓</span>
+                    <span class="eyebrow">APPROVED</span>
+                </div>
+                <h3>Notify procurement</h3>
+                <p>Create order and notify the requester</p>
+                <span class="port input approved" fConnector fConnectorId="approved-in" fConnectorType="target"
+                    fConnectorConnectableSide="left" aria-label="Approval input"></span>
+            </article>
+
+            <article fNode fNodeId="rejected" [fNodePosition]="{ x: 750, y: 275 }" class="node outcome rejected-card">
+                <div class="node-heading">
+                    <span class="icon" aria-hidden="true">×</span>
+                    <span class="eyebrow">REJECTED</span>
+                </div>
+                <h3>Return to requester</h3>
+                <p>Send the decision with reviewer notes</p>
+                <span class="port input rejected" fConnector fConnectorId="rejected-in" fConnectorType="target"
+                    fConnectorConnectableSide="left" aria-label="Rejection input"></span>
+            </article>
+
+            <f-connection fConnectionId="request-to-review" fSourceId="purchase-out" fTargetId="review-in" />
+            <f-connection fConnectionId="review-to-approved" fSourceId="review-approved" fTargetId="approved-in" />
+            <f-connection fConnectionId="review-to-rejected" fSourceId="review-rejected" fTargetId="rejected-in" />
+        </f-canvas>
+    </f-flow>
+    <p class="hint">Drag nodes to arrange the flow. Pan the canvas and use the wheel to zoom.</p>
+</section>

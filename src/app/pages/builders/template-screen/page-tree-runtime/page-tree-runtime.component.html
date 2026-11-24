@@ -1,0 +1,41 @@
+<ng-container *ngTemplateOutlet="tree; context: {$implicit: nodes()}" /><ng-template #tree let-items><div class="page-tree-items" [class.navigation-layout-left]="navigationPlacement(items) === 'left'" [class.navigation-layout-right]="navigationPlacement(items) === 'right'" [class.navigation-layout-top]="navigationPlacement(items) === 'top'">@for (node of
+    items; track node.id) {
+    <div [class.responsive-grid]="!!node.responsiveColumns" [class.floating-action-host]="node.type === 'button' && !!node.floatingButton"
+        [class.side-navigation]="isNavigationRoot(node)" [class.top-navigation]="isNavigationRoot(node) && node.navigationPlacement === 'top'" [ngStyle]="style(node)">
+        @if (isNavigationRoot(node)) { <div class="navigation-brand"><img [src]="navigationLogo(node)" [alt]="navigationBrand(node)" /><strong>{{ navigationBrand(node) }}</strong></div> }
+        @switch (node.type) {
+        @case ('container') { @if (node.presentation) { <ant-section-block #sections [node]="node">
+            <div collapse-content>@for (child of node.children || []; track child.id) {
+                <div [hidden]="node.presentation !== 'collapse' && sections.active() !== $index"><ng-container
+                        *ngTemplateOutlet="tree; context: {$implicit: [child]}" /></div>
+                }
+            </div>
+        </ant-section-block> } @else { <ng-container
+            *ngTemplateOutlet="tree; context: {$implicit: navigationChildren(node)}" /> } }
+        @case ('text') { <p>{{ node.text }}</p> }
+        @case ('heading') { <h2>{{ node.text }}</h2> }
+        @case ('image') { @if (node.imageUrl) { <img [src]="node.imageUrl" [alt]="node.text || ''" loading="lazy" /> } }
+        @case ('button') { @if (node.floatingButton && node.actionType === 'form') { <button type="button"
+            (click)="openFormDialog(node)" [disabled]="formDialogLoading()" [attr.aria-busy]="formDialogLoading()">
+            {{ node.text }}</button> } @else if (localOnly() && externalUrl(node)) { <button type="button" disabled
+            [title]="'preview.externalLinkDisabled' | transloco">{{ node.text }}</button> } @else if (externalUrl(node); as url) { <a
+            [href]="url" target="_blank" rel="noopener noreferrer"
+            [attr.aria-label]="node.text + ' (' + ('designer.opensNewTab' | transloco) + ')'">{{ node.text }}</a> } @else if (localOnly() && pageKeyFor(node); as pageKey) { <button type="button"
+            (click)="navigatePage.emit(pageKey)">{{ node.text }}</button> } @else if (navigation(node); as target) { <a
+            [routerLink]="target.commands" [queryParams]="target.queryParams">{{ node.text }}</a> } @else { <button
+            type="button" disabled>{{ node.text }}</button> } }
+        @default { @if (runtime(node); as renderer) { @if (runtimeInputs(node); as inputs) { <ng-container
+            *ngComponentOutlet="renderer.component; inputs: inputs" /> } } }
+        }</div>
+    }
+</div></ng-template>
+@if (formDialogError()) { <p class="form-dialog-error" role="alert">{{ formDialogError() | transloco }}</p> }
+@if (activeForm(); as form) { <div class="form-dialog-backdrop" (click)="closeFormDialog()">
+    <section class="form-dialog" role="dialog" aria-modal="true" aria-labelledby="floating-form-title" (click)="$event.stopPropagation()">
+        <header><div><p>{{ 'ui.tenant_form' | transloco }}</p><h2 id="floating-form-title">{{ form.name }}</h2></div>
+            <button type="button" class="form-dialog-close" [attr.aria-label]="'ui.cancel' | transloco" (click)="closeFormDialog()">×</button></header>
+        <ant-runtime-form [objectId]="form.objectId" [definition]="form" [tenantContext]="tenantId()"
+            [preview]="preview() || localOnly()" [localOnly]="localOnly()" (recordSaved)="closeFormDialog($event)" />
+        <footer><button type="button" (click)="closeFormDialog()">{{ 'ui.cancel' | transloco }}</button></footer>
+    </section>
+</div> }
